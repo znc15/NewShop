@@ -57,6 +57,9 @@ type AlipayConfig struct {
 	AppID      string
 	PrivateKey string
 	PublicKey  string
+	NotifyURL  string
+	ReturnURL  string
+	IsProd     bool
 }
 
 // GeetestConfig 极验配置
@@ -104,6 +107,9 @@ func Load() (*Config, error) {
 			AppID:      getEnv("ALIPAY_APP_ID", ""),
 			PrivateKey: getEnv("ALIPAY_PRIVATE_KEY", ""),
 			PublicKey:  getEnv("ALIPAY_PUBLIC_KEY", ""),
+			NotifyURL:  getEnv("ALIPAY_NOTIFY_URL", ""),
+			ReturnURL:  getEnv("ALIPAY_RETURN_URL", ""),
+			IsProd:     getEnv("ALIPAY_IS_PROD", "false") == "true",
 		},
 		Geetest: GeetestConfig{
 			ID:  getEnv("GEETEST_ID", ""),
