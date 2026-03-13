@@ -287,7 +287,7 @@ func (h *PaymentHandler) GeneratePayForm(c *gin.Context) {
 
 	// 返回 HTML 内容类型
 	c.Header("Content-Type", "text/html; charset=utf-8")
-	c.String(http.StatusOK, fmt.Sprintf(`<!DOCTYPE html>
+	html := `<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -297,7 +297,7 @@ func (h *PaymentHandler) GeneratePayForm(c *gin.Context) {
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align: center; padding: 50px 20px; background: #f5f5f5; }
         .container { max-width: 400px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .spinner { width: 40px; height: 40px; margin: 20px auto; border: 3px solid #f3f3f3; border-top: 3px solid #1677ff; border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         p { color: #666; margin: 10px 0; }
     </style>
 </head>
@@ -306,9 +306,14 @@ func (h *PaymentHandler) GeneratePayForm(c *gin.Context) {
         <div class="spinner"></div>
         <p>正在跳转到支付宝...</p>
         <p style="font-size: 12px; color: #999;">如未自动跳转，请点击下方按钮</p>
-        <a href="%s" style="display: inline-block; margin-top: 15px; padding: 10px 30px; background: #1677ff; color: white; text-decoration: none; border-radius: 4px;">立即支付</a>
+        <a id="payLink" href="#" style="display: inline-block; margin-top: 15px; padding: 10px 30px; background: #1677ff; color: white; text-decoration: none; border-radius: 4px;">立即支付</a>
     </div>
-    <script>setTimeout(function() { window.location.href = '%s'; }, 1000);</script>
+    <script>
+        var payUrl = "%s";
+        document.getElementById('payLink').href = payUrl;
+        setTimeout(function() { window.location.href = payUrl; }, 1000);
+    </script>
 </body>
-</html>`, result.PayURL, result.PayURL))
+</html>`
+	c.String(http.StatusOK, fmt.Sprintf(html, result.PayURL))
 }
