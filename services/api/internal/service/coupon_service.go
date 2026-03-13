@@ -208,7 +208,7 @@ func (s *CouponService) ValidateCoupon(ctx context.Context, userID, userCouponID
 	}
 
 	// 验证归属
-	if userCoupon.UserID != userID {
+	if userCoupon.UserID != uint64(userID) {
 		return ErrUserCouponNotFound
 	}
 
