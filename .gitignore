@@ -6,3 +6,5 @@ flow.js
 CLAUDE.md
 .claude/
 docs/
+.DS_Store
+.superpowers/
