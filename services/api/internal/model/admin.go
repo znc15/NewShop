@@ -1,4 +1,3 @@
-// Package model 定义数据库模型
 package model
 
 import (
