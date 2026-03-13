@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"newshop/api/internal/model"
 
@@ -159,4 +160,156 @@ func (r *OrderRepo) GetByIDForUpdate(ctx context.Context, tx *gorm.DB, id uint64
 		Set("gorm:query_option", "FOR UPDATE").
 		First(&order, id).Error
 	return &order, err
+}
+
+// OrderListFilter 订单列表筛选条件
+type OrderListFilter struct {
+	Status    string     // 状态筛选
+	UserID    uint64     // 用户ID筛选
+	OrderNo   string     // 订单号筛选
+	StartTime *time.Time // 开始时间
+	EndTime   *time.Time // 结束时间
+	Page      int        // 页码
+	PageSize  int        // 每页数量
+}
+
+// ListForAdmin 管理后台订单列表查询
+func (r *OrderRepo) ListForAdmin(ctx context.Context, filter OrderListFilter) ([]model.Order, int64, error) {
+	var orders []model.Order
+	var total int64
+
+	query := r.db.WithContext(ctx).Model(&model.Order{})
+
+	// 状态筛选
+	if filter.Status != "" {
+		query = query.Where("status = ?", filter.Status)
+	}
+
+	// 用户ID筛选
+	if filter.UserID > 0 {
+		query = query.Where("user_id = ?", filter.UserID)
+	}
+
+	// 订单号筛选
+	if filter.OrderNo != "" {
+		query = query.Where("order_no LIKE ?", "%"+filter.OrderNo+"%")
+	}
+
+	// 时间范围筛选
+	if filter.StartTime != nil {
+		query = query.Where("created_at >= ?", filter.StartTime)
+	}
+	if filter.EndTime != nil {
+		query = query.Where("created_at <= ?", filter.EndTime)
+	}
+
+	// 获取总数
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// 分页查询
+	offset := (filter.Page - 1) * filter.PageSize
+	err := query.Preload("Items").Order("id DESC").Offset(offset).Limit(filter.PageSize).Find(&orders).Error
+
+	return orders, total, err
+}
+
+// Update 更新订单
+func (r *OrderRepo) Update(ctx context.Context, order *model.Order) error {
+	return r.db.WithContext(ctx).Save(order).Error
+}
+
+// UpdateWithTx 在事务中更新订单
+func (r *OrderRepo) UpdateWithTx(ctx context.Context, tx *gorm.DB, order *model.Order) error {
+	return tx.WithContext(ctx).Save(order).Error
+}
+
+// GetDB 获取数据库连接（用于事务）
+func (r *OrderRepo) GetDB() *gorm.DB {
+	return r.db
+}
+
+// CreateStatusTransition 创建订单状态变更记录
+func (r *OrderRepo) CreateStatusTransition(ctx context.Context, transition *model.OrderStatusTransition) error {
+	return r.db.WithContext(ctx).Create(transition).Error
+}
+
+// OrderStatistics 订单统计结果
+type OrderStatistics struct {
+	TotalOrders     int64   `json:"total_orders"`
+	TotalAmount     float64 `json:"total_amount"`
+	PendingOrders   int64   `json:"pending_orders"`
+	PaidOrders      int64   `json:"paid_orders"`
+	ShippedOrders   int64   `json:"shipped_orders"`
+	CompletedOrders int64   `json:"completed_orders"`
+	CancelledOrders int64   `json:"cancelled_orders"`
+	RefundedOrders  int64   `json:"refunded_orders"`
+	RefundAmount    float64 `json:"refund_amount"`
+}
+
+// GetStatistics 获取订单统计
+func (r *OrderRepo) GetStatistics(ctx context.Context, startTime, endTime *time.Time) (*OrderStatistics, error) {
+	stats := &OrderStatistics{}
+
+	query := r.db.WithContext(ctx).Model(&model.Order{})
+
+	// 时间范围筛选
+	if startTime != nil {
+		query = query.Where("created_at >= ?", startTime)
+	}
+	if endTime != nil {
+		query = query.Where("created_at <= ?", endTime)
+	}
+
+	// 总订单数
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, err
+	}
+	stats.TotalOrders = total
+
+	// 总金额
+	var totalAmount float64
+	amountQuery := r.db.WithContext(ctx).Model(&model.Order{})
+	if startTime != nil {
+		amountQuery = amountQuery.Where("created_at >= ?", startTime)
+	}
+	if endTime != nil {
+		amountQuery = amountQuery.Where("created_at <= ?", endTime)
+	}
+	amountQuery.Select("COALESCE(SUM(pay_amount), 0)").Scan(&totalAmount)
+	stats.TotalAmount = totalAmount
+
+	// 各状态订单数
+	statusCounts := make(map[string]int64)
+	statusQuery := r.db.WithContext(ctx).Model(&model.Order{}).Select("status, count(*) as count")
+	if startTime != nil {
+		statusQuery = statusQuery.Where("created_at >= ?", startTime)
+	}
+	if endTime != nil {
+		statusQuery = statusQuery.Where("created_at <= ?", endTime)
+	}
+	statusQuery.Group("status").Scan(&statusCounts)
+
+	stats.PendingOrders = statusCounts[string(model.OrderStatusPending)]
+	stats.PaidOrders = statusCounts[string(model.OrderStatusPaid)]
+	stats.ShippedOrders = statusCounts[string(model.OrderStatusShipped)]
+	stats.CompletedOrders = statusCounts[string(model.OrderStatusDelivered)]
+	stats.CancelledOrders = statusCounts[string(model.OrderStatusCancelled)]
+	stats.RefundedOrders = statusCounts[string(model.OrderStatusRefunded)]
+
+	// 退款金额
+	var refundAmount float64
+	refundQuery := r.db.WithContext(ctx).Model(&model.Order{}).Where("status = ?", model.OrderStatusRefunded)
+	if startTime != nil {
+		refundQuery = refundQuery.Where("created_at >= ?", startTime)
+	}
+	if endTime != nil {
+		refundQuery = refundQuery.Where("created_at <= ?", endTime)
+	}
+	refundQuery.Select("COALESCE(SUM(refund_amount), 0)").Scan(&refundAmount)
+	stats.RefundAmount = refundAmount
+
+	return stats, nil
 }

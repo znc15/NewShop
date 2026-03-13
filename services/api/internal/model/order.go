@@ -14,25 +14,26 @@ const (
 	OrderStatusPaid      OrderStatus = "paid"      // 已支付
 	OrderStatusShipped   OrderStatus = "shipped"   // 已发货
 	OrderStatusDelivered OrderStatus = "delivered" // 已送达
+	OrderStatusCompleted OrderStatus = "completed" // 已完成
 	OrderStatusCancelled OrderStatus = "cancelled" // 已取消
 	OrderStatusRefunded  OrderStatus = "refunded"  // 已退款
 )
 
 // Order 订单模型
 type Order struct {
-	ID              uint64         `gorm:"primaryKey" json:"id"`
-	OrderNo         string         `gorm:"uniqueIndex;size:32;not null" json:"order_no"`
-	UserID          uint64         `gorm:"not null;index" json:"user_id"`
-	AddressID       uint64         `gorm:"not null" json:"address_id"`
-	TotalAmount     float64        `gorm:"type:decimal(10,2);not null" json:"total_amount"`
-	PayAmount       float64        `gorm:"type:decimal(10,2);not null" json:"pay_amount"`
-	DiscountAmount  float64        `gorm:"type:decimal(10,2);default:0" json:"discount_amount"`
-	FreightAmount   float64        `gorm:"type:decimal(10,2);default:0" json:"freight_amount"`
-	Status          OrderStatus    `gorm:"size:20;default:pending;index" json:"status"`
-	PaymentMethod   string         `gorm:"size:50" json:"payment_method"`
-	PaymentTime     *time.Time     `json:"payment_time"`
-	ShipTime        *time.Time     `json:"ship_time"`
-	ReceiveTime     *time.Time     `json:"receive_time"`
+	ID             uint64      `gorm:"primaryKey" json:"id"`
+	OrderNo        string      `gorm:"uniqueIndex;size:32;not null" json:"order_no"`
+	UserID         uint64      `gorm:"not null;index" json:"user_id"`
+	AddressID      uint64      `gorm:"not null" json:"address_id"`
+	TotalAmount    float64     `gorm:"type:decimal(10,2);not null" json:"total_amount"`
+	PayAmount      float64     `gorm:"type:decimal(10,2);not null" json:"pay_amount"`
+	DiscountAmount float64     `gorm:"type:decimal(10,2);default:0" json:"discount_amount"`
+	FreightAmount  float64     `gorm:"type:decimal(10,2);default:0" json:"freight_amount"`
+	Status         OrderStatus `gorm:"size:20;default:pending;index" json:"status"`
+	PaymentMethod  string      `gorm:"size:50" json:"payment_method"`
+	PaymentTime    *time.Time  `json:"payment_time"`
+	ShipTime       *time.Time  `json:"ship_time"`
+	ReceiveTime    *time.Time  `json:"receive_time"`
 	// 物流信息
 	ExpressCompany string `gorm:"size:100" json:"express_company"` // 物流公司
 	ExpressNo      string `gorm:"size:100" json:"express_no"`      // 物流单号
@@ -130,8 +131,9 @@ func (o *Order) CanTransitionTo(target OrderStatus) bool {
 	transitions := map[OrderStatus][]OrderStatus{
 		OrderStatusPending:   {OrderStatusPaid, OrderStatusCancelled},
 		OrderStatusPaid:      {OrderStatusShipped, OrderStatusCancelled, OrderStatusRefunded},
-		OrderStatusShipped:   {OrderStatusDelivered, OrderStatusRefunded},
-		OrderStatusDelivered: {OrderStatusRefunded},
+		OrderStatusShipped:   {OrderStatusDelivered, OrderStatusCompleted, OrderStatusRefunded},
+		OrderStatusDelivered: {OrderStatusCompleted, OrderStatusRefunded},
+		OrderStatusCompleted: {OrderStatusRefunded},
 		OrderStatusCancelled: {},
 		OrderStatusRefunded:  {},
 	}
