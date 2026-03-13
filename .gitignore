@@ -1,0 +1,6 @@
+.workflow/
+.flowpilot/
+.claude/settings.json
+.claude/worktrees/
+flow.js
+CLAUDE.md
