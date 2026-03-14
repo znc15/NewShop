@@ -6,24 +6,15 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"sync"
+	"strconv"
 	"time"
 
+	"newshop/api/internal/model"
 	"newshop/api/internal/pkg/alipay"
+	"newshop/api/internal/repository"
 
 	"go.uber.org/zap"
-)
-
-// PaymentStatus 支付状态
-type PaymentStatus string
-
-const (
-	PaymentStatusPending   PaymentStatus = "pending"   // 待支付
-	PaymentStatusPaid      PaymentStatus = "paid"      // 已支付
-	PaymentStatusFailed    PaymentStatus = "failed"    // 支付失败
-	PaymentStatusClosed    PaymentStatus = "closed"    // 已关闭
-	PaymentStatusRefunded  PaymentStatus = "refunded"  // 已退款
-	PaymentStatusRefunding PaymentStatus = "refunding" // 退款中
+	"gorm.io/gorm"
 )
 
 var (
@@ -34,49 +25,19 @@ var (
 	ErrRefundAmountExceed   = errors.New("退款金额超过可退金额")
 )
 
-// PaymentRecord 支付记录（内存存储，生产环境应使用数据库）
-type PaymentRecord struct {
-	OutTradeNo     string        // 商户订单号
-	TradeNo        string        // 支付宝交易号
-	UserID         uint64        // 用户ID
-	TotalAmount    string        // 订单金额
-	PaidAmount     string        // 实付金额
-	Status         PaymentStatus // 支付状态
-	Subject        string        // 订单标题
-	Passback       string        // 回传参数
-	CreatedAt      time.Time     // 创建时间
-	PaidAt         *time.Time    // 支付时间
-	RefundedAmount string        // 已退款金额
-	RefundedAt     *time.Time    // 退款时间
-}
-
-// RefundRecord 退款记录
-type RefundRecord struct {
-	OutRequestNo string    // 退款请求单号
-	OutTradeNo   string    // 商户订单号
-	RefundAmount string    // 退款金额
-	RefundReason string    // 退款原因
-	Status       string    // 退款状态
-	CreatedAt    time.Time // 创建时间
-}
-
 // PaymentService 支付服务
 type PaymentService struct {
-	alipayClient   *alipay.Client
-	logger         *zap.Logger
-	payments       map[string]*PaymentRecord
-	refunds        map[string]*RefundRecord
-	mu             sync.RWMutex
-	refundCounter  int64
+	alipayClient *alipay.Client
+	paymentRepo  *repository.PaymentRepo
+	logger       *zap.Logger
 }
 
 // NewPaymentService 创建支付服务
-func NewPaymentService(alipayClient *alipay.Client, logger *zap.Logger) *PaymentService {
+func NewPaymentService(alipayClient *alipay.Client, paymentRepo *repository.PaymentRepo, logger *zap.Logger) *PaymentService {
 	return &PaymentService{
 		alipayClient: alipayClient,
+		paymentRepo:  paymentRepo,
 		logger:       logger,
-		payments:     make(map[string]*PaymentRecord),
-		refunds:      make(map[string]*RefundRecord),
 	}
 }
 
@@ -100,28 +61,46 @@ type CreatePaymentResult struct {
 // CreatePayment 创建支付
 func (s *PaymentService) CreatePayment(ctx context.Context, req CreatePaymentRequest) (*CreatePaymentResult, error) {
 	// 检查订单是否已存在
-	s.mu.RLock()
-	if existing, ok := s.payments[req.OutTradeNo]; ok {
-		s.mu.RUnlock()
-		if existing.Status == PaymentStatusPaid {
+	existing, err := s.paymentRepo.GetByOutTradeNo(ctx, req.OutTradeNo)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		s.logger.Error("查询支付记录失败", zap.Error(err))
+		return nil, fmt.Errorf("查询支付记录失败: %w", err)
+	}
+
+	if existing != nil {
+		if existing.Status == model.PaymentStatusPaid {
 			return nil, ErrPaymentAlreadyPaid
 		}
 		// 如果订单存在但未支付，返回已有的支付链接
 	} else {
-		s.mu.RUnlock()
-		// 创建新的支付记录
-		record := &PaymentRecord{
-			OutTradeNo:  req.OutTradeNo,
-			UserID:      req.UserID,
-			TotalAmount: req.Amount,
-			Status:      PaymentStatusPending,
-			Subject:     req.Subject,
-			Passback:    req.Passback,
-			CreatedAt:   time.Now(),
+		// 解析金额
+		amount, err := strconv.ParseFloat(req.Amount, 64)
+		if err != nil {
+			return nil, fmt.Errorf("金额格式错误: %w", err)
 		}
-		s.mu.Lock()
-		s.payments[req.OutTradeNo] = record
-		s.mu.Unlock()
+
+		// 确定支付方式
+		paymentMethod := model.PaymentMethodAlipayPage
+		if req.PayType == "wap" {
+			paymentMethod = model.PaymentMethodAlipayWap
+		}
+
+		// 创建新的支付记录
+		record := &model.Payment{
+			OutTradeNo:    req.OutTradeNo,
+			UserID:        req.UserID,
+			TotalAmount:   amount,
+			Status:        model.PaymentStatusPending,
+			Subject:       req.Subject,
+			Body:          req.Body,
+			Passback:      req.Passback,
+			PaymentMethod: paymentMethod,
+		}
+
+		if err := s.paymentRepo.Create(ctx, record); err != nil {
+			s.logger.Error("创建支付记录失败", zap.Error(err))
+			return nil, fmt.Errorf("创建支付记录失败: %w", err)
+		}
 	}
 
 	// 创建支付宝支付请求
@@ -134,7 +113,6 @@ func (s *PaymentService) CreatePayment(ctx context.Context, req CreatePaymentReq
 	}
 
 	var result *alipay.CreatePaymentResult
-	var err error
 
 	switch req.PayType {
 	case "wap":
@@ -178,36 +156,47 @@ func (s *PaymentService) HandleNotify(ctx context.Context, r *http.Request) erro
 		zap.String("trade_status", notifyData.TradeStatus),
 	)
 
-	// 更新支付记录
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	record, ok := s.payments[notifyData.OutTradeNo]
-	if !ok {
-		s.logger.Warn("收到未知订单的支付回调",
-			zap.String("out_trade_no", notifyData.OutTradeNo),
-		)
-		return nil // 返回 success 避免支付宝重复通知
+	// 查询支付记录
+	record, err := s.paymentRepo.GetByOutTradeNo(ctx, notifyData.OutTradeNo)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			s.logger.Warn("收到未知订单的支付回调",
+				zap.String("out_trade_no", notifyData.OutTradeNo),
+			)
+			return nil // 返回 success 避免支付宝重复通知
+		}
+		return fmt.Errorf("查询支付记录失败: %w", err)
 	}
 
 	// 根据交易状态更新记录
 	switch notifyData.TradeStatus {
 	case "TRADE_SUCCESS", "TRADE_FINISHED":
-		if record.Status == PaymentStatusPaid {
+		if record.Status == model.PaymentStatusPaid {
 			return nil // 已处理过
 		}
-		record.Status = PaymentStatusPaid
+		paidAmount, _ := strconv.ParseFloat(notifyData.TotalAmount, 64)
 		record.TradeNo = notifyData.TradeNo
-		record.PaidAmount = notifyData.TotalAmount
+		record.PaidAmount = paidAmount
+		record.Status = model.PaymentStatusPaid
 		now := time.Now()
 		record.PaidAt = &now
+
+		if err := s.paymentRepo.Update(ctx, record); err != nil {
+			s.logger.Error("更新支付记录失败", zap.Error(err))
+			return fmt.Errorf("更新支付记录失败: %w", err)
+		}
+
 		s.logger.Info("支付成功",
 			zap.String("out_trade_no", notifyData.OutTradeNo),
 			zap.String("trade_no", notifyData.TradeNo),
 			zap.String("amount", notifyData.TotalAmount),
 		)
 	case "TRADE_CLOSED":
-		record.Status = PaymentStatusClosed
+		record.Status = model.PaymentStatusClosed
+		if err := s.paymentRepo.Update(ctx, record); err != nil {
+			s.logger.Error("更新支付记录失败", zap.Error(err))
+			return fmt.Errorf("更新支付记录失败: %w", err)
+		}
 		s.logger.Info("交易关闭",
 			zap.String("out_trade_no", notifyData.OutTradeNo),
 		)
@@ -217,37 +206,40 @@ func (s *PaymentService) HandleNotify(ctx context.Context, r *http.Request) erro
 }
 
 // QueryPayment 查询支付状态
-func (s *PaymentService) QueryPayment(ctx context.Context, outTradeNo string) (*PaymentRecord, error) {
-	// 先查本地记录
-	s.mu.RLock()
-	record, ok := s.payments[outTradeNo]
-	s.mu.RUnlock()
-
-	if !ok {
-		return nil, ErrPaymentNotFound
+func (s *PaymentService) QueryPayment(ctx context.Context, outTradeNo string) (*model.Payment, error) {
+	// 查询数据库记录
+	record, err := s.paymentRepo.GetByOutTradeNo(ctx, outTradeNo)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrPaymentNotFound
+		}
+		return nil, fmt.Errorf("查询支付记录失败: %w", err)
 	}
 
-	// 如果本地状态是待支付，主动查询支付宝
-	if record.Status == PaymentStatusPending {
+	// 如果状态是待支付，主动查询支付宝同步状态
+	if record.Status == model.PaymentStatusPending {
 		queryResult, err := s.alipayClient.QueryPayment(ctx, outTradeNo)
 		if err != nil {
 			s.logger.Warn("查询支付宝状态失败", zap.Error(err))
-			return record, nil // 返回本地记录
+			return record, nil // 返回数据库记录
 		}
 
-		// 更新本地状态
-		s.mu.Lock()
+		// 更新数据库状态
 		switch queryResult.TradeStatus {
 		case "TRADE_SUCCESS", "TRADE_FINISHED":
-			record.Status = PaymentStatusPaid
+			paidAmount, _ := strconv.ParseFloat(queryResult.TotalAmount, 64)
+			record.Status = model.PaymentStatusPaid
 			record.TradeNo = queryResult.TradeNo
-			record.PaidAmount = queryResult.TotalAmount
+			record.PaidAmount = paidAmount
 			now := time.Now()
 			record.PaidAt = &now
 		case "TRADE_CLOSED":
-			record.Status = PaymentStatusClosed
+			record.Status = model.PaymentStatusClosed
 		}
-		s.mu.Unlock()
+
+		if err := s.paymentRepo.Update(ctx, record); err != nil {
+			s.logger.Warn("更新支付状态失败", zap.Error(err))
+		}
 	}
 
 	return record, nil
@@ -269,21 +261,32 @@ type RefundResult struct {
 
 // RefundPayment 申请退款
 func (s *PaymentService) RefundPayment(ctx context.Context, req RefundRequest) (*RefundResult, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	record, ok := s.payments[req.OutTradeNo]
-	if !ok {
-		return nil, ErrPaymentNotFound
+	// 查询支付记录
+	record, err := s.paymentRepo.GetByOutTradeNo(ctx, req.OutTradeNo)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrPaymentNotFound
+		}
+		return nil, fmt.Errorf("查询支付记录失败: %w", err)
 	}
 
-	if record.Status != PaymentStatusPaid {
+	if record.Status != model.PaymentStatusPaid {
 		return nil, ErrPaymentNotPaid
 	}
 
+	// 解析退款金额
+	refundAmount, err := strconv.ParseFloat(req.RefundAmount, 64)
+	if err != nil {
+		return nil, fmt.Errorf("退款金额格式错误: %w", err)
+	}
+
+	// 检查可退款金额
+	if refundAmount > record.CanRefund() {
+		return nil, ErrRefundAmountExceed
+	}
+
 	// 生成退款请求单号
-	s.refundCounter++
-	outRequestNo := fmt.Sprintf("%s_R%06d", req.OutTradeNo, s.refundCounter)
+	outRequestNo := fmt.Sprintf("%s_R%d", req.OutTradeNo, time.Now().UnixNano())
 
 	// 调用支付宝退款接口
 	alipayReq := alipay.RefundRequest{
@@ -302,22 +305,33 @@ func (s *PaymentService) RefundPayment(ctx context.Context, req RefundRequest) (
 		return nil, err
 	}
 
-	// 记录退款信息
-	refundRecord := &RefundRecord{
+	// 创建退款记录
+	refundRecord := &model.PaymentRefund{
+		PaymentID:    record.ID,
 		OutRequestNo: outRequestNo,
 		OutTradeNo:   req.OutTradeNo,
-		RefundAmount: req.RefundAmount,
+		RefundAmount: refundAmount,
 		RefundReason: req.RefundReason,
 		Status:       "SUCCESS",
-		CreatedAt:    time.Now(),
 	}
-	s.refunds[outRequestNo] = refundRecord
+
+	if err := s.paymentRepo.CreateRefund(ctx, refundRecord); err != nil {
+		s.logger.Error("创建退款记录失败", zap.Error(err))
+	}
 
 	// 更新支付记录
-	record.RefundedAmount = result.RefundFee
+	record.RefundedAmount += refundAmount
 	now := time.Now()
 	record.RefundedAt = &now
-	record.Status = PaymentStatusRefunded
+	if record.RefundedAmount >= record.PaidAmount {
+		record.Status = model.PaymentStatusRefunded
+	} else {
+		record.Status = model.PaymentStatusRefunding
+	}
+
+	if err := s.paymentRepo.Update(ctx, record); err != nil {
+		s.logger.Error("更新支付记录失败", zap.Error(err))
+	}
 
 	s.logger.Info("退款成功",
 		zap.String("out_trade_no", req.OutTradeNo),
@@ -329,17 +343,4 @@ func (s *PaymentService) RefundPayment(ctx context.Context, req RefundRequest) (
 		OutTradeNo: result.OutTradeNo,
 		RefundFee:  result.RefundFee,
 	}, nil
-}
-
-// GetPaymentRecord 获取支付记录
-func (s *PaymentService) GetPaymentRecord(outTradeNo string) (*PaymentRecord, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	record, ok := s.payments[outTradeNo]
-	if !ok {
-		return nil, ErrPaymentNotFound
-	}
-
-	return record, nil
 }

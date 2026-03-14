@@ -34,6 +34,7 @@ type Router struct {
 	userRepo       *repository.UserRepo
 	adminRepo      *repository.AdminRepo
 	statisticsRepo *repository.StatisticsRepo
+	paymentRepo    *repository.PaymentRepo
 
 	// Services
 	userService     *service.UserService
@@ -74,6 +75,7 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 	userRepo := repository.NewUserRepo(db)
 	adminRepo := repository.NewAdminRepo(db)
 	statisticsRepo := repository.NewStatisticsRepo(db)
+	paymentRepo := repository.NewPaymentRepo(db)
 
 	// 初始化 Services
 	userService := service.NewUserService(db)
@@ -116,6 +118,7 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 		userRepo:       userRepo,
 		adminRepo:      adminRepo,
 		statisticsRepo: statisticsRepo,
+		paymentRepo:    paymentRepo,
 		// Services
 		userService:     userService,
 		productService:  productService,
@@ -156,6 +159,11 @@ func (r *Router) SetEmailService(emailService *service.EmailService) {
 func (r *Router) SetPaymentService(paymentService *service.PaymentService) {
 	r.paymentService = paymentService
 	r.paymentHandler = handler.NewPaymentHandler(paymentService, r.logger)
+}
+
+// GetPaymentRepo 获取支付仓库（用于创建PaymentService）
+func (r *Router) GetPaymentRepo() *repository.PaymentRepo {
+	return r.paymentRepo
 }
 
 // Setup 注册所有路由
