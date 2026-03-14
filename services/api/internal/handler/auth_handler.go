@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 type AuthHandler struct {
@@ -32,17 +33,17 @@ type RegisterRequest struct {
 	Email        string `json:"email" binding:"required,email"`
 	Password     string `json:"password" binding:"required,min=6,max=20"`
 	Nickname     string `json:"nickname"`
-	Code         string `json:"code" binding:"required"`
-	CaptchaID    string `json:"captcha_id" binding:"required"`
-	CaptchaToken string `json:"captcha_token" binding:"required"`
+	Code         string `json:"code"`
+	CaptchaID    string `json:"captcha_id"`
+	CaptchaToken string `json:"captcha_token"`
 }
 
 type LoginRequest struct {
 	Email        string `json:"email" binding:"required,email"`
 	Password     string `json:"password" binding:"required"`
 	Code         string `json:"code"`
-	CaptchaID    string `json:"captcha_id" binding:"required"`
-	CaptchaToken string `json:"captcha_token" binding:"required"`
+	CaptchaID    string `json:"captcha_id"`
+	CaptchaToken string `json:"captcha_token"`
 }
 
 type RefreshRequest struct {
@@ -64,7 +65,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	}
 
 	existingUser, err := h.userService.GetByEmail(c.Request.Context(), req.Email)
-	if err != nil {
+	if err != nil && err != gorm.ErrRecordNotFound {
 		h.logger.Error("查询用户失败", zap.Error(err), zap.String("email", req.Email))
 		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "查询用户失败"})
 		return
@@ -74,15 +75,18 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	valid, err := h.emailService.VerifyCode(c.Request.Context(), req.Email, "register", req.Code)
-	if err != nil {
-		h.logger.Error("验证码校验失败", zap.Error(err), zap.String("email", req.Email))
-		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "验证码校验失败"})
-		return
-	}
-	if !valid {
-		c.JSON(http.StatusBadRequest, gin.H{"code": 40002, "message": "验证码错误或已过期"})
-		return
+	// 开发环境跳过验证码校验
+	if h.emailService != nil && req.Code != "" {
+		valid, err := h.emailService.VerifyCode(c.Request.Context(), req.Email, "register", req.Code)
+		if err != nil {
+			h.logger.Error("验证码校验失败", zap.Error(err), zap.String("email", req.Email))
+			c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "验证码校验失败"})
+			return
+		}
+		if !valid {
+			c.JSON(http.StatusBadRequest, gin.H{"code": 40002, "message": "验证码错误或已过期"})
+			return
+		}
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
