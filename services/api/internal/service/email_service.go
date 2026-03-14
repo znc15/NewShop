@@ -2,8 +2,9 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"time"
 
 	"newshop/api/internal/model"
@@ -112,13 +113,13 @@ func (s *EmailService) sendQueuedEmail(ctx context.Context, e *model.EmailOutbox
 	return s.email.SendWithTemplate(e.ToEmail, template.Subject, template.BodyHTML, params)
 }
 
-// generateCode 生成随机验证码
+// generateCode 使用加密随机数生成验证码
 func generateCode(length int) string {
 	const digits = "0123456789"
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	code := ""
 	for i := 0; i < length; i++ {
-		code += string(digits[r.Intn(10)])
+		n, _ := rand.Int(rand.Reader, big.NewInt(10))
+		code += string(digits[n.Int64()])
 	}
 	return code
 }
