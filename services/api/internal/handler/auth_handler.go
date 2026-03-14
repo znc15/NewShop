@@ -63,7 +63,12 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	existingUser, _ := h.userService.GetByEmail(c.Request.Context(), req.Email)
+	existingUser, err := h.userService.GetByEmail(c.Request.Context(), req.Email)
+	if err != nil {
+		h.logger.Error("查询用户失败", zap.Error(err), zap.String("email", req.Email))
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "查询用户失败"})
+		return
+	}
 	if existingUser != nil {
 		c.JSON(http.StatusConflict, gin.H{"code": 40901, "message": "邮箱已被注册"})
 		return
@@ -89,8 +94,18 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	accessToken, _ := h.jwtManager.GenerateToken(user.ID, user.Email, "user")
-	refreshToken, _ := h.jwtManager.GenerateRefreshToken(user.ID, user.Email, "user")
+	accessToken, err := h.jwtManager.GenerateToken(user.ID, user.Email, "user")
+	if err != nil {
+		h.logger.Error("生成访问令牌失败", zap.Error(err), zap.Uint64("user_id", user.ID))
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "生成令牌失败"})
+		return
+	}
+	refreshToken, err := h.jwtManager.GenerateRefreshToken(user.ID, user.Email, "user")
+	if err != nil {
+		h.logger.Error("生成刷新令牌失败", zap.Error(err), zap.Uint64("user_id", user.ID))
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "生成令牌失败"})
+		return
+	}
 
 	c.JSON(http.StatusCreated, gin.H{
 		"code": 0,
@@ -124,8 +139,18 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	accessToken, _ := h.jwtManager.GenerateToken(user.ID, user.Email, "user")
-	refreshToken, _ := h.jwtManager.GenerateRefreshToken(user.ID, user.Email, "user")
+	accessToken, err := h.jwtManager.GenerateToken(user.ID, user.Email, "user")
+	if err != nil {
+		h.logger.Error("生成访问令牌失败", zap.Error(err), zap.Uint64("user_id", user.ID))
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "生成令牌失败"})
+		return
+	}
+	refreshToken, err := h.jwtManager.GenerateRefreshToken(user.ID, user.Email, "user")
+	if err != nil {
+		h.logger.Error("生成刷新令牌失败", zap.Error(err), zap.Uint64("user_id", user.ID))
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "生成令牌失败"})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
@@ -154,8 +179,18 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 
-	accessToken, _ := h.jwtManager.GenerateToken(claims.UserID, claims.Email, claims.Role)
-	refreshToken, _ := h.jwtManager.GenerateRefreshToken(claims.UserID, claims.Email, claims.Role)
+	accessToken, err := h.jwtManager.GenerateToken(claims.UserID, claims.Email, claims.Role)
+	if err != nil {
+		h.logger.Error("生成访问令牌失败", zap.Error(err), zap.Uint64("user_id", claims.UserID))
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "生成令牌失败"})
+		return
+	}
+	refreshToken, err := h.jwtManager.GenerateRefreshToken(claims.UserID, claims.Email, claims.Role)
+	if err != nil {
+		h.logger.Error("生成刷新令牌失败", zap.Error(err), zap.Uint64("user_id", claims.UserID))
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "生成令牌失败"})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
@@ -175,7 +210,12 @@ func (h *AuthHandler) SendCode(c *gin.Context) {
 
 	codeType := req.Type
 	if codeType == "register" {
-		existingUser, _ := h.userService.GetByEmail(c.Request.Context(), req.Email)
+		existingUser, err := h.userService.GetByEmail(c.Request.Context(), req.Email)
+		if err != nil {
+			h.logger.Error("查询用户失败", zap.Error(err), zap.String("email", req.Email))
+			c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "查询用户失败"})
+			return
+		}
 		if existingUser != nil {
 			c.JSON(http.StatusConflict, gin.H{"code": 40901, "message": "邮箱已被注册"})
 			return
@@ -227,21 +267,44 @@ func (h *AuthHandler) UpdatePassword(c *gin.Context) {
 		return
 	}
 
-	user, _ := h.userService.GetByID(c.Request.Context(), userID)
+	user, err := h.userService.GetByID(c.Request.Context(), userID)
+	if err != nil {
+		h.logger.Error("查询用户失败", zap.Error(err), zap.Uint64("user_id", userID))
+		c.JSON(http.StatusNotFound, gin.H{"code": 40400, "message": "用户不存在"})
+		return
+	}
+	if user == nil {
+		c.JSON(http.StatusNotFound, gin.H{"code": 40400, "message": "用户不存在"})
+		return
+	}
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.OldPassword)); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"code": 40101, "message": "原密码错误"})
 		return
 	}
 
-	valid, _ := h.emailService.VerifyCode(c.Request.Context(), user.Email, "reset", req.Code)
+	valid, err := h.emailService.VerifyCode(c.Request.Context(), user.Email, "reset", req.Code)
+	if err != nil {
+		h.logger.Error("验证码校验失败", zap.Error(err), zap.String("email", user.Email))
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "验证码校验失败"})
+		return
+	}
 	if !valid {
 		c.JSON(http.StatusBadRequest, gin.H{"code": 40002, "message": "验证码错误或已过期"})
 		return
 	}
 
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		h.logger.Error("密码加密失败", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "密码加密失败"})
+		return
+	}
 	user.PasswordHash = string(hashedPassword)
-	h.userService.Update(c.Request.Context(), user)
+	if err := h.userService.Update(c.Request.Context(), user); err != nil {
+		h.logger.Error("更新用户密码失败", zap.Error(err), zap.Uint64("user_id", userID))
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "更新密码失败"})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{"code": 0, "message": "密码修改成功"})
 }
