@@ -10,3 +10,4 @@ docs/
 .claude/worktrees/
 services/api/bin/server
 AGENTS.md
+.env
