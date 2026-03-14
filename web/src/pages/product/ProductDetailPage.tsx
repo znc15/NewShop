@@ -8,8 +8,39 @@ import { SkuSelector } from '@/components/product/SkuSelector'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Loading'
 import { cn } from '@/utils'
-import { formatPriceWithSymbol } from '@/lib/utils'
-import type { Product, ProductSku } from '@/types'
+import type { Product, ProductSku, ProductSpec } from '@/types'
+
+// 辅助函数：从 SKU 列表生成规格选项
+function generateSpecsFromSkus(skus: ProductSku[]): ProductSpec[] {
+  const specMap = new Map<string, Set<string>>()
+
+  skus.forEach(sku => {
+    let specs: Record<string, string> = {}
+    if (typeof sku.specs === 'string') {
+      try {
+        specs = JSON.parse(sku.specs)
+      } catch {
+        return
+      }
+    } else {
+      specs = sku.specs
+    }
+
+    Object.entries(specs).forEach(([key, value]) => {
+      if (!specMap.has(key)) {
+        specMap.set(key, new Set())
+      }
+      specMap.get(key)!.add(value)
+    })
+  })
+
+  return Array.from(specMap.entries()).map(([name, values], index) => ({
+    id: index + 1,
+    product_id: skus[0]?.product_id || 0,
+    name,
+    values: Array.from(values)
+  }))
+}
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -104,7 +135,8 @@ export default function ProductDetailPage() {
   }
 
   const currentPrice = selectedSku?.price ?? product?.price ?? 0
-  const originalPrice = selectedSku?.originalPrice ?? product?.originalPrice
+  const originalPrice = selectedSku?.original_price ?? product?.original_price
+  const specs = generateSpecsFromSkus(product.skus)
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -124,7 +156,7 @@ export default function ProductDetailPage() {
         {/* 左侧：图片和选择 */}
         <div className="lg:sticky lg:top-24">
           <ImageGallery
-            images={product.images.length > 0 ? product.images : [product.mainImage]}
+            images={product.images.length > 0 ? product.images : [product.main_image]}
             selectedIndex={0}
             onSelect={() => {}}
           />
@@ -140,35 +172,28 @@ export default function ProductDetailPage() {
             <p className="text-stone mt-2">{product.description}</p>
           </div>
 
-          {/* 价格 */}
+          {/* 价格 - 后端价格单位为分 */}
           <div className="flex items-baseline gap-3">
             <span className="text-3xl font-bold text-red-500">
-              {formatPriceWithSymbol(currentPrice * 100)}
+              ¥{((currentPrice) / 100).toFixed(2)}
             </span>
             {originalPrice && originalPrice > currentPrice && (
               <span className="text-lg text-stone line-through">
-                {formatPriceWithSymbol(originalPrice * 100)}
+                ¥{((originalPrice) / 100).toFixed(2)}
               </span>
             )}
           </div>
 
-          {/* 销量和评分 */}
+          {/* 销量 */}
           <div className="flex items-center gap-6 text-sm">
-            <span className="text-stone">已售 {product.salesCount || 0}</span>
-            {product.rating > 0 && (
-              <span className="flex items-center gap-1">
-                <span className="text-amber-400">★</span>
-                <span>{product.rating.toFixed(1)}</span>
-                <span className="text-stone">({product.reviewCount || 0} 评价)</span>
-              </span>
-            )}
+            <span className="text-stone">已售 {product.sales || 0}</span>
           </div>
 
           {/* SKU 选择器 */}
-          {product.specs.length > 0 && (
+          {specs.length > 0 && (
             <div className="border-t border-cream-200 pt-6">
               <SkuSelector
-                specs={product.specs}
+                specs={specs}
                 skus={product.skus}
                 selectedSku={selectedSku}
                 onSkuChange={setSelectedSku}
@@ -239,7 +264,7 @@ export default function ProductDetailPage() {
         <div className="bg-white rounded-xl shadow-sm p-6">
           <h2 className="font-display text-xl font-semibold text-charcoal mb-4">商品详情</h2>
           <div className="prose text-stone whitespace-pre-line">
-            {product.description}
+            {product.detail || product.description}
           </div>
         </div>
       </div>

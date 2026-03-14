@@ -54,7 +54,7 @@ export default function ProductListPage() {
       } else {
         setProducts((prev) => [...prev, ...response.data])
       }
-      setTotalPages(response.totalPages)
+      setTotalPages(response.total_pages)
     } catch (error) {
       console.error('获取商品列表失败:', error)
     } finally {

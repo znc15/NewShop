@@ -1,15 +1,15 @@
-// 用户中心相关类型定义
+// 用户中心相关类型定义（与后端模型一致）
 
-// 用户地址
+// 用户地址（与后端 UserAddress 模型一致）
 export interface UserAddress {
   id: number
+  user_id: number
   name: string
   phone: string
   province: string
   city: string
   district: string
   address: string
-  full_address: string
   is_default: boolean
   created_at: string
   updated_at: string
@@ -37,33 +37,25 @@ export interface UpdateAddressRequest {
   is_default?: boolean
 }
 
-// 用户资料
+// 用户资料（与后端 User 模型一致）
 export interface UserProfile {
   id: number
-  username: string
   email: string
   phone: string | null
-  avatar: string | null
   nickname: string | null
-  gender: 'male' | 'female' | 'other' | null
-  birthday: string | null
-  bio: string | null
-  level: number
+  avatar: string | null
+  member_level: number
   points: number
-  total_spent: number
-  order_count: number
+  status: string
   created_at: string
   updated_at: string
 }
 
 // 更新用户资料请求
 export interface UpdateProfileRequest {
-  username?: string
   nickname?: string
   phone?: string
-  gender?: 'male' | 'female' | 'other'
-  birthday?: string
-  bio?: string
+  avatar?: string
 }
 
 // 修改密码请求

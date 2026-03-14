@@ -1,22 +1,50 @@
-// 管理后台相关类型定义
+// 管理后台相关类型定义（与后端模型一致）
 
-// 管理后台商品类型
+// 订单状态类型
+export type OrderStatusType = 'pending' | 'paid' | 'shipped' | 'delivered' | 'completed' | 'cancelled' | 'refunded'
+
+// 管理后台商品类型（与后端 Product 模型一致）
 export interface AdminProduct {
   id: number
   name: string
   description: string
+  detail: string | null
   price: number
-  original_price: number | null
+  original_price: number
   main_image: string
+  images: string
   category_id: number
-  category_name: string
+  category_name?: string
   brand_id: number | null
-  brand_name: string | null
-  status: 'draft' | 'active' | 'inactive' | 'sold_out'
+  brand_name?: string | null
+  status: 'draft' | 'active' | 'inactive'
   stock: number
-  sales_count: number
+  sales: number
+  sort: number
+  skus?: AdminProductSku[]
+  attrs?: AdminProductAttr[]
   created_at: string
   updated_at: string
+}
+
+export interface AdminProductSku {
+  id: number
+  product_id: number
+  sku_code: string
+  specs: string
+  price: number
+  stock: number
+  image: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminProductAttr {
+  id: number
+  product_id: number
+  name: string
+  value: string
+  sort: number
 }
 
 export interface AdminProductListParams {
@@ -25,59 +53,77 @@ export interface AdminProductListParams {
   keyword?: string
   category_id?: number
   status?: string
-  sort_by?: 'created_at' | 'price' | 'sales_count' | 'stock'
+  sort_by?: 'created_at' | 'price' | 'sales' | 'stock'
   sort_order?: 'asc' | 'desc'
 }
 
 export interface AdminProductFormData {
   name: string
   description: string
+  detail?: string
   price: number
   original_price?: number
   category_id: number
   brand_id?: number
-  status: 'draft' | 'active' | 'inactive'
+  status?: 'draft' | 'active' | 'inactive'
+  stock?: number
+  sort?: number
   images: string[]
   skus: {
     sku_code: string
-    specs: Record<string, string>
+    specs: string
     price: number
-    original_price?: number
     stock: number
     image?: string
   }[]
+  attrs?: {
+    name: string
+    value: string
+    sort?: number
+  }[]
 }
 
-// 管理后台订单类型
+// 管理后台订单类型（与后端 Order 模型一致）
 export interface AdminOrder {
   id: number
   order_no: string
   user_id: number
-  user_name: string
-  user_email: string
-  status: string
+  status: OrderStatusType
   total_amount: number
-  discount_amount: number
-  shipping_fee: number
   pay_amount: number
+  discount_amount: number
+  freight_amount: number
   payment_method: string | null
+  payment_time: string | null
+  ship_time: string | null
+  receive_time: string | null
+  express_company: string | null
+  express_no: string | null
+  refund_amount: number
+  refund_reason: string | null
+  refund_time: string | null
   receiver_name: string
   receiver_phone: string
   receiver_address: string
-  items_count: number
   remark: string
-  cancel_reason: string | null
-  refund_reason: string | null
-  tracking_company: string | null
-  tracking_no: string | null
-  paid_at: string | null
-  shipped_at: string | null
-  delivered_at: string | null
-  completed_at: string | null
-  cancelled_at: string | null
-  refunded_at: string | null
+  items?: AdminOrderItem[]
   created_at: string
   updated_at: string
+}
+
+export interface AdminOrderItem {
+  id: number
+  order_id: number
+  product_id: number
+  sku_id: number
+  product_name: string
+  sku_name: string | null
+  image: string | null
+  price: number
+  quantity: number
+  total_amount: number
+  attributes: Record<string, unknown> | null
+  created_at: string
 }
 
 export interface AdminOrderListParams {
@@ -91,27 +137,24 @@ export interface AdminOrderListParams {
 }
 
 export interface ShipOrderRequest {
-  tracking_company: string
-  tracking_no: string
+  express_company: string
+  express_no: string
 }
 
 export interface RefundOrderRequest {
   reason: string
 }
 
-// 管理后台用户类型
+// 管理后台用户类型（与后端 User 模型一致）
 export interface AdminUser {
   id: number
-  username: string
   email: string
   phone: string | null
-  avatar: string | null
   nickname: string | null
-  status: 'active' | 'disabled'
-  level: number
+  avatar: string | null
+  member_level: number
   points: number
-  total_spent: number
-  order_count: number
+  status: string
   created_at: string
   updated_at: string
 }
@@ -123,17 +166,16 @@ export interface AdminUserListParams {
   status?: string
 }
 
-// 管理后台分类类型
+// 管理后台分类类型（与后端 Category 模型一致）
 export interface AdminCategory {
   id: number
   name: string
   parent_id: number | null
-  parent_name: string | null
+  level: number
   icon: string | null
   sort: number
-  status: 'active' | 'inactive'
+  status: string
   children?: AdminCategory[]
-  product_count: number
   created_at: string
   updated_at: string
 }
@@ -141,12 +183,13 @@ export interface AdminCategory {
 export interface AdminCategoryFormData {
   name: string
   parent_id?: number
+  level?: number
   icon?: string
   sort: number
-  status: 'active' | 'inactive'
+  status?: string
 }
 
-// 管理后台优惠券类型
+// 管理后台优惠券类型（与后端 Coupon 模型一致）
 export interface AdminCoupon {
   id: number
   code: string
@@ -159,7 +202,7 @@ export interface AdminCoupon {
   used_count: number
   start_time: string
   end_time: string
-  status: 'active' | 'inactive' | 'expired'
+  status: string
   created_at: string
   updated_at: string
 }
@@ -181,7 +224,7 @@ export interface AdminCouponFormData {
   total_count: number
   start_time: string
   end_time: string
-  status: 'active' | 'inactive'
+  status?: string
 }
 
 // 分页响应类型

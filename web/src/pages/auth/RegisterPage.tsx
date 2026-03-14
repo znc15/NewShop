@@ -11,7 +11,7 @@ export default function RegisterPage() {
   const { setUser, setToken } = useAuthStore()
 
   const [formData, setFormData] = useState({
-    username: '',
+    nickname: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -36,10 +36,10 @@ export default function RegisterPage() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
-    if (!formData.username.trim()) {
-      newErrors.username = '请输入用户名'
-    } else if (formData.username.length < 2 || formData.username.length > 20) {
-      newErrors.username = '用户名长度需在 2-20 位之间'
+    if (!formData.nickname.trim()) {
+      newErrors.nickname = '请输入昵称'
+    } else if (formData.nickname.length < 2 || formData.nickname.length > 20) {
+      newErrors.nickname = '昵称长度需在 2-20 位之间'
     }
 
     if (!formData.email.trim()) {
@@ -100,7 +100,7 @@ export default function RegisterPage() {
     setIsLoading(true)
     try {
       const response = await authService.register({
-        username: formData.username,
+        nickname: formData.nickname,
         email: formData.email,
         password: formData.password,
       })
@@ -212,18 +212,18 @@ export default function RegisterPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* 用户名输入 */}
+              {/* 昵称输入 */}
               <div className="space-y-2">
-                <label htmlFor="username" className="block text-sm font-medium text-charcoal">
-                  用户名
+                <label htmlFor="nickname" className="block text-sm font-medium text-charcoal">
+                  昵称
                 </label>
                 <Input
-                  id="username"
+                  id="nickname"
                   type="text"
-                  placeholder="请输入用户名（2-20位）"
-                  value={formData.username}
-                  onChange={(e) => handleInputChange('username', e.target.value)}
-                  error={errors.username}
+                  placeholder="请输入昵称（2-20位）"
+                  value={formData.nickname}
+                  onChange={(e) => handleInputChange('nickname', e.target.value)}
+                  error={errors.nickname}
                   icon={<User className="w-5 h-5" />}
                 />
               </div>

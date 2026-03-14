@@ -12,6 +12,18 @@ interface SkuSelectorProps {
   maxQuantity?: number
 }
 
+// 辅助函数：解析 SKU 的 specs 字段
+function parseSkuSpecs(specs: Record<string, string> | string): Record<string, string> {
+  if (typeof specs === 'string') {
+    try {
+      return JSON.parse(specs)
+    } catch {
+      return {}
+    }
+  }
+  return specs
+}
+
 export function SkuSelector({
   specs,
   skus,
@@ -27,7 +39,7 @@ export function SkuSelector({
   // 根据 sku 的 specs 字段初始化 selectedSpecs
   useEffect(() => {
     if (selectedSku?.specs) {
-      setSelectedSpecs(selectedSku.specs)
+      setSelectedSpecs(parseSkuSpecs(selectedSku.specs))
     }
   }, [selectedSku])
 
@@ -38,7 +50,8 @@ export function SkuSelector({
 
     // 查找匹配的 SKU
     const matchedSku = skus.find((sku) => {
-      return Object.entries(newSpecs).every(([key, val]) => sku.specs[key] === val)
+      const skuSpecs = parseSkuSpecs(sku.specs)
+      return Object.entries(newSpecs).every(([key, val]) => skuSpecs[key] === val)
     })
 
     if (matchedSku) {
@@ -50,8 +63,9 @@ export function SkuSelector({
   const isSpecValueAvailable = (specName: string, value: string) => {
     const testSpecs = { ...selectedSpecs, [specName]: value }
     return skus.some((sku) => {
+      const skuSpecs = parseSkuSpecs(sku.specs)
       return (
-        Object.entries(testSpecs).every(([key, val]) => sku.specs[key] === val) &&
+        Object.entries(testSpecs).every(([key, val]) => skuSpecs[key] === val) &&
         sku.stock > 0
       )
     })
@@ -78,7 +92,7 @@ export function SkuSelector({
         <div key={spec.id}>
           <h4 className="text-sm font-medium text-charcoal mb-3">{spec.name}</h4>
           <div className="flex flex-wrap gap-2">
-            {spec.values.map((value, index) => {
+            {spec.values.map((value: string, index: number) => {
               const isAvailable = isSpecValueAvailable(spec.name, value)
               const isSelected = isSpecValueSelected(spec.name, value)
 

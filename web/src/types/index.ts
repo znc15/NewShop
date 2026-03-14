@@ -1,13 +1,15 @@
-// 用户相关类型
+// 用户相关类型（与后端 User 模型一致）
 export interface User {
   id: number
-  username: string
   email: string
-  phone?: string
-  avatar?: string
-  nickname?: string
-  createdAt: string
-  updatedAt: string
+  phone: string | null
+  nickname: string | null
+  avatar: string | null
+  member_level: number
+  points: number
+  status: string
+  created_at: string
+  updated_at: string
 }
 
 export interface LoginRequest {
@@ -16,7 +18,7 @@ export interface LoginRequest {
 }
 
 export interface RegisterRequest {
-  username: string
+  nickname: string
   email: string
   password: string
   phone?: string
@@ -27,43 +29,55 @@ export interface AuthResponse {
   token: string
 }
 
-// 商品相关类型
+// 商品相关类型（与后端 Product 模型一致）
 export interface Product {
   id: number
   name: string
   description: string
+  detail: string | null
   price: number
-  originalPrice?: number
+  original_price: number
+  main_image: string
   images: string[]
-  mainImage: string
-  categoryId: number
+  category_id: number
   category?: Category
-  brandId?: number
+  brand_id: number | null
   brand?: Brand
   skus: ProductSku[]
-  specs: ProductSpec[]
+  attrs?: ProductAttr[]
   status: ProductStatus
-  salesCount: number
-  rating: number
-  reviewCount: number
-  createdAt: string
-  updatedAt: string
+  stock: number
+  sales: number
+  sort: number
+  created_at: string
+  updated_at: string
 }
 
 export interface ProductSku {
   id: number
-  productId: number
-  skuCode: string
-  specs: Record<string, string>
+  product_id: number
+  sku_code: string
+  specs: Record<string, string> | string  // 兼容后端 JSON 字符串和前端解析后的对象
   price: number
-  originalPrice?: number
+  original_price?: number
   stock: number
-  image?: string
+  image: string | null
+  created_at: string
+  updated_at: string
 }
 
+export interface ProductAttr {
+  id: number
+  product_id: number
+  name: string
+  value: string
+  sort: number
+}
+
+// 前端规格展示用类型（从 SKU 聚合生成）
 export interface ProductSpec {
   id: number
-  productId: number
+  product_id: number
   name: string
   values: string[]
 }
@@ -71,41 +85,49 @@ export interface ProductSpec {
 export interface Category {
   id: number
   name: string
-  parentId?: number
+  parent_id: number | null
   parent?: Category
   children?: Category[]
-  icon?: string
+  level: number
+  icon: string | null
   sort: number
+  status: string
+  created_at: string
+  updated_at: string
 }
 
 export interface Brand {
   id: number
   name: string
-  logo?: string
-  description?: string
+  logo: string | null
+  description: string | null
+  sort: number
+  status: string
+  created_at: string
+  updated_at: string
 }
 
-export type ProductStatus = 'draft' | 'active' | 'inactive' | 'sold_out'
+export type ProductStatus = 'draft' | 'active' | 'inactive'
 
 // 商品列表请求参数
 export interface ProductListParams {
   page?: number
-  pageSize?: number
-  categoryId?: number
-  brandId?: number
+  page_size?: number
+  category_id?: number
+  brand_id?: number
   keyword?: string
-  minPrice?: number
-  maxPrice?: number
-  sortBy?: 'price' | 'sales' | 'rating' | 'createdAt'
-  sortOrder?: 'asc' | 'desc'
+  min_price?: number
+  max_price?: number
+  sort_by?: 'price' | 'sales' | 'created_at'
+  sort_order?: 'asc' | 'desc'
 }
 
 export interface PaginatedResponse<T> {
   data: T[]
   total: number
   page: number
-  pageSize: number
-  totalPages: number
+  page_size: number
+  total_pages: number
 }
 
 // 搜索相关
