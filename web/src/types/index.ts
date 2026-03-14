@@ -136,3 +136,4 @@ export interface ApiError {
 // 重新导出购物车和订单类型
 export * from './cart'
 export * from './order'
+export * from './user'

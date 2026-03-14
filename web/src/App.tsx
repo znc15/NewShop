@@ -3,6 +3,14 @@ import CartPage from './pages/cart/CartPage'
 import CheckoutPage from './pages/order/CheckoutPage'
 import OrderListPage from './pages/order/OrderListPage'
 import OrderDetailPage from './pages/order/OrderDetailPage'
+import LoginPage from './pages/auth/LoginPage'
+import RegisterPage from './pages/auth/RegisterPage'
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
+import HomePage from './pages/home/HomePage'
+import ProductListPage from './pages/product/ProductListPage'
+import ProductDetailPage from './pages/product/ProductDetailPage'
+import SearchPage from './pages/product/SearchPage'
+import { UserProfilePage, UserAddressesPage } from './pages/user'
 
 function App() {
   return (
@@ -60,7 +68,7 @@ function App() {
       <main className="flex-1">
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/products" element={<ProductListPage />} />
           <Route path="/products/:id" element={<ProductDetailPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/cart" element={<CartPage />} />
@@ -69,6 +77,9 @@ function App() {
           <Route path="/orders/:id" element={<OrderDetailPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/user/profile" element={<UserProfilePage />} />
+          <Route path="/user/addresses" element={<UserAddressesPage />} />
         </Routes>
       </main>
 
@@ -113,55 +124,6 @@ function App() {
       </footer>
     </div>
   )
-}
-
-// 临时占位组件
-function HomePage() {
-  return (
-    <div className="animate-fade-in">
-      <section className="relative h-96 bg-gradient-to-br from-forest-700 to-forest-900 flex items-center justify-center">
-        <div className="text-center text-cream-100">
-          <h1 className="font-display text-5xl font-semibold mb-4">发现美好生活</h1>
-          <p className="text-lg text-cream-200 mb-8">精选好物，品质之选</p>
-          <a href="/products" className="inline-flex items-center px-6 py-3 bg-copper-500 text-white rounded-lg hover:bg-copper-600 transition-colors">
-            立即探索
-          </a>
-        </div>
-      </section>
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <h2 className="font-display text-3xl font-semibold text-forest-700 mb-8">热门商品</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-4">
-              <div className="aspect-square bg-cream-200 rounded-lg mb-4"></div>
-              <h3 className="font-medium text-charcoal mb-2">商品名称 {i}</h3>
-              <p className="text-copper-500 font-semibold">¥99.00</p>
-            </div>
-          ))}
-        </div>
-      </section>
-    </div>
-  )
-}
-
-function ProductsPage() {
-  return <div className="max-w-7xl mx-auto px-4 py-8"><h1 className="text-2xl font-semibold">全部商品</h1></div>
-}
-
-function ProductDetailPage() {
-  return <div className="max-w-7xl mx-auto px-4 py-8"><h1 className="text-2xl font-semibold">商品详情</h1></div>
-}
-
-function SearchPage() {
-  return <div className="max-w-7xl mx-auto px-4 py-8"><h1 className="text-2xl font-semibold">搜索</h1></div>
-}
-
-function LoginPage() {
-  return <div className="max-w-7xl mx-auto px-4 py-8"><h1 className="text-2xl font-semibold">登录</h1></div>
-}
-
-function RegisterPage() {
-  return <div className="max-w-7xl mx-auto px-4 py-8"><h1 className="text-2xl font-semibold">注册</h1></div>
 }
 
 export default App
