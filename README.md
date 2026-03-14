@@ -142,9 +142,18 @@ npm run dev
 ```
 
 ### 7. 访问应用
-- 前端: http://localhost:5173
+- 前端: http://localhost:3000
 - API: http://localhost:8080
 - 健康检查: http://localhost:8080/health
+
+## 初始账户
+
+### 管理后台
+| 账户类型 | 邮箱 | 密码 | 说明 |
+|----------|------|------|------|
+| 超级管理员 | admin@newshop.com | admin123 | 拥有所有权限 |
+
+> ⚠️ 生产环境请务必修改默认密码
 
 ## 常用命令
 

@@ -13,13 +13,15 @@ export const productService = {
   },
 
   // 获取分类列表
-  getCategories(): Promise<Category[]> {
-    return http.get('/categories')
+  async getCategories(): Promise<Category[]> {
+    const res = await http.get<{ categories: Category[] }>('/categories')
+    return res.categories || []
   },
 
   // 获取分类树
-  getCategoryTree(): Promise<Category[]> {
-    return http.get('/categories/tree')
+  async getCategoryTree(): Promise<Category[]> {
+    const res = await http.get<{ categories: Category[] }>('/categories/tree')
+    return res.categories || []
   },
 
   // 搜索商品
@@ -28,13 +30,15 @@ export const productService = {
   },
 
   // 获取热门商品
-  getHotProducts(limit?: number): Promise<Product[]> {
-    return http.get('/products/hot', { limit })
+  async getHotProducts(limit?: number): Promise<Product[]> {
+    const res = await http.get<{ products: Product[] }>('/products/hot', { limit })
+    return res.products || []
   },
 
   // 获取新品推荐
-  getNewProducts(limit?: number): Promise<Product[]> {
-    return http.get('/products/new', { limit })
+  async getNewProducts(limit?: number): Promise<Product[]> {
+    const res = await http.get<{ products: Product[] }>('/products/new', { limit })
+    return res.products || []
   },
 
   // 获取相关商品

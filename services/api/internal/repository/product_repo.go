@@ -139,10 +139,21 @@ func (r *ProductRepo) ListProducts(ctx context.Context, query *ProductQuery) ([]
 	db.Count(&total)
 
 	offset := (query.Page - 1) * query.PageSize
+
+	// 动态排序
+	orderClause := "sort ASC, id DESC"
+	if query.OrderBy != "" {
+		orderDirection := "ASC"
+		if query.OrderDesc {
+			orderDirection = "DESC"
+		}
+		orderClause = query.OrderBy + " " + orderDirection
+	}
+
 	err := db.
 		Preload("Category").
 		Preload("Brand").
-		Order("sort ASC, id DESC").
+		Order(orderClause).
 		Offset(offset).
 		Limit(query.PageSize).
 		Find(&products).Error
@@ -260,6 +271,8 @@ type ProductQuery struct {
 	Keyword    string
 	Page       int
 	PageSize   int
+	OrderBy    string
+	OrderDesc  bool
 }
 
 func NewProductQuery() *ProductQuery {

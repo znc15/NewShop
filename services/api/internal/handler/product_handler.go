@@ -265,21 +265,71 @@ func (h *ProductHandler) GetProductsByBrand(c *gin.Context) {
 	})
 }
 
+// GetHotProducts 获取热门商品
+// GET /products/hot?limit=8
+func (h *ProductHandler) GetHotProducts(c *gin.Context) {
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "8"))
+	if limit <= 0 || limit > 50 {
+		limit = 8
+	}
+
+	products, err := h.productService.GetHotProducts(c.Request.Context(), limit)
+	if err != nil {
+		h.logger.Error("获取热门商品失败", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "获取热门商品失败"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": 0,
+		"data": gin.H{
+			"products": products,
+		},
+	})
+}
+
+// GetNewProducts 获取新品推荐
+// GET /products/new?limit=8
+func (h *ProductHandler) GetNewProducts(c *gin.Context) {
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "8"))
+	if limit <= 0 || limit > 50 {
+		limit = 8
+	}
+
+	products, err := h.productService.GetNewProducts(c.Request.Context(), limit)
+	if err != nil {
+		h.logger.Error("获取新品推荐失败", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "获取新品推荐失败"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": 0,
+		"data": gin.H{
+			"products": products,
+		},
+	})
+}
+
 // RegisterProductRoutes 注册商品相关路由
 func RegisterProductRoutes(r *gin.RouterGroup, h *ProductHandler) {
 	// 商品相关
 	products := r.Group("/products")
 	{
+		// 注意：静态路由必须在动态路由（/:id）之前注册
 		products.GET("", h.GetProductList)
+		products.GET("/hot", h.GetHotProducts)    // 热门商品
+		products.GET("/new", h.GetNewProducts)    // 新品推荐
 		products.GET("/:id", h.GetProductDetail)
 	}
 
 	// 分类相关
 	categories := r.Group("/categories")
 	{
+		// 注意：静态路由必须在动态路由（/:id）之前注册
 		categories.GET("", h.GetCategories)
-		categories.GET("/:id", h.GetCategoryDetail)
 		categories.GET("/:id/products", h.GetProductsByCategory)
+		categories.GET("/:id", h.GetCategoryDetail)
 	}
 
 	// 品牌相关

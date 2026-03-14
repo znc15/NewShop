@@ -240,18 +240,24 @@ func (r *Router) setupUserRoutes(rg *gin.RouterGroup) {
 func (r *Router) setupProductRoutes(rg *gin.RouterGroup) {
 	products := rg.Group("/products")
 	{
-		// 公开路由
+		// 公开路由 - 注意：静态路由必须在动态路由（/:id）之前注册
 		products.GET("", r.productHandler.GetProductList)
-		products.GET("/:id", r.productHandler.GetProductDetail)
+		products.GET("/hot", r.productHandler.GetHotProducts)    // 热门商品
+		products.GET("/new", r.productHandler.GetNewProducts)    // 新品推荐
 		products.GET("/search", r.productHandler.SearchProducts)
+		products.GET("/:id", r.productHandler.GetProductDetail)  // 动态路由放最后
 	}
+
 	// 分类路由
 	categories := rg.Group("/categories")
 	{
+		// 静态路由必须在动态路由（/:id）之前
 		categories.GET("", r.productHandler.GetCategories)
-		categories.GET("/:id", r.productHandler.GetCategoryDetail)
+		categories.GET("/tree", r.productHandler.GetCategories) // 分类树（复用 GetCategories）
 		categories.GET("/:id/products", r.productHandler.GetProductsByCategory)
+		categories.GET("/:id", r.productHandler.GetCategoryDetail)
 	}
+
 	// 品牌路由
 	brands := rg.Group("/brands")
 	{
@@ -259,8 +265,10 @@ func (r *Router) setupProductRoutes(rg *gin.RouterGroup) {
 		brands.GET("/:id", r.productHandler.GetBrandDetail)
 		brands.GET("/:id/products", r.productHandler.GetProductsByBrand)
 	}
+
 	// 搜索
 	rg.GET("/search", r.productHandler.SearchProducts)
+
 	// 需要认证的商品评论路由
 	productsProtected := rg.Group("/products")
 	productsProtected.Use(middleware.Auth(r.jwtManager))

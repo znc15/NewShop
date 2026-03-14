@@ -270,3 +270,45 @@ func (s *ProductService) IncreaseStock(ctx context.Context, productID uint64, qu
 func (s *ProductService) IncreaseSales(ctx context.Context, productID uint64, quantity int) error {
 	return s.repo.UpdateProductSales(ctx, productID, quantity)
 }
+
+// GetHotProducts 获取热门商品（按销量排序）
+func (s *ProductService) GetHotProducts(ctx context.Context, limit int) ([]model.Product, error) {
+	if limit <= 0 || limit > 50 {
+		limit = 8
+	}
+
+	query := repository.NewProductQuery()
+	query.Status = "on_sale"
+	query.Page = 1
+	query.PageSize = limit
+	query.OrderBy = "sales"
+	query.OrderDesc = true
+
+	products, _, err := s.repo.ListProducts(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	return products, nil
+}
+
+// GetNewProducts 获取新品推荐（按创建时间排序）
+func (s *ProductService) GetNewProducts(ctx context.Context, limit int) ([]model.Product, error) {
+	if limit <= 0 || limit > 50 {
+		limit = 8
+	}
+
+	query := repository.NewProductQuery()
+	query.Status = "on_sale"
+	query.Page = 1
+	query.PageSize = limit
+	query.OrderBy = "created_at"
+	query.OrderDesc = true
+
+	products, _, err := s.repo.ListProducts(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	return products, nil
+}
