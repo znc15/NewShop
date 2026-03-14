@@ -25,17 +25,19 @@ var (
 
 // OrderService 订单服务
 type OrderService struct {
-	db        *gorm.DB
-	orderRepo *repository.OrderRepo
-	userRepo  *repository.UserRepo
+	db          *gorm.DB
+	orderRepo   *repository.OrderRepo
+	userRepo    *repository.UserRepo
+	productRepo *repository.ProductRepo
 }
 
 // NewOrderService 创建订单服务实例
-func NewOrderService(db *gorm.DB, orderRepo *repository.OrderRepo, userRepo *repository.UserRepo) *OrderService {
+func NewOrderService(db *gorm.DB, orderRepo *repository.OrderRepo, userRepo *repository.UserRepo, productRepo *repository.ProductRepo) *OrderService {
 	return &OrderService{
-		db:        db,
-		orderRepo: orderRepo,
-		userRepo:  userRepo,
+		db:          db,
+		orderRepo:   orderRepo,
+		userRepo:    userRepo,
+		productRepo: productRepo,
 	}
 }
 
@@ -50,60 +52,129 @@ func (s *OrderService) CreateOrder(ctx context.Context, userID uint64, req *mode
 		return nil, errors.New("收货地址不属于当前用户")
 	}
 
-	// 计算订单金额
-	var totalAmount float64
-	items := make([]model.OrderItem, 0, len(req.Items))
+	// 使用事务创建订单
+	var order *model.Order
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var totalAmount float64
+		items := make([]model.OrderItem, 0, len(req.Items))
 
-	for _, itemReq := range req.Items {
-		// 模拟商品信息获取（实际项目中应该调用商品服务）
-		price := 99.99 // 模拟价格
-		productName := "商品名称"
-		skuName := "规格名称"
-		image := ""
+		for _, itemReq := range req.Items {
+			// 获取商品信息
+			product, err := s.productRepo.GetProductByID(ctx, itemReq.ProductID)
+			if err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					return fmt.Errorf("商品不存在: %d", itemReq.ProductID)
+				}
+				return fmt.Errorf("获取商品信息失败: %w", err)
+			}
 
-		itemTotal := price * float64(itemReq.Quantity)
-		totalAmount += itemTotal
+			// 检查商品状态
+			if product.Status != "active" {
+				return fmt.Errorf("商品已下架: %s", product.Name)
+			}
 
-		items = append(items, model.OrderItem{
-			ProductID:   itemReq.ProductID,
-			SkuID:       itemReq.SkuID,
-			ProductName: productName,
-			SkuName:     skuName,
-			Image:       image,
-			Price:       price,
-			Quantity:    itemReq.Quantity,
-			TotalAmount: itemTotal,
-		})
-	}
+			// 确定价格和库存来源
+			var price int64    // 价格（分）
+			var stock int      // 库存
+			var skuName string // SKU名称
+			var image string   // 商品图片
 
-	// 计算运费（满99免运费）
-	freightAmount := 0.0
-	if totalAmount < 99 {
-		freightAmount = 10.0
-	}
+			if itemReq.SkuID > 0 {
+				// 使用SKU价格和库存
+				var sku *model.ProductSku
+				sku, err = s.productRepo.GetSkuByID(ctx, itemReq.SkuID)
+				if err != nil {
+					if errors.Is(err, gorm.ErrRecordNotFound) {
+						return fmt.Errorf("商品规格不存在: %d", itemReq.SkuID)
+					}
+					return fmt.Errorf("获取商品规格失败: %w", err)
+				}
+				if sku.ProductID != itemReq.ProductID {
+					return errors.New("SKU与商品不匹配")
+				}
+				price = sku.Price
+				stock = sku.Stock
+				skuName = sku.Specs
+				image = sku.Image
+			} else {
+				// 使用商品本身的价格和库存
+				price = product.Price
+				stock = product.Stock
+				skuName = ""
+				image = product.MainImage
+			}
 
-	// 生成订单号
-	orderNo := s.generateOrderNo(userID)
+			// 检查库存
+			if stock < itemReq.Quantity {
+				return fmt.Errorf("%w: %s", ErrInsufficientStock, product.Name)
+			}
 
-	// 创建订单
-	order := &model.Order{
-		OrderNo:         orderNo,
-		UserID:          userID,
-		AddressID:       req.AddressID,
-		TotalAmount:     totalAmount,
-		PayAmount:       totalAmount + freightAmount,
-		DiscountAmount:  0,
-		FreightAmount:   freightAmount,
-		Status:          model.OrderStatusPending,
-		ReceiverName:    address.Name,
-		ReceiverPhone:   address.Phone,
-		ReceiverAddress: fmt.Sprintf("%s%s%s%s", address.Province, address.City, address.District, address.Address),
-		Remark:          req.Remark,
-		Items:           items,
-	}
+			// 价格从分转换为元
+			priceInYuan := float64(price) / 100.0
+			itemTotal := priceInYuan * float64(itemReq.Quantity)
+			totalAmount += itemTotal
 
-	if err := s.orderRepo.Create(ctx, order); err != nil {
-		return nil, fmt.Errorf("创建订单失败: %w", err)
+			items = append(items, model.OrderItem{
+				ProductID:   itemReq.ProductID,
+				SkuID:       itemReq.SkuID,
+				ProductName: product.Name,
+				SkuName:     skuName,
+				Image:       image,
+				Price:       priceInYuan,
+				Quantity:    itemReq.Quantity,
+				TotalAmount: itemTotal,
+			})
+		}
+
+		// 计算运费（满99免运费）
+		freightAmount := 0.0
+		if totalAmount < 99 {
+			freightAmount = 10.0
+		}
+
+		// 生成订单号
+		orderNo := s.generateOrderNo(userID)
+
+		// 创建订单
+		order = &model.Order{
+			OrderNo:         orderNo,
+			UserID:          userID,
+			AddressID:       req.AddressID,
+			TotalAmount:     totalAmount,
+			PayAmount:       totalAmount + freightAmount,
+			DiscountAmount:  0,
+			FreightAmount:   freightAmount,
+			Status:          model.OrderStatusPending,
+			ReceiverName:    address.Name,
+			ReceiverPhone:   address.Phone,
+			ReceiverAddress: fmt.Sprintf("%s%s%s%s", address.Province, address.City, address.District, address.Address),
+			Remark:          req.Remark,
+			Items:           items,
+		}
+
+		if err := tx.Create(order).Error; err != nil {
+			return fmt.Errorf("创建订单失败: %w", err)
+		}
+
+		// 扣减库存
+		for _, itemReq := range req.Items {
+			if itemReq.SkuID > 0 {
+				// 扣减SKU库存
+				if err := s.productRepo.UpdateSkuStock(ctx, itemReq.SkuID, -itemReq.Quantity); err != nil {
+					return fmt.Errorf("扣减SKU库存失败: %w", err)
+				}
+			}
+			// 同时扣减商品总库存
+			if err := s.productRepo.UpdateProductStock(ctx, itemReq.ProductID, -itemReq.Quantity); err != nil {
+				return fmt.Errorf("扣减商品库存失败: %w", err)
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
 	return order, nil
@@ -166,7 +237,8 @@ func (s *OrderService) GetUserOrders(ctx context.Context, userID uint64, status 
 
 // CancelOrder 取消订单
 func (s *OrderService) CancelOrder(ctx context.Context, userID, orderID uint64, reason string) error {
-	order, err := s.orderRepo.GetByID(ctx, orderID)
+	// 获取订单及其商品明细
+	order, err := s.orderRepo.GetByIDWithItems(ctx, orderID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return ErrOrderNotFound
@@ -186,25 +258,42 @@ func (s *OrderService) CancelOrder(ctx context.Context, userID, orderID uint64, 
 		return ErrOrderStatusInvalid
 	}
 
-	// 更新订单状态
-	now := time.Now()
-	updates := map[string]interface{}{
-		"updated_at": now,
-	}
-	if err := s.orderRepo.UpdateStatusWithTime(ctx, orderID, string(model.OrderStatusCancelled), updates); err != nil {
-		return err
-	}
+	// 使用事务处理取消订单和恢复库存
+	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// 更新订单状态
+		now := time.Now()
+		updates := map[string]interface{}{
+			"updated_at": now,
+		}
+		if err := s.orderRepo.UpdateStatusWithTime(ctx, orderID, string(model.OrderStatusCancelled), updates); err != nil {
+			return err
+		}
 
-	// 记录订单日志
-	log := &model.OrderLog{
-		OrderID:  orderID,
-		Action:   "cancel",
-		Content:  fmt.Sprintf("用户取消订单，原因：%s", reason),
-		Operator: "user",
-	}
-	s.orderRepo.CreateLog(ctx, log)
+		// 恢复库存
+		for _, item := range order.Items {
+			// 恢复SKU库存
+			if item.SkuID > 0 {
+				if err := s.productRepo.UpdateSkuStock(ctx, item.SkuID, item.Quantity); err != nil {
+					return fmt.Errorf("恢复SKU库存失败: %w", err)
+				}
+			}
+			// 恢复商品总库存
+			if err := s.productRepo.UpdateProductStock(ctx, item.ProductID, item.Quantity); err != nil {
+				return fmt.Errorf("恢复商品库存失败: %w", err)
+			}
+		}
 
-	return nil
+		// 记录订单日志
+		log := &model.OrderLog{
+			OrderID:  orderID,
+			Action:   "cancel",
+			Content:  fmt.Sprintf("用户取消订单，原因：%s", reason),
+			Operator: "user",
+		}
+		return s.orderRepo.CreateLog(ctx, log)
+	})
+
+	return err
 }
 
 // ConfirmReceive 确认收货
