@@ -17,6 +17,12 @@ type Config struct {
 	Alipay   AlipayConfig
 	Geetest  GeetestConfig
 	SMTP     SMTPConfig
+	CORS     CORSConfig
+}
+
+// CORSConfig CORS 配置
+type CORSConfig struct {
+	AllowedOrigins []string
 }
 
 // ServerConfig 服务器配置
@@ -122,6 +128,9 @@ func Load() (*Config, error) {
 			Password: getEnv("SMTP_PASSWORD", ""),
 			From:     getEnv("SMTP_FROM", "noreply@example.com"),
 		},
+		CORS: CORSConfig{
+			AllowedOrigins: getEnvSlice("CORS_ALLOWED_ORIGINS", []string{"http://localhost:3000"}),
+		},
 	}
 
 	return cfg, nil
@@ -151,4 +160,52 @@ func parseDuration(s string) time.Duration {
 		return d
 	}
 	return 24 * time.Hour
+}
+
+// getEnvSlice 获取逗号分隔的字符串切片环境变量
+func getEnvSlice(key string, defaultValue []string) []string {
+	if value := os.Getenv(key); value != "" {
+		var result []string
+		for _, v := range splitByComma(value) {
+			if v != "" {
+				result = append(result, v)
+			}
+		}
+		if len(result) > 0 {
+			return result
+		}
+	}
+	return defaultValue
+}
+
+// splitByComma 按逗号分隔字符串
+func splitByComma(s string) []string {
+	var result []string
+	start := 0
+	for i := 0; i <= len(s); i++ {
+		if i == len(s) || s[i] == ',' {
+			part := trimSpace(s[start:i])
+			result = append(result, part)
+			start = i + 1
+		}
+	}
+	return result
+}
+
+// trimSpace 去除字符串前后空白
+func trimSpace(s string) string {
+	start := 0
+	end := len(s)
+	for start < end && isSpace(s[start]) {
+		start++
+	}
+	for end > start && isSpace(s[end-1]) {
+		end--
+	}
+	return s[start:end]
+}
+
+// isSpace 判断是否为空白字符
+func isSpace(c byte) bool {
+	return c == ' ' || c == '\t' || c == '\n' || c == '\r'
 }

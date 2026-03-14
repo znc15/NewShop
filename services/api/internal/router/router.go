@@ -81,7 +81,7 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 	userService := service.NewUserService(db)
 	productService := service.NewProductService(productRepo, db)
 	cartService := service.NewCartService(cartRepo, db)
-	orderService := service.NewOrderService(db, orderRepo, userRepo)
+	orderService := service.NewOrderService(db, orderRepo, userRepo, productRepo)
 	adminService := service.NewAdminService(adminRepo, db)
 	productAdminSvc := adminservice.NewProductAdminService(productRepo, db)
 	orderAdminSvc := adminservice.NewOrderAdminService(orderRepo, db, logger)
@@ -169,7 +169,7 @@ func (r *Router) GetPaymentRepo() *repository.PaymentRepo {
 // Setup 注册所有路由
 func (r *Router) Setup(engine *gin.Engine) {
 	// 全局中间件（按顺序执行）
-	engine.Use(middleware.CORS())
+	engine.Use(middleware.CORS(r.cfg))
 	engine.Use(middleware.Recovery(r.logger))
 	engine.Use(middleware.Logger(r.logger))
 	engine.Use(middleware.RateLimit(r.rdb, 100, time.Minute)) // 每分钟 100 次请求限制
