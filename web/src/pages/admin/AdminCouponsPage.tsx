@@ -4,7 +4,6 @@ import type { AdminCoupon, AdminCouponListParams, AdminCouponFormData } from '@/
 import { DataTable, Pagination, SearchInput, Select, Modal, ConfirmDialog, StatusBadge } from '@/components/admin/AdminComponents'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { cn } from '@/utils'
 
 // 优惠券状态配置
 const COUPON_STATUS_LABELS: Record<string, string> = {

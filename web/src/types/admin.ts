@@ -3,7 +3,7 @@
 // 订单状态类型
 export type OrderStatusType = 'pending' | 'paid' | 'shipped' | 'delivered' | 'completed' | 'cancelled' | 'refunded'
 
-// 管理后台商品类型（与后端 Product 模型一致）
+// 管理后台商品类型（与后端 Product 模型一致，包含关联统计）
 export interface AdminProduct {
   id: number
   name: string
@@ -12,7 +12,7 @@ export interface AdminProduct {
   price: number
   original_price: number
   main_image: string
-  images: string
+  images: string | null
   category_id: number
   category_name?: string
   brand_id: number | null
@@ -20,6 +20,7 @@ export interface AdminProduct {
   status: 'draft' | 'active' | 'inactive'
   stock: number
   sales: number
+  sales_count: number  // 别名
   sort: number
   skus?: AdminProductSku[]
   attrs?: AdminProductAttr[]
@@ -83,32 +84,44 @@ export interface AdminProductFormData {
   }[]
 }
 
-// 管理后台订单类型（与后端 Order 模型一致）
+// 管理后台订单类型（与后端 Order 模型一致，包含关联统计）
 export interface AdminOrder {
   id: number
   order_no: string
   user_id: number
+  user_name: string | null  // 用户名（关联查询）
+  user_email: string | null  // 用户邮箱（关联查询）
   status: OrderStatusType
   total_amount: number
-  pay_amount: number
   discount_amount: number
-  freight_amount: number
+  shipping_fee: number  // 运费
+  pay_amount: number
   payment_method: string | null
-  payment_time: string | null
-  ship_time: string | null
-  receive_time: string | null
-  express_company: string | null
-  express_no: string | null
-  refund_amount: number
-  refund_reason: string | null
-  refund_time: string | null
   receiver_name: string
   receiver_phone: string
   receiver_address: string
+  items_count: number  // 商品数量（关联统计）
   remark: string
-  items?: AdminOrderItem[]
+  cancel_reason: string | null  // 取消原因
+  refund_reason: string | null  // 退款原因
+  tracking_company: string | null  // 物流公司
+  tracking_no: string | null  // 物流单号
+  paid_at: string | null  // 支付时间
+  shipped_at: string | null  // 发货时间
+  delivered_at: string | null  // 送达时间
+  completed_at: string | null  // 完成时间
+  cancelled_at: string | null  // 取消时间
+  refunded_at: string | null  // 退款时间
   created_at: string
   updated_at: string
+  items?: AdminOrderItem[]
+  // 后端字段别名
+  freight_amount?: number
+  express_company?: string | null
+  express_no?: string | null
+  payment_time?: string | null
+  ship_time?: string | null
+  receive_time?: string | null
 }
 
 export interface AdminOrderItem {
@@ -137,24 +150,32 @@ export interface AdminOrderListParams {
 }
 
 export interface ShipOrderRequest {
-  express_company: string
-  express_no: string
+  // 后端字段
+  express_company?: string
+  express_no?: string
+  // 前端使用的别名（与后端字段二选一）
+  tracking_company?: string
+  tracking_no?: string
 }
 
 export interface RefundOrderRequest {
   reason: string
 }
 
-// 管理后台用户类型（与后端 User 模型一致）
+// 管理后台用户类型（与后端 User 模型一致，包含关联统计）
 export interface AdminUser {
   id: number
   email: string
   phone: string | null
+  username: string | null
   nickname: string | null
   avatar: string | null
-  member_level: number
+  member_level: number  // 会员等级
+  level: number  // 别名，兼容前端
   points: number
   status: string
+  order_count: number  // 订单数量
+  total_spent: number  // 总消费
   created_at: string
   updated_at: string
 }
@@ -166,15 +187,17 @@ export interface AdminUserListParams {
   status?: string
 }
 
-// 管理后台分类类型（与后端 Category 模型一致）
+// 管理后台分类类型（与后端 Category 模型一致，包含关联统计）
 export interface AdminCategory {
   id: number
   name: string
   parent_id: number | null
+  parent_name: string | null  // 父分类名称（关联查询）
   level: number
   icon: string | null
   sort: number
   status: string
+  product_count: number  // 商品数量（关联统计）
   children?: AdminCategory[]
   created_at: string
   updated_at: string

@@ -10,6 +10,7 @@ export interface UserAddress {
   city: string
   district: string
   address: string
+  full_address: string  // 完整地址（后端生成）
   is_default: boolean
   created_at: string
   updated_at: string
@@ -37,22 +38,27 @@ export interface UpdateAddressRequest {
   is_default?: boolean
 }
 
-// 用户资料（与后端 User 模型一致）
+// 用户资料（与后端 User 模型一致，包含关联统计字段）
 export interface UserProfile {
   id: number
   email: string
   phone: string | null
+  username: string | null
   nickname: string | null
   avatar: string | null
   member_level: number
+  level: number  // 别名，兼容前端
   points: number
   status: string
+  order_count: number  // 订单数量（关联统计）
+  total_spent: number  // 总消费（关联统计）
   created_at: string
   updated_at: string
 }
 
 // 更新用户资料请求
 export interface UpdateProfileRequest {
+  username?: string
   nickname?: string
   phone?: string
   avatar?: string

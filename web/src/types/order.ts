@@ -35,22 +35,27 @@ export const OrderStatusColors: Record<string, string> = {
   [OrderStatus.Refunded]: 'text-red-600 bg-red-50',
 }
 
-// 订单商品
+// 订单商品（与后端 OrderItem 模型一致）
 export interface OrderItem {
   id: number
   order_id: number
   product_id: number
   sku_id: number
   product_name: string
-  sku_specs: string
-  sku_code: string
+  sku_name: string | null
+  sku_specs: string | null  // 规格描述
+  sku_code: string | null  // SKU 编码
+  image: string | null
+  product_image: string | null  // 别名
   price: number
   quantity: number
-  total_price: number
-  product_image: string
+  total_amount: number
+  total_price: number  // 别名
+  attributes: Record<string, unknown> | null
+  created_at: string
 }
 
-// 收货地址
+// 收货地址（用于结算预览，非订单内嵌）
 export interface OrderAddress {
   name: string
   phone: string
@@ -61,29 +66,47 @@ export interface OrderAddress {
   full_address: string
 }
 
-// 订单详情
+// 收货地址（嵌套在订单中）
+export interface OrderReceiver {
+  name: string
+  phone: string
+  address: string
+}
+
+// 订单详情（与后端 Order 模型一致）
 export interface Order {
   id: number
   order_no: string
   user_id: number
+  address_id: number
   status: OrderStatusType
   total_amount: number
-  discount_amount: number
-  shipping_fee: number
   pay_amount: number
-  coupon_id: number | null
-  coupon_code: string | null
-  coupon_discount: number
-  points_used: number
-  points_discount: number
-  address: OrderAddress
+  discount_amount: number
+  freight_amount: number
+  shipping_fee: number  // 别名，兼容 freight_amount
+  coupon_discount: number  // 优惠券折扣
+  points_discount: number  // 积分抵扣
+  payment_method: string | null
+  payment_time: string | null
+  paid_at: string | null  // 别名
+  ship_time: string | null
+  shipped_at: string | null  // 别名
+  receive_time: string | null
+  delivered_at: string | null  // 别名
+  completed_at: string | null  // 完成时间
+  cancelled_at: string | null  // 取消时间
+  express_company: string | null
+  express_no: string | null
+  refund_amount: number
+  refund_reason: string | null
+  cancel_reason: string | null  // 取消原因
+  refund_time: string | null
+  receiver_name: string
+  receiver_phone: string
+  receiver_address: string
+  address: OrderAddress  // 收货地址详情（前端聚合）
   remark: string
-  cancel_reason: string
-  paid_at: string | null
-  shipped_at: string | null
-  delivered_at: string | null
-  completed_at: string | null
-  cancelled_at: string | null
   items: OrderItem[]
   created_at: string
   updated_at: string
@@ -96,28 +119,28 @@ export interface OrderListItem {
   status: OrderStatusType
   total_amount: number
   pay_amount: number
+  freight_amount: number
   items: {
     product_id: number
     product_name: string
-    product_image: string
+    product_image: string  // 别名
+    image: string
     quantity: number
     price: number
   }[]
   created_at: string
 }
 
-// 创建订单请求
+// 创建订单请求（与后端 CreateOrderRequest 一致）
 export interface CreateOrderRequest {
   address_id: number
-  cart_item_ids?: number[]
-  buy_now_item?: {
+  items: {
     product_id: number
     sku_id: number
     quantity: number
-  }
-  coupon_id?: number
-  use_points?: number
+  }[]
   remark?: string
+  coupon_id?: number
 }
 
 // 创建订单响应
@@ -165,14 +188,19 @@ export interface CheckoutItem {
 export interface CheckoutPreviewResponse {
   items: CheckoutItem[]
   total_amount: number
-  shipping_fee: number
+  freight_amount: number
+  shipping_fee: number  // 别名
+  discount_amount: number
+  pay_amount: number
   default_address: OrderAddress | null
   available_coupons: {
     id: number
     code: string
     name: string
-    discount: number
+    type: string
+    value: number
     min_amount: number
+    discount: number
   }[]
   user_points: number
   max_points_usable: number

@@ -364,7 +364,7 @@ export default function OrderDetailPage() {
                   className="flex items-center gap-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 -mx-2 px-2 rounded"
                 >
                   <img
-                    src={item.product_image}
+                    src={item.product_image ?? item.image ?? ''}
                     alt={item.product_name}
                     className="w-20 h-20 object-cover rounded-lg"
                   />

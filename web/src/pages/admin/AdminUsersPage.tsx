@@ -55,6 +55,7 @@ export function AdminUsersPage() {
           avatar: 'https://picsum.photos/seed/user1/100/100',
           nickname: '张三',
           status: 'active',
+          member_level: 3,
           level: 3,
           points: 5680,
           total_spent: 12580,
@@ -70,6 +71,7 @@ export function AdminUsersPage() {
           avatar: 'https://picsum.photos/seed/user2/100/100',
           nickname: '李四',
           status: 'active',
+          member_level: 2,
           level: 2,
           points: 2350,
           total_spent: 4890,
@@ -85,6 +87,7 @@ export function AdminUsersPage() {
           avatar: null,
           nickname: '王五',
           status: 'disabled',
+          member_level: 1,
           level: 1,
           points: 120,
           total_spent: 580,
@@ -154,8 +157,8 @@ export function AdminUsersPage() {
       title: '头像',
       render: (item: AdminUser) => (
         <img
-          src={item.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.nickname || item.username)}&background=2D5A3D&color=fff`}
-          alt={item.nickname || item.username}
+          src={item.avatar ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(item.nickname ?? item.username ?? 'User')}&background=2D5A3D&color=fff`}
+          alt={item.nickname ?? item.username ?? 'User'}
           className="w-10 h-10 rounded-full object-cover"
         />
       ),
@@ -299,8 +302,8 @@ export function AdminUsersPage() {
             {/* 基本信息 */}
             <div className="flex items-start gap-4">
               <img
-                src={selectedUser.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser.nickname || selectedUser.username)}&background=2D5A3D&color=fff&size=80`}
-                alt={selectedUser.nickname || selectedUser.username}
+                src={selectedUser.avatar ?? `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser.nickname ?? selectedUser.username ?? 'User')}&background=2D5A3D&color=fff&size=80`}
+                alt={selectedUser.nickname ?? selectedUser.username ?? 'User'}
                 className="w-20 h-20 rounded-full object-cover"
               />
               <div className="flex-1">

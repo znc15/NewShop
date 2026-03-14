@@ -109,7 +109,7 @@ function OrderCard({
             className="flex items-center gap-4 py-2 first:pt-0 last:pb-0"
           >
             <img
-              src={item.product_image}
+              src={item.product_image || item.image}
               alt={item.product_name}
               className="w-16 h-16 object-cover rounded-lg"
             />

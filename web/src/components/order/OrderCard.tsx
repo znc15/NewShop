@@ -85,7 +85,7 @@ export function OrderCard({
             {order.items.slice(0, 3).map((item, index) => (
               <img
                 key={index}
-                src={item.product_image}
+                src={item.product_image || item.image}
                 alt={item.product_name}
                 className="w-12 h-12 object-cover rounded-lg border-2 border-white"
               />
@@ -137,7 +137,7 @@ export function OrderCardCompact({
         {order.items.slice(0, 2).map((item, index) => (
           <img
             key={index}
-            src={item.product_image}
+            src={item.product_image || item.image}
             alt={item.product_name}
             className="w-10 h-10 object-cover rounded border border-white"
           />

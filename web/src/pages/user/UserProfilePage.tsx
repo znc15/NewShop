@@ -84,9 +84,9 @@ export default function UserProfilePage() {
       const data = await userService.getProfile()
       setProfile(data)
       setFormData({
-        username: data.username,
-        nickname: data.nickname || '',
-        phone: data.phone || '',
+        username: data.username ?? '',
+        nickname: data.nickname ?? '',
+        phone: data.phone ?? '',
       })
     } catch (error) {
       console.error('获取用户资料失败:', error)
@@ -134,9 +134,9 @@ export default function UserProfilePage() {
   const handleCancel = () => {
     if (profile) {
       setFormData({
-        username: profile.username,
-        nickname: profile.nickname || '',
-        phone: profile.phone || '',
+        username: profile.username ?? '',
+        nickname: profile.nickname ?? '',
+        phone: profile.phone ?? '',
       })
     }
     setErrors({})
@@ -185,7 +185,7 @@ export default function UserProfilePage() {
                   {profile.avatar ? (
                     <img
                       src={profile.avatar}
-                      alt={profile.username}
+                      alt={profile.username ?? 'User'}
                       className="w-full h-full object-cover"
                     />
                   ) : (
