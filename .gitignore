@@ -1,10 +1,12 @@
-.workflow/
-.flowpilot/
-.claude/settings.json
-.claude/worktrees/
 flow.js
 CLAUDE.md
 .claude/
 docs/
 .DS_Store
 .superpowers/
+.workflow/
+.flowpilot/
+.claude/settings.json
+.claude/worktrees/
+services/api/bin/server
+AGENTS.md
