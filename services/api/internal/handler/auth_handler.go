@@ -74,6 +74,17 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
+	valid, err := h.emailService.VerifyCode(c.Request.Context(), req.Email, "register", req.Code)
+	if err != nil {
+		h.logger.Error("验证码校验失败", zap.Error(err), zap.String("email", req.Email))
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "验证码校验失败"})
+		return
+	}
+	if !valid {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 40002, "message": "验证码错误或已过期"})
+		return
+	}
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "密码加密失败"})
