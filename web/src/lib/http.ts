@@ -1,94 +1,119 @@
 // HTTP 客户端封装
-import axios, { AxiosError } from 'axios';
-import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosError } from 'axios'
+import type { AxiosInstance, AxiosRequestConfig } from 'axios'
+import type { ApiResponse, ApiError } from '@/types'
 
-// API 响应结构
-export interface ApiResponse<T = unknown> {
-  code: number;
-  message: string;
-  data: T;
-}
+const BASE_URL = '/api/v1'
 
-// 分页响应结构
-export interface PaginatedResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  page_size: number;
-  total_pages: number;
-}
-
-// 创建 axios 实例
-const client: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
+const instance: AxiosInstance = axios.create({
+  baseURL: BASE_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
-});
+})
 
 // 请求拦截器：添加 token
-client.interceptors.request.use(
+instance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token')
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`
     }
-    return config;
+    return config
   },
-  (error) => Promise.reject(error)
-);
+  (error) => {
+    return Promise.reject(error)
+  }
+)
 
 // 响应拦截器：统一错误处理
-client.interceptors.response.use(
-  (response: AxiosResponse<ApiResponse>) => {
-    const { data } = response;
-    // 业务逻辑错误
-    if (data.code !== 0 && data.code !== 200) {
-      return Promise.reject(new Error(data.message || '请求失败'));
+instance.interceptors.response.use(
+  (response) => {
+    const data = response.data as ApiResponse
+    if (data.code === 0 || data.code === 200) {
+      return data.data as unknown as typeof response
     }
-    return response;
+    // 业务错误
+    const error: ApiError = {
+      code: data.code,
+      message: data.message,
+    }
+    return Promise.reject(error)
   },
   (error: AxiosError<ApiResponse>) => {
     if (error.response) {
-      const { status, data } = error.response;
+      const { status, data } = error.response
+      let message = '请求失败'
 
-      // 401 未授权，跳转登录
-      if (status === 401) {
-        localStorage.removeItem('token');
-        window.location.href = '/login';
-        return Promise.reject(new Error('登录已过期，请重新登录'));
+      switch (status) {
+        case 400:
+          message = data?.message || '请求参数错误'
+          break
+        case 401:
+          message = '登录已过期，请重新登录'
+          localStorage.removeItem('token')
+          window.location.href = '/login'
+          break
+        case 403:
+          message = '没有权限访问'
+          break
+        case 404:
+          message = '请求的资源不存在'
+          break
+        case 500:
+          message = '服务器错误'
+          break
+        default:
+          message = data?.message || `请求失败 (${status})`
       }
 
-      // 其他错误
-      const message = data?.message || `请求失败 (${status})`;
-      return Promise.reject(new Error(message));
+      const apiError: ApiError = {
+        code: status,
+        message,
+      }
+      return Promise.reject(apiError)
     }
 
     if (error.request) {
-      return Promise.reject(new Error('网络错误，请检查网络连接'));
+      return Promise.reject({
+        code: -1,
+        message: '网络错误，请检查网络连接',
+      } as ApiError)
     }
 
-    return Promise.reject(error);
+    return Promise.reject({
+      code: -1,
+      message: error.message || '未知错误',
+    } as ApiError)
   }
-);
+)
 
 // 封装请求方法
+async function request<T>(config: AxiosRequestConfig): Promise<T> {
+  return instance.request<unknown, T>(config)
+}
+
 export const http = {
-  get: <T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> =>
-    client.get(url, config).then((res) => res.data),
+  get<T>(url: string, params?: Record<string, unknown>): Promise<T> {
+    return request<T>({ method: 'GET', url, params })
+  },
 
-  post: <T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> =>
-    client.post(url, data, config).then((res) => res.data),
+  post<T>(url: string, data?: unknown): Promise<T> {
+    return request<T>({ method: 'POST', url, data })
+  },
 
-  put: <T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> =>
-    client.put(url, data, config).then((res) => res.data),
+  put<T>(url: string, data?: unknown): Promise<T> {
+    return request<T>({ method: 'PUT', url, data })
+  },
 
-  delete: <T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> =>
-    client.delete(url, config).then((res) => res.data),
+  patch<T>(url: string, data?: unknown): Promise<T> {
+    return request<T>({ method: 'PATCH', url, data })
+  },
 
-  patch: <T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> =>
-    client.patch(url, data, config).then((res) => res.data),
-};
+  delete<T>(url: string, params?: Record<string, unknown>): Promise<T> {
+    return request<T>({ method: 'DELETE', url, params })
+  },
+}
 
-export default client;
+export default http
