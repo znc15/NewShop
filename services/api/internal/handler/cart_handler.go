@@ -257,6 +257,76 @@ func (h *CartHandler) GetSelectedItems(c *gin.Context) {
 	})
 }
 
+// BatchSelect 批量选择购物车商品
+// POST /cart/batch-select
+func (h *CartHandler) BatchSelect(c *gin.Context) {
+	userID := c.GetUint64("user_id")
+
+	var req struct {
+		IDs []uint64 `json:"ids" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil || len(req.IDs) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 40001, "message": "请求参数错误"})
+		return
+	}
+
+	if err := h.cartService.BatchSelect(c.Request.Context(), userID, req.IDs, true); err != nil {
+		h.logger.Error("批量选择失败", zap.Uint64("user_id", userID), zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "批量选择失败"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":    0,
+		"message": "批量选择成功",
+	})
+}
+
+// SelectAll 全选/取消全选
+// POST /cart/select-all
+func (h *CartHandler) SelectAll(c *gin.Context) {
+	userID := c.GetUint64("user_id")
+
+	var req struct {
+		Selected bool `json:"selected" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 40001, "message": "请求参数错误"})
+		return
+	}
+
+	if err := h.cartService.SelectAll(c.Request.Context(), userID, req.Selected); err != nil {
+		h.logger.Error("全选操作失败", zap.Uint64("user_id", userID), zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "全选操作失败"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":    0,
+		"message": "操作成功",
+	})
+}
+
+// GetCartCount 获取购物车商品数量
+// GET /cart/count
+func (h *CartHandler) GetCartCount(c *gin.Context) {
+	userID := c.GetUint64("user_id")
+
+	count, err := h.cartService.GetCartItemCount(c.Request.Context(), userID)
+	if err != nil {
+		h.logger.Error("获取购物车数量失败", zap.Uint64("user_id", userID), zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "获取购物车数量失败"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": 0,
+		"data": gin.H{
+			"count": count,
+		},
+	})
+}
+
 // RegisterCartRoutes 注册购物车路由
 func RegisterCartRoutes(r *gin.RouterGroup, h *CartHandler, authMiddleware gin.HandlerFunc) {
 	cart := r.Group("/cart")
@@ -269,6 +339,9 @@ func RegisterCartRoutes(r *gin.RouterGroup, h *CartHandler, authMiddleware gin.H
 		cart.DELETE("/:id", h.RemoveItem)           // 删除商品
 		cart.DELETE("", h.ClearCart)                // 清空购物车
 		cart.POST("/batch-remove", h.BatchRemove)   // 批量删除
+		cart.POST("/batch-select", h.BatchSelect)   // 批量选择
+		cart.POST("/select-all", h.SelectAll)       // 全选/取消全选
 		cart.GET("/selected", h.GetSelectedItems)   // 获取选中商品
+		cart.GET("/count", h.GetCartCount)         // 获取购物车数量
 	}
 }

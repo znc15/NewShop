@@ -10,6 +10,7 @@ import (
 	"newshop/api/internal/pkg/jwt"
 	"newshop/api/internal/router"
 	"newshop/api/internal/service"
+	"newshop/api/internal/task/scheduler"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -77,15 +78,19 @@ func main() {
 	// 初始化邮件服务
 	emailService := service.NewEmailService(db, rdb, emailClient)
 
-	// 设置运行模式
-	gin.SetMode(cfg.Server.Mode)
-
 	// 创建 Gin 引擎
 	engine := gin.New()
 
 	// 创建路由管理器
 	appRouter := router.NewRouter(db, rdb, cfg, logger)
 	appRouter.SetEmailService(emailService)
+
+	// 创建并启动任务调度器
+	taskScheduler := scheduler.NewScheduler(db, emailService, logger)
+	go taskScheduler.Start()
+	defer taskScheduler.Stop()
+
+	logger.Info("任务调度器已启动")
 
 	// 注册路由
 	appRouter.Setup(engine)

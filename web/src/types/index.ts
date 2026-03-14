@@ -159,3 +159,27 @@ export interface ApiError {
 export * from './cart'
 export * from './order'
 export * from './user'
+
+// 优惠券相关类型
+export interface Coupon {
+  id: number | string
+  name: string
+  code: string
+  type: 'fixed' | 'percent' | 'no_threshold'
+  discount_value: number
+  min_order_amount: number
+  max_discount?: number
+  valid_from: string
+  valid_to: string
+  status: 'active' | 'expired' | 'used' | 'claimed'
+}
+
+// 积分记录类型
+export interface PointRecord {
+  id: number
+  user_id: number
+  points: number
+  type: 'earn' | 'spend'
+  remark: string
+  created_at: string
+}

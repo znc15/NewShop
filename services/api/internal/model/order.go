@@ -10,13 +10,14 @@ import (
 type OrderStatus string
 
 const (
-	OrderStatusPending   OrderStatus = "pending"   // 待支付
-	OrderStatusPaid      OrderStatus = "paid"      // 已支付
-	OrderStatusShipped   OrderStatus = "shipped"   // 已发货
-	OrderStatusDelivered OrderStatus = "delivered" // 已送达
-	OrderStatusCompleted OrderStatus = "completed" // 已完成
-	OrderStatusCancelled OrderStatus = "cancelled" // 已取消
-	OrderStatusRefunded  OrderStatus = "refunded"  // 已退款
+	OrderStatusPending    OrderStatus = "pending"    // 待支付
+	OrderStatusPaid       OrderStatus = "paid"       // 已支付
+	OrderStatusShipped    OrderStatus = "shipped"    // 已发货
+	OrderStatusDelivered  OrderStatus = "delivered"  // 已送达
+	OrderStatusCompleted  OrderStatus = "completed"  // 已完成
+	OrderStatusCancelled  OrderStatus = "cancelled"  // 已取消
+	OrderStatusRefunded   OrderStatus = "refunded"   // 已退款
+	OrderStatusRefunding  OrderStatus = "refunding"  // 退款中
 )
 
 // Order 订单模型
@@ -149,4 +150,41 @@ func (o *Order) CanTransitionTo(target OrderStatus) bool {
 		}
 	}
 	return false
+}
+
+// CheckoutPreview 结算预览
+type CheckoutPreview struct {
+	Items         []CheckoutPreviewItem `json:"items"`
+	TotalAmount   float64               `json:"total_amount"`
+	FreightAmount float64               `json:"freight_amount"`
+	PayAmount     float64               `json:"pay_amount"`
+}
+
+// CheckoutPreviewItem 结算预览商品项
+type CheckoutPreviewItem struct {
+	ProductID   uint64  `json:"product_id"`
+	SkuID       uint64  `json:"sku_id"`
+	ProductName string  `json:"product_name"`
+	SkuName     string  `json:"sku_name"`
+	Image       string  `json:"image"`
+	Price       float64 `json:"price"`
+	Quantity    int     `json:"quantity"`
+	TotalAmount float64 `json:"total_amount"`
+}
+
+// OrderLogistics 订单物流信息
+type OrderLogistics struct {
+	ID               uint64    `gorm:"primaryKey" json:"id"`
+	OrderID          uint64    `gorm:"not null;uniqueIndex" json:"order_id"`
+	LogisticsCompany string    `gorm:"size:100" json:"logistics_company"`
+	LogisticsNo      string    `gorm:"size:100" json:"logistics_no"`
+	Status           string    `gorm:"size:50" json:"status"`
+	Traces           JSONB     `gorm:"type:jsonb" json:"traces"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
+}
+
+// TableName 指定表名
+func (OrderLogistics) TableName() string {
+	return "order_logistics"
 }

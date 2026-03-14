@@ -28,39 +28,60 @@ type Router struct {
 	jwtManager *jwt.JWTManager
 
 	// Repositories
-	productRepo    *repository.ProductRepo
-	cartRepo       *repository.CartRepo
-	orderRepo      *repository.OrderRepo
-	userRepo       *repository.UserRepo
-	adminRepo      *repository.AdminRepo
-	statisticsRepo *repository.StatisticsRepo
-	paymentRepo    *repository.PaymentRepo
+	productRepo     *repository.ProductRepo
+	cartRepo        *repository.CartRepo
+	orderRepo       *repository.OrderRepo
+	userRepo        *repository.UserRepo
+	adminRepo       *repository.AdminRepo
+	statisticsRepo  *repository.StatisticsRepo
+	paymentRepo     *repository.PaymentRepo
+	addressRepo     *repository.AddressRepo
+	presaleRepo     *repository.PresaleRepo
+	couponRepo      *repository.CouponRepo
+	pointsRepo      *repository.PointsRepo
+	memberLevelRepo *repository.MemberLevelRepo
+	memberExpRepo   *repository.MemberExperienceRepo
+	expLogRepo      *repository.ExperienceLogRepo
+	configRepo      *repository.ConfigRepo
 
 	// Services
-	userService     *service.UserService
-	emailService    *service.EmailService
-	productService  *service.ProductService
-	cartService     *service.CartService
-	orderService    *service.OrderService
-	adminService    *service.AdminService
-	paymentService  *service.PaymentService
-	productAdminSvc *adminservice.ProductAdminService
-	orderAdminSvc   *adminservice.OrderAdminService
-	statisticsSvc   *adminservice.StatisticsAdminService
+	userService      *service.UserService
+	emailService     *service.EmailService
+	productService   *service.ProductService
+	cartService       *service.CartService
+	orderService      *service.OrderService
+	adminService      *service.AdminService
+	paymentService    *service.PaymentService
+	addressService    *service.AddressService
+	productAdminSvc  *adminservice.ProductAdminService
+	orderAdminSvc    *adminservice.OrderAdminService
+	statisticsSvc    *adminservice.StatisticsAdminService
+	presaleService    *service.PresaleService
+	couponService     *service.CouponService
+	pointsService     *service.PointsService
+	membershipSvc     *service.MembershipService
+	configService     *service.ConfigService
 
 	// Handlers
-	authHandler    *handler.AuthHandler
-	productHandler *handler.ProductHandler
-	cartHandler    *handler.CartHandler
-	orderHandler   *handler.OrderHandler
-	paymentHandler *handler.PaymentHandler
-	adminHandler   *handler.AdminHandler
+	authHandler         *handler.AuthHandler
+	productHandler      *handler.ProductHandler
+	cartHandler         *handler.CartHandler
+	orderHandler        *handler.OrderHandler
+	paymentHandler       *handler.PaymentHandler
+	adminHandler        *handler.AdminHandler
+	addressHandler      *handler.AddressHandler
+	presaleHandler      *handler.PresaleHandler
+	couponHandler       *handler.CouponHandler
+	pointsHandler       *handler.PointsHandler
+	membershipHandler   *handler.MembershipHandler
 	// Admin handlers
-	productAdminHandler   *adminhandler.ProductAdminHandler
-	orderAdminHandler     *adminhandler.OrderAdminHandler
-	categoryAdminHandler  *adminhandler.CategoryAdminHandler
-	brandAdminHandler     *adminhandler.BrandAdminHandler
+	productAdminHandler    *adminhandler.ProductAdminHandler
+	orderAdminHandler      *adminhandler.OrderAdminHandler
+	categoryAdminHandler   *adminhandler.CategoryAdminHandler
+	brandAdminHandler      *adminhandler.BrandAdminHandler
 	statisticsAdminHandler *adminhandler.StatisticsAdminHandler
+	userAdminHandler       *adminhandler.UserAdminHandler
+	configAdminHandler     *adminhandler.ConfigAdminHandler
 }
 
 // NewRouter 创建路由管理器
@@ -76,6 +97,14 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 	adminRepo := repository.NewAdminRepo(db)
 	statisticsRepo := repository.NewStatisticsRepo(db)
 	paymentRepo := repository.NewPaymentRepo(db)
+	addressRepo := repository.NewAddressRepo(db)
+	presaleRepo := repository.NewPresaleRepo(db)
+	couponRepo := repository.NewCouponRepo(db)
+	pointsRepo := repository.NewPointsRepo(db)
+	memberLevelRepo := repository.NewMemberLevelRepo(db)
+	memberExpRepo := repository.NewMemberExperienceRepo(db)
+	expLogRepo := repository.NewExperienceLogRepo(db)
+	configRepo := repository.NewConfigRepo(db)
 
 	// 初始化 Services
 	userService := service.NewUserService(db)
@@ -83,9 +112,15 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 	cartService := service.NewCartService(cartRepo, db)
 	orderService := service.NewOrderService(db, orderRepo, userRepo, productRepo)
 	adminService := service.NewAdminService(adminRepo, db)
+	addressService := service.NewAddressService(addressRepo, db)
 	productAdminSvc := adminservice.NewProductAdminService(productRepo, db)
 	orderAdminSvc := adminservice.NewOrderAdminService(orderRepo, db, logger)
 	statisticsSvc := adminservice.NewStatisticsAdminService(statisticsRepo, logger)
+	presaleService := service.NewPresaleService(db, presaleRepo)
+	couponService := service.NewCouponService(db, couponRepo)
+	pointsService := service.NewPointsService(db, pointsRepo, userRepo)
+	membershipSvc := service.NewMembershipService(db, memberLevelRepo, memberExpRepo, expLogRepo)
+	configService := service.NewConfigService(db, configRepo, logger)
 
 	// 初始化 Handlers
 	authHandler := handler.NewAuthHandler(
@@ -98,12 +133,20 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 	cartHandler := handler.NewCartHandler(cartService, logger)
 	orderHandler := handler.NewOrderHandler(orderService, logger)
 	adminHandler := handler.NewAdminHandler(adminService, jwtManager, logger)
+	addressHandler := handler.NewAddressHandler(addressService, logger)
+	presaleHandler := handler.NewPresaleHandler(presaleService, logger)
+	couponHandler := handler.NewCouponHandler(couponService, logger)
+	pointsHandler := handler.NewPointsHandler(pointsService, logger)
+	membershipHandler := handler.NewMembershipHandler(membershipSvc, logger)
 	// Admin handlers
 	productAdminHandler := adminhandler.NewProductAdminHandler(productAdminSvc, productRepo, logger)
 	orderAdminHandler := adminhandler.NewOrderAdminHandler(orderAdminSvc, logger)
 	categoryAdminHandler := adminhandler.NewCategoryAdminHandler(productAdminSvc, logger)
 	brandAdminHandler := adminhandler.NewBrandAdminHandler(productAdminSvc, logger)
 	statisticsAdminHandler := adminhandler.NewStatisticsAdminHandler(statisticsSvc, logger)
+	userAdminSvc := adminservice.NewUserAdminService(db, userRepo, logger)
+	userAdminHandler := adminhandler.NewUserAdminHandler(userAdminSvc, logger)
+	configAdminHandler := adminhandler.NewConfigAdminHandler(configService, logger)
 
 	return &Router{
 		db:          db,
@@ -112,34 +155,55 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 		logger:      logger,
 		jwtManager:  jwtManager,
 		// Repositories
-		productRepo:    productRepo,
-		cartRepo:       cartRepo,
-		orderRepo:      orderRepo,
-		userRepo:       userRepo,
-		adminRepo:      adminRepo,
-		statisticsRepo: statisticsRepo,
-		paymentRepo:    paymentRepo,
+		productRepo:     productRepo,
+		cartRepo:        cartRepo,
+		orderRepo:       orderRepo,
+		userRepo:        userRepo,
+		adminRepo:       adminRepo,
+		statisticsRepo:  statisticsRepo,
+		paymentRepo:     paymentRepo,
+		addressRepo:     addressRepo,
+		presaleRepo:     presaleRepo,
+		couponRepo:      couponRepo,
+		pointsRepo:      pointsRepo,
+		memberLevelRepo: memberLevelRepo,
+		memberExpRepo:   memberExpRepo,
+		expLogRepo:      expLogRepo,
+		configRepo:      configRepo,
 		// Services
 		userService:     userService,
 		productService:  productService,
-		cartService:     cartService,
-		orderService:    orderService,
-		adminService:    adminService,
-		productAdminSvc: productAdminSvc,
-		orderAdminSvc:   orderAdminSvc,
-		statisticsSvc:   statisticsSvc,
+		cartService:       cartService,
+		orderService:      orderService,
+		adminService:      adminService,
+		addressService:    addressService,
+		productAdminSvc:   productAdminSvc,
+		orderAdminSvc:     orderAdminSvc,
+		statisticsSvc:     statisticsSvc,
+		presaleService:    presaleService,
+		couponService:     couponService,
+		pointsService:     pointsService,
+		membershipSvc:     membershipSvc,
+		configService:     configService,
 		// Handlers
-		authHandler:    authHandler,
-		productHandler: productHandler,
-		cartHandler:    cartHandler,
-		orderHandler:   orderHandler,
-		adminHandler:   adminHandler,
+		authHandler:       authHandler,
+		productHandler:    productHandler,
+		cartHandler:       cartHandler,
+		orderHandler:      orderHandler,
+		adminHandler:      adminHandler,
+		addressHandler:    addressHandler,
+		presaleHandler:    presaleHandler,
+		couponHandler:     couponHandler,
+		pointsHandler:     pointsHandler,
+		membershipHandler: membershipHandler,
 		// Admin handlers
 		productAdminHandler:    productAdminHandler,
 		orderAdminHandler:      orderAdminHandler,
 		categoryAdminHandler:   categoryAdminHandler,
 		brandAdminHandler:      brandAdminHandler,
 		statisticsAdminHandler: statisticsAdminHandler,
+		userAdminHandler:       userAdminHandler,
+		configAdminHandler:     configAdminHandler,
 	}
 }
 
@@ -189,6 +253,10 @@ func (r *Router) Setup(engine *gin.Engine) {
 		r.setupCartRoutes(v1)
 		r.setupOrderRoutes(v1)
 		r.setupPaymentRoutes(v1)
+		r.setupPresaleRoutes(v1)
+		r.setupCouponRoutes(v1)
+		r.setupPointsRoutes(v1)
+		r.setupMembershipRoutes(v1)
 	}
 
 	// 管理后台路由组
@@ -207,13 +275,16 @@ func (r *Router) setupAuthRoutes(rg *gin.RouterGroup) {
 		auth.POST("/login", r.authHandler.Login)
 		auth.POST("/refresh", r.authHandler.Refresh)
 		auth.POST("/send-code", r.authHandler.SendCode)
+		auth.POST("/reset-password", r.authHandler.ResetPassword) // 重置密码
 
 		// 需要认证的路由
 		authProtected := auth.Group("")
 		authProtected.Use(middleware.Auth(r.jwtManager))
 		{
 			authProtected.GET("/profile", r.authHandler.GetProfile)
+			authProtected.GET("/me", r.authHandler.GetProfile) // 别名，前端兼容
 			authProtected.PUT("/password", r.authHandler.UpdatePassword)
+			authProtected.POST("/logout", r.authHandler.Logout) // 退出登录
 		}
 	}
 }
@@ -226,13 +297,13 @@ func (r *Router) setupUserRoutes(rg *gin.RouterGroup) {
 		// 用户信息相关
 		user.GET("/info", r.authHandler.GetProfile)
 		user.PUT("/info", r.authHandler.GetProfile) // 暂时复用 GetProfile，后续可扩展
-		// 用户地址相关（待实现 AddressHandler）
-		user.GET("/addresses", func(c *gin.Context) {
-			c.JSON(200, gin.H{"code": 0, "data": []interface{}{}, "message": "功能开发中"})
-		})
-		user.POST("/addresses", func(c *gin.Context) {
-			c.JSON(200, gin.H{"code": 0, "message": "功能开发中"})
-		})
+		// 用户地址相关
+		user.GET("/addresses", r.addressHandler.ListAddresses)
+		user.GET("/addresses/:id", r.addressHandler.GetAddress)
+		user.POST("/addresses", r.addressHandler.CreateAddress)
+		user.PUT("/addresses/:id", r.addressHandler.UpdateAddress)
+		user.DELETE("/addresses/:id", r.addressHandler.DeleteAddress)
+		user.PUT("/addresses/:id/default", r.addressHandler.SetDefaultAddress)
 	}
 }
 
@@ -287,25 +358,43 @@ func (r *Router) setupCartRoutes(rg *gin.RouterGroup) {
 		cart.GET("", r.cartHandler.GetCart)
 		cart.POST("", r.cartHandler.AddItem)
 		cart.PUT("/:id", r.cartHandler.UpdateQuantity)
+		cart.PUT("/:id/selected", r.cartHandler.UpdateSelected)
 		cart.DELETE("/:id", r.cartHandler.RemoveItem)
 		cart.DELETE("", r.cartHandler.ClearCart)
+		// 批量删除
+		cart.POST("/batch-remove", r.cartHandler.BatchRemove)
+		// 批量选择
+		cart.POST("/batch-select", r.cartHandler.BatchSelect)
+		// 全选/取消全选
+		cart.POST("/select-all", r.cartHandler.SelectAll)
+		// 获取选中商品
+		cart.GET("/selected", r.cartHandler.GetSelectedItems)
+		// 获取购物车商品数量
+		cart.GET("/count", r.cartHandler.GetCartCount)
 	}
 }
 
-// setupOrderRoutes 订单路由（需要认证）
+// setupOrderRoutes 订单路由
 func (r *Router) setupOrderRoutes(rg *gin.RouterGroup) {
 	orders := rg.Group("/orders")
 	orders.Use(middleware.Auth(r.jwtManager))
 	{
 		orders.GET("", r.orderHandler.GetOrderList)
-		orders.GET("/:id", r.orderHandler.GetOrderDetail)
 		orders.POST("", r.orderHandler.CreateOrder)
+		// 静态路由必须在动态路由（/:id）之前
+		orders.GET("/no/:order_no", r.orderHandler.GetOrderByNo)
+		orders.POST("/checkout/preview", r.orderHandler.CheckoutPreview)
+		// 动态路由
+		orders.GET("/:id", r.orderHandler.GetOrderDetail)
+		orders.GET("/:id/status", r.orderHandler.GetOrderStatus)
+		orders.GET("/:id/logistics", r.orderHandler.GetLogistics)
+		orders.POST("/:id/reorder", r.orderHandler.Reorder)
+		orders.POST("/:id/refund", r.orderHandler.ApplyRefund)
 		orders.PUT("/:id/cancel", r.orderHandler.CancelOrder)
+		orders.PUT("/:id/confirm", r.orderHandler.ConfirmReceive)
 		orders.GET("/:id/pay", func(c *gin.Context) {
 			c.JSON(200, gin.H{"code": 0, "data": gin.H{"pay_url": ""}, "message": "请使用支付接口"})
 		})
-		orders.PUT("/:id/confirm", r.orderHandler.ConfirmReceive)
-		orders.GET("/:id/status", r.orderHandler.GetOrderStatus)
 	}
 }
 
@@ -328,10 +417,11 @@ func (r *Router) setupAdminRoutes(rg *gin.RouterGroup) {
 	// 用户管理
 	users := rg.Group("/users")
 	{
-		users.GET("", r.listUsers)
-		users.GET("/:id", r.getUser)
-		users.PUT("/:id", r.updateUser)
-		users.DELETE("/:id", r.deleteUser)
+		users.GET("", r.userAdminHandler.List)
+		users.GET("/stats", r.userAdminHandler.Stats)
+		users.GET("/:id", r.userAdminHandler.Get)
+		users.PUT("/:id", r.userAdminHandler.Update)
+		users.DELETE("/:id", r.userAdminHandler.Delete)
 	}
 
 	// 商品管理
@@ -350,13 +440,15 @@ func (r *Router) setupAdminRoutes(rg *gin.RouterGroup) {
 	orders := rg.Group("/orders")
 	{
 		orders.GET("", r.orderAdminHandler.ListOrders)
+		// 静态路由必须在动态路由（/:id）之前
+		orders.GET("/statistics", r.orderAdminHandler.GetStatistics)
+		// 动态路由
 		orders.GET("/:id", r.orderAdminHandler.GetOrderDetail)
 		orders.PUT("/:id/status", func(c *gin.Context) {
 			c.JSON(200, gin.H{"code": 0, "message": "请使用专用接口（ship/refund）"})
 		})
 		orders.PUT("/:id/ship", r.orderAdminHandler.ShipOrder)
 		orders.PUT("/:id/refund", r.orderAdminHandler.RefundOrder)
-		orders.GET("/statistics", r.orderAdminHandler.GetStatistics)
 	}
 
 	// 分类管理
@@ -386,22 +478,74 @@ func (r *Router) setupAdminRoutes(rg *gin.RouterGroup) {
 		stats.GET("/products", r.statisticsAdminHandler.GetProductStatistics)
 		stats.GET("/trend", r.statisticsAdminHandler.GetTrendData)
 	}
+
+	// 配置管理
+	configs := rg.Group("/configs")
+	{
+		configs.GET("", r.configAdminHandler.List)
+		configs.POST("", r.configAdminHandler.Create)
+		configs.GET("/:key", r.configAdminHandler.Get)
+		configs.PUT("/:key", r.configAdminHandler.Update)
+		configs.DELETE("/:key", r.configAdminHandler.Delete)
+		configs.GET("/:key/histories", r.configAdminHandler.GetHistories)
+	}
 }
 
-// 用户管理辅助方法（临时占位，待实现 UserAdminHandler）
+// setupPresaleRoutes 预售路由
+func (r *Router) setupPresaleRoutes(rg *gin.RouterGroup) {
+	presale := rg.Group("/presales")
+	{
+		// 公开路由
+		presale.GET("", r.presaleHandler.GetPresaleList)
+		presale.GET("/active", r.presaleHandler.GetActivePresaleList)
+		presale.GET("/:id", r.presaleHandler.GetPresaleDetail)
+	}
 
-func (r *Router) listUsers(c *gin.Context) {
-	c.JSON(200, gin.H{"code": 0, "data": []interface{}{}, "message": "功能开发中"})
+	// 需要认证的预售路由
+	presaleProtected := rg.Group("/presales")
+	presaleProtected.Use(middleware.Auth(r.jwtManager))
+	{
+		presaleProtected.POST("/orders", r.presaleHandler.CreatePresaleOrder)
+		presaleProtected.POST("/orders/deposit", r.presaleHandler.PayDeposit)
+		presaleProtected.POST("/orders/balance", r.presaleHandler.PayBalance)
+		presaleProtected.GET("/my-orders", r.presaleHandler.GetUserOrderList)
+		presaleProtected.GET("/orders/:id", r.presaleHandler.GetOrderDetail)
+		presaleProtected.POST("/orders/:id/cancel", r.presaleHandler.CancelOrder)
+	}
 }
 
-func (r *Router) getUser(c *gin.Context) {
-	c.JSON(200, gin.H{"code": 0, "data": nil, "message": "功能开发中"})
+// setupCouponRoutes 优惠券路由
+func (r *Router) setupCouponRoutes(rg *gin.RouterGroup) {
+	handler.RegisterCouponRoutes(rg, r.couponHandler, middleware.Auth(r.jwtManager))
 }
 
-func (r *Router) updateUser(c *gin.Context) {
-	c.JSON(200, gin.H{"code": 0, "message": "功能开发中"})
+// setupPointsRoutes 积分路由
+func (r *Router) setupPointsRoutes(rg *gin.RouterGroup) {
+	points := rg.Group("/points")
+	points.Use(middleware.Auth(r.jwtManager))
+	{
+		points.POST("/checkin", r.pointsHandler.CheckIn)
+		points.GET("/status", r.pointsHandler.GetCheckInStatus)
+		points.GET("/history", r.pointsHandler.GetPointsHistory)
+		points.GET("/continuous", r.pointsHandler.GetContinuousDays)
+		points.GET("/balance", r.pointsHandler.GetUserPoints)
+	}
 }
 
-func (r *Router) deleteUser(c *gin.Context) {
-	c.JSON(200, gin.H{"code": 0, "message": "功能开发中"})
+// setupMembershipRoutes 会员路由
+func (r *Router) setupMembershipRoutes(rg *gin.RouterGroup) {
+	member := rg.Group("/member")
+	{
+		// 公开路由
+		member.GET("/levels", r.membershipHandler.GetLevelList)
+	}
+	// 需要认证的会员路由
+	memberProtected := rg.Group("/member")
+	memberProtected.Use(middleware.Auth(r.jwtManager))
+	{
+		memberProtected.GET("/profile", r.membershipHandler.GetUserLevel)
+		memberProtected.GET("/rights/:level_id", r.membershipHandler.GetLevelRights)
+		memberProtected.GET("/experience/logs", r.membershipHandler.GetExperienceLogs)
+		memberProtected.POST("/checkin", r.membershipHandler.CheckIn)
+	}
 }

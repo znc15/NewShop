@@ -132,6 +132,25 @@ func (r *CartRepo) BatchRemove(ctx context.Context, userID uint64, ids []uint64)
 		Delete(&model.CartItem{}).Error
 }
 
+// BatchSelect 批量选择购物车商品
+func (r *CartRepo) BatchSelect(ctx context.Context, userID uint64, ids []uint64, selected bool) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	return r.db.WithContext(ctx).
+		Model(&model.CartItem{}).
+		Where("id IN ? AND user_id = ?", ids, userID).
+		Update("selected", selected).Error
+}
+
+// SelectAll 全选/取消全选购物车商品
+func (r *CartRepo) SelectAll(ctx context.Context, userID uint64, selected bool) error {
+	return r.db.WithContext(ctx).
+		Model(&model.CartItem{}).
+		Where("user_id = ?", userID).
+		Update("selected", selected).Error
+}
+
 // Upsert 插入或更新购物车项（使用 ON CONFLICT）
 func (r *CartRepo) Upsert(ctx context.Context, item *model.CartItem) error {
 	return r.db.WithContext(ctx).

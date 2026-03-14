@@ -1,10 +1,40 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { User, Mail, Lock, ArrowRight, Eye, EyeOff, Send } from 'lucide-react'
+import { motion, type Variants } from 'motion/react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { authService } from '@/services/auth'
 import { useAuthStore } from '@/stores/auth'
+
+// 动画变体配置
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+}
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5 },
+  },
+}
+
+const slideVariants: Variants = {
+  hidden: { opacity: 0, x: -30 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.6 },
+  },
+}
 
 export default function RegisterPage() {
   const navigate = useNavigate()
@@ -140,12 +170,31 @@ export default function RegisterPage() {
         </div>
 
         {/* 浮动装饰元素 */}
-        <div className="absolute top-32 right-20 w-72 h-72 bg-copper-400/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-16 left-16 w-64 h-64 bg-cream-100/15 rounded-full blur-3xl" />
+        <motion.div
+          className="absolute top-32 right-20 w-72 h-72 bg-copper-400/20 rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.2, 0.3, 0.2],
+          }}
+          transition={{ duration: 8, repeat: Infinity }}
+        />
+        <motion.div
+          className="absolute bottom-16 left-16 w-64 h-64 bg-cream-100/15 rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.3, 1],
+            opacity: [0.15, 0.2, 0.15],
+          }}
+          transition={{ duration: 10, repeat: Infinity }}
+        />
 
         {/* 品牌内容 */}
-        <div className="relative z-10 flex flex-col justify-center px-16 text-cream-100">
-          <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
+        <motion.div
+          className="relative z-10 flex flex-col justify-center px-16 text-cream-100"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.div variants={slideVariants}>
             <h1 className="font-display text-5xl font-semibold mb-6">
               加入我们
             </h1>
@@ -153,43 +202,65 @@ export default function RegisterPage() {
               创建账户，享受专属会员权益，<br />
               开启您的品质购物之旅。
             </p>
-          </div>
+          </motion.div>
 
           {/* 会员权益 */}
-          <div className="space-y-4 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+          <motion.div className="space-y-4" variants={containerVariants}>
             {[
               { icon: '🎁', text: '新用户专享礼包' },
               { icon: '⭐', text: '积分双倍返还' },
               { icon: '🔔', text: '优先获取新品资讯' },
               { icon: '💎', text: '专属会员折扣' },
             ].map((item, index) => (
-              <div
+              <motion.div
                 key={index}
                 className="flex items-center gap-3 text-cream-200"
+                variants={itemVariants}
+                whileHover={{ x: 5 }}
               >
                 <span className="text-2xl">{item.icon}</span>
                 <span className="text-lg">{item.text}</span>
-              </div>
+              </motion.div>
             ))}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
 
       {/* 右侧表单区 */}
       <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-cream-50">
-        <div className="w-full max-w-md">
+        <motion.div
+          className="w-full max-w-md"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+        >
           {/* 移动端品牌标识 */}
-          <div className="lg:hidden text-center mb-8 animate-fade-in">
+          <motion.div
+            className="lg:hidden text-center mb-8"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
             <Link to="/" className="inline-block">
               <span className="font-display text-3xl font-semibold text-forest-700">
                 NewShop
               </span>
             </Link>
-          </div>
+          </motion.div>
 
           {/* 表单卡片 */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 animate-scale-in">
-            <div className="text-center mb-8">
+          <motion.div
+            className="bg-white rounded-2xl shadow-lg p-8"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            <motion.div
+              className="text-center mb-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
               <h2 className="font-display text-2xl font-semibold text-charcoal mb-2">
                 创建账户
               </h2>
@@ -202,18 +273,27 @@ export default function RegisterPage() {
                   立即登录
                 </Link>
               </p>
-            </div>
+            </motion.div>
 
             {/* 服务器错误提示 */}
             {serverError && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm animate-slide-down">
+              <motion.div
+                className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm"
+                initial={{ opacity: 0, y: -10, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: 'auto' }}
+              >
                 {serverError}
-              </div>
+              </motion.div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* 昵称输入 */}
-              <div className="space-y-2">
+              <motion.div
+                className="space-y-2"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+              >
                 <label htmlFor="nickname" className="block text-sm font-medium text-charcoal">
                   昵称
                 </label>
@@ -226,10 +306,15 @@ export default function RegisterPage() {
                   error={errors.nickname}
                   icon={<User className="w-5 h-5" />}
                 />
-              </div>
+              </motion.div>
 
               {/* 邮箱输入 + 验证码按钮 */}
-              <div className="space-y-2">
+              <motion.div
+                className="space-y-2"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.45 }}
+              >
                 <label htmlFor="email" className="block text-sm font-medium text-charcoal">
                   邮箱地址
                 </label>
@@ -245,27 +330,38 @@ export default function RegisterPage() {
                       icon={<Mail className="w-5 h-5" />}
                     />
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleSendCode}
-                    disabled={countdown > 0}
-                    className="shrink-0 whitespace-nowrap"
-                  >
-                    {countdown > 0 ? `${countdown}s` : codeSent ? '重新发送' : '发送验证码'}
-                    {countdown === 0 && <Send className="w-4 h-4 ml-1" />}
-                  </Button>
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleSendCode}
+                      disabled={countdown > 0}
+                      className="shrink-0 whitespace-nowrap"
+                    >
+                      {countdown > 0 ? `${countdown}s` : codeSent ? '重新发送' : '发送验证码'}
+                      {countdown === 0 && <Send className="w-4 h-4 ml-1" />}
+                    </Button>
+                  </motion.div>
                 </div>
                 {codeSent && countdown > 0 && (
-                  <p className="text-xs text-green-600 flex items-center gap-1">
+                  <motion.p
+                    className="text-xs text-green-600 flex items-center gap-1"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
                     <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
                     验证码已发送至您的邮箱
-                  </p>
+                  </motion.p>
                 )}
-              </div>
+              </motion.div>
 
               {/* 验证码输入 */}
-              <div className="space-y-2">
+              <motion.div
+                className="space-y-2"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 }}
+              >
                 <label htmlFor="code" className="block text-sm font-medium text-charcoal">
                   验证码
                 </label>
@@ -279,10 +375,15 @@ export default function RegisterPage() {
                   className="tracking-widest text-center"
                   maxLength={6}
                 />
-              </div>
+              </motion.div>
 
               {/* 密码输入 */}
-              <div className="space-y-2">
+              <motion.div
+                className="space-y-2"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.55 }}
+              >
                 <label htmlFor="password" className="block text-sm font-medium text-charcoal">
                   密码
                 </label>
@@ -308,10 +409,15 @@ export default function RegisterPage() {
                     )}
                   </button>
                 </div>
-              </div>
+              </motion.div>
 
               {/* 确认密码输入 */}
-              <div className="space-y-2">
+              <motion.div
+                className="space-y-2"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.6 }}
+              >
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-charcoal">
                   确认密码
                 </label>
@@ -337,30 +443,41 @@ export default function RegisterPage() {
                     )}
                   </button>
                 </div>
-              </div>
+              </motion.div>
 
               {/* 注册按钮 */}
-              <Button
-                type="submit"
-                variant="default"
-                size="lg"
-                loading={isLoading}
-                className="w-full mt-6"
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 }}
               >
-                {isLoading ? '注册中...' : '注册'}
-                {!isLoading && <ArrowRight className="w-5 h-5" />}
-              </Button>
+                <Button
+                  type="submit"
+                  variant="default"
+                  size="lg"
+                  loading={isLoading}
+                  className="w-full mt-6"
+                >
+                  {isLoading ? '注册中...' : '注册'}
+                  {!isLoading && <ArrowRight className="w-5 h-5" />}
+                </Button>
+              </motion.div>
             </form>
 
             {/* 用户协议 */}
-            <p className="mt-6 text-center text-xs text-stone">
+            <motion.p
+              className="mt-6 text-center text-xs text-stone"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8 }}
+            >
               注册即表示您已阅读并同意
               <a href="#" className="text-copper-500 hover:text-copper-600 mx-1">《用户协议》</a>
               和
               <a href="#" className="text-copper-500 hover:text-copper-600 mx-1">《隐私政策》</a>
-            </p>
-          </div>
-        </div>
+            </motion.p>
+          </motion.div>
+        </motion.div>
       </div>
     </div>
   )

@@ -1,11 +1,46 @@
 import { useState, useEffect } from 'react'
 import { Plus, MapPin, Edit2, Trash2, Check, AlertCircle } from 'lucide-react'
+import { motion, AnimatePresence, type Variants } from 'motion/react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { userService } from '@/services/user'
 import type { UserAddress, CreateAddressRequest } from '@/types/user'
 import { cn } from '@/utils'
+
+// 动画变体配置
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+}
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4 },
+  },
+  exit: {
+    opacity: 0,
+    x: -20,
+    transition: { duration: 0.3 },
+  },
+}
+
+const scaleVariants: Variants = {
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.3 },
+  },
+}
 
 // 省份列表（简化版）
 const PROVINCES = [
@@ -207,62 +242,90 @@ function AddressCard({
   onSetDefault: () => void
 }) {
   return (
-    <div className={cn(
-      'relative p-4 rounded-xl border-2 transition-colors',
-      address.is_default
-        ? 'border-forest-500 bg-forest-50'
-        : 'border-cream-200 hover:border-cream-300 bg-white'
-    )}>
+    <motion.div
+      className={cn(
+        'relative p-4 rounded-xl border-2 transition-colors',
+        address.is_default
+          ? 'border-forest-500 bg-forest-50'
+          : 'border-cream-200 hover:border-cream-300 bg-white'
+      )}
+      variants={itemVariants}
+      initial="hidden"
+      animate="visible"
+      whileHover={{ scale: 1.01, y: -2 }}
+      whileTap={{ scale: 0.99 }}
+    >
       {address.is_default && (
-        <div className="absolute top-0 right-0 -translate-y-1/2">
+        <motion.div
+          className="absolute top-0 right-0 -translate-y-1/2"
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
           <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-forest-500 text-white text-xs rounded-full">
             <Check className="w-3 h-3" />
             默认
           </span>
-        </div>
+        </motion.div>
       )}
 
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
+          <motion.div
+            className="flex items-center gap-3 mb-2"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
+          >
             <span className="font-medium text-charcoal">{address.name}</span>
             <span className="text-stone">{address.phone}</span>
-          </div>
-          <div className="flex items-start gap-2 text-sm text-stone">
+          </motion.div>
+          <motion.div
+            className="flex items-start gap-2 text-sm text-stone"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
             <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
             <span>{address.full_address}</span>
-          </div>
+          </motion.div>
         </div>
 
         <div className="flex items-center gap-2 ml-4">
-          <button
+          <motion.button
             onClick={onEdit}
             className="p-2 text-stone hover:text-forest-600 hover:bg-forest-50 rounded-lg transition-colors"
             title="编辑"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
           >
             <Edit2 className="w-4 h-4" />
-          </button>
+          </motion.button>
           {!address.is_default && (
             <>
-              <button
+              <motion.button
                 onClick={onSetDefault}
                 className="p-2 text-stone hover:text-forest-600 hover:bg-forest-50 rounded-lg transition-colors"
                 title="设为默认"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
               >
                 <Check className="w-4 h-4" />
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 onClick={onDelete}
                 className="p-2 text-stone hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                 title="删除"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
               >
                 <Trash2 className="w-4 h-4" />
-              </button>
+              </motion.button>
             </>
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }
 
@@ -343,123 +406,220 @@ export default function UserAddressesPage() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-16 bg-cream-200 rounded-xl" />
-          <div className="h-32 bg-cream-200 rounded-xl" />
-          <div className="h-32 bg-cream-200 rounded-xl" />
-        </div>
-      </div>
+      <motion.div
+        className="max-w-4xl mx-auto px-4 py-8"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+      >
+        <motion.div className="space-y-4" variants={itemVariants}>
+          <motion.div
+            className="h-16 bg-cream-200 rounded-xl"
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          />
+          <motion.div
+            className="h-32 bg-cream-200 rounded-xl"
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity, delay: 0.1 }}
+          />
+          <motion.div
+            className="h-32 bg-cream-200 rounded-xl"
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
+          />
+        </motion.div>
+      </motion.div>
     )
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <motion.div
+      className="max-w-4xl mx-auto px-4 py-8"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       {/* 页面标题 */}
-      <div className="flex items-center justify-between mb-6">
+      <motion.div
+        className="flex items-center justify-between mb-6"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
         <div>
           <h1 className="font-display text-2xl font-semibold text-charcoal">收货地址</h1>
           <p className="text-sm text-stone mt-1">管理您的收货地址，最多可添加 20 个</p>
         </div>
         {!showForm && !editingAddress && (
-          <Button onClick={() => setShowForm(true)} disabled={addresses.length >= 20}>
-            <Plus className="w-4 h-4 mr-1" />
-            添加地址
-          </Button>
-        )}
-      </div>
-
-      {/* 添加新地址表单 */}
-      {showForm && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>添加新地址</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AddressForm
-              onSubmit={handleCreate}
-              onCancel={() => setShowForm(false)}
-              loading={saving}
-            />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* 编辑地址表单 */}
-      {editingAddress && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>编辑地址</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AddressForm
-              initialData={editingAddress}
-              onSubmit={handleUpdate}
-              onCancel={() => setEditingAddress(null)}
-              loading={saving}
-            />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* 地址列表 */}
-      {addresses.length === 0 && !showForm ? (
-        <Card>
-          <CardContent className="py-16 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-cream-100 rounded-full">
-              <MapPin className="w-8 h-8 text-stone" />
-            </div>
-            <p className="text-charcoal font-medium mb-2">暂无收货地址</p>
-            <p className="text-sm text-stone mb-4">添加收货地址，方便购物时快速选择</p>
-            <Button onClick={() => setShowForm(true)}>
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <Button onClick={() => setShowForm(true)} disabled={addresses.length >= 20}>
               <Plus className="w-4 h-4 mr-1" />
               添加地址
             </Button>
-          </CardContent>
-        </Card>
+          </motion.div>
+        )}
+      </motion.div>
+
+      {/* 添加新地址表单 */}
+      <AnimatePresence mode="wait">
+        {showForm && (
+          <motion.div
+            className="mb-6"
+            variants={scaleVariants}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>添加新地址</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <AddressForm
+                  onSubmit={handleCreate}
+                  onCancel={() => setShowForm(false)}
+                  loading={saving}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 编辑地址表单 */}
+      <AnimatePresence mode="wait">
+        {editingAddress && (
+          <motion.div
+            className="mb-6"
+            variants={scaleVariants}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>编辑地址</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <AddressForm
+                  initialData={editingAddress}
+                  onSubmit={handleUpdate}
+                  onCancel={() => setEditingAddress(null)}
+                  loading={saving}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 地址列表 */}
+      {addresses.length === 0 && !showForm ? (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <Card>
+            <CardContent className="py-16 text-center">
+              <motion.div
+                className="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-cream-100 rounded-full"
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <MapPin className="w-8 h-8 text-stone" />
+              </motion.div>
+              <p className="text-charcoal font-medium mb-2">暂无收货地址</p>
+              <p className="text-sm text-stone mb-4">添加收货地址，方便购物时快速选择</p>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button onClick={() => setShowForm(true)}>
+                  <Plus className="w-4 h-4 mr-1" />
+                  添加地址
+                </Button>
+              </motion.div>
+            </CardContent>
+          </Card>
+        </motion.div>
       ) : (
-        <div className="space-y-4">
-          {addresses.map(address => (
-            <AddressCard
+        <motion.div
+          className="space-y-4"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          {addresses.map((address, index) => (
+            <motion.div
               key={address.id}
-              address={address}
-              onEdit={() => setEditingAddress(address)}
-              onDelete={() => setDeleteConfirm(address.id)}
-              onSetDefault={() => handleSetDefault(address.id)}
-            />
+              variants={itemVariants}
+              custom={index}
+              layout
+            >
+              <AddressCard
+                address={address}
+                onEdit={() => setEditingAddress(address)}
+                onDelete={() => setDeleteConfirm(address.id)}
+                onSetDefault={() => handleSetDefault(address.id)}
+              />
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
 
       {/* 删除确认弹窗 */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <Card className="w-full max-w-sm mx-4">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 flex items-center justify-center bg-red-100 rounded-full">
-                  <AlertCircle className="w-5 h-5 text-red-500" />
-                </div>
-                <div>
-                  <p className="font-medium text-charcoal">确认删除</p>
-                  <p className="text-sm text-stone">删除后无法恢复</p>
-                </div>
-              </div>
-              <div className="flex justify-end gap-3">
-                <Button variant="outline" onClick={() => setDeleteConfirm(null)}>
-                  取消
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => handleDelete(deleteConfirm)}
-                >
-                  删除
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-    </div>
+      <AnimatePresence>
+        {deleteConfirm && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Card className="w-full max-w-sm mx-4">
+                <CardContent className="pt-6">
+                  <motion.div
+                    className="flex items-center gap-3 mb-4"
+                    initial={{ x: -10, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                  >
+                    <div className="w-10 h-10 flex items-center justify-center bg-red-100 rounded-full">
+                      <AlertCircle className="w-5 h-5 text-red-500" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-charcoal">确认删除</p>
+                      <p className="text-sm text-stone">删除后无法恢复</p>
+                    </div>
+                  </motion.div>
+                  <motion.div
+                    className="flex justify-end gap-3"
+                    initial={{ y: 10, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    <Button variant="outline" onClick={() => setDeleteConfirm(null)}>
+                      取消
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => handleDelete(deleteConfirm)}
+                    >
+                      删除
+                    </Button>
+                  </motion.div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   )
 }

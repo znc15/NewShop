@@ -87,6 +87,16 @@ func (s *CartService) BatchRemove(ctx context.Context, userID uint64, ids []uint
 	return s.repo.BatchRemove(ctx, userID, ids)
 }
 
+// BatchSelect 批量选择购物车商品
+func (s *CartService) BatchSelect(ctx context.Context, userID uint64, ids []uint64, selected bool) error {
+	return s.repo.BatchSelect(ctx, userID, ids, selected)
+}
+
+// SelectAll 全选/取消全选购物车商品
+func (s *CartService) SelectAll(ctx context.Context, userID uint64, selected bool) error {
+	return s.repo.SelectAll(ctx, userID, selected)
+}
+
 // GetCartItemCount 获取购物车商品数量
 func (s *CartService) GetCartItemCount(ctx context.Context, userID uint64) (int64, error) {
 	var count int64

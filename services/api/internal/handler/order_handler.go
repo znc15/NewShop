@@ -360,14 +360,258 @@ func (h *OrderHandler) GetOrderStatus(c *gin.Context) {
 	})
 }
 
+// GetOrderByNo 按订单号查询
+// GET /orders/no/:order_no
+func (h *OrderHandler) GetOrderByNo(c *gin.Context) {
+	userID := c.GetUint64("user_id")
+
+	orderNo := c.Param("order_no")
+	if orderNo == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    40001,
+			"message": "订单号不能为空",
+		})
+		return
+	}
+
+	order, err := h.orderService.GetOrderByNo(c.Request.Context(), userID, orderNo)
+	if err != nil {
+		if err == service.ErrOrderNotFound {
+			c.JSON(http.StatusNotFound, gin.H{
+				"code":    40400,
+				"message": "订单不存在",
+			})
+			return
+		}
+		if err == service.ErrOrderNotYours {
+			c.JSON(http.StatusForbidden, gin.H{
+				"code":    40300,
+				"message": "无权访问此订单",
+			})
+			return
+		}
+		h.logger.Error("按订单号查询失败", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    50000,
+			"message": "查询订单失败",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": 0,
+		"data": gin.H{
+			"id":               order.ID,
+			"order_no":         order.OrderNo,
+			"status":           order.Status,
+			"total_amount":     order.TotalAmount,
+			"pay_amount":       order.PayAmount,
+			"receiver_name":    order.ReceiverName,
+			"receiver_phone":   order.ReceiverPhone,
+			"receiver_address": order.ReceiverAddress,
+			"created_at":       order.CreatedAt,
+		},
+	})
+}
+
+// CheckoutPreview 结算预览
+// POST /orders/checkout/preview
+func (h *OrderHandler) CheckoutPreview(c *gin.Context) {
+	userID := c.GetUint64("user_id")
+
+	var req struct {
+		AddressID uint64   `json:"address_id" binding:"required"`
+		ItemIDs   []uint64 `json:"item_ids" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    40001,
+			"message": "请求参数错误: " + err.Error(),
+		})
+		return
+	}
+
+	preview, err := h.orderService.CheckoutPreview(c.Request.Context(), userID, req.AddressID, req.ItemIDs)
+	if err != nil {
+		h.logger.Error("结算预览失败", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    50000,
+			"message": "结算预览失败",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": 0,
+		"data": preview,
+	})
+}
+
+// ApplyRefund 申请退款
+// POST /orders/:id/refund
+func (h *OrderHandler) ApplyRefund(c *gin.Context) {
+	userID := c.GetUint64("user_id")
+
+	orderID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    40001,
+			"message": "无效的订单ID",
+		})
+		return
+	}
+
+	var req struct {
+		Reason string `json:"reason" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    40001,
+			"message": "请求参数错误",
+		})
+		return
+	}
+
+	if err := h.orderService.ApplyRefund(c.Request.Context(), userID, orderID, req.Reason); err != nil {
+		if err == service.ErrOrderNotFound {
+			c.JSON(http.StatusNotFound, gin.H{
+				"code":    40400,
+				"message": "订单不存在",
+			})
+			return
+		}
+		if err == service.ErrOrderNotYours {
+			c.JSON(http.StatusForbidden, gin.H{
+				"code":    40300,
+				"message": "无权操作此订单",
+			})
+			return
+		}
+		if err == service.ErrOrderStatusInvalid {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"code":    40002,
+				"message": "订单状态不允许退款",
+			})
+			return
+		}
+		h.logger.Error("申请退款失败", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    50000,
+			"message": "申请退款失败",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":    0,
+		"message": "退款申请已提交",
+	})
+}
+
+// GetLogistics 获取物流信息
+// GET /orders/:id/logistics
+func (h *OrderHandler) GetLogistics(c *gin.Context) {
+	userID := c.GetUint64("user_id")
+
+	orderID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    40001,
+			"message": "无效的订单ID",
+		})
+		return
+	}
+
+	logistics, err := h.orderService.GetLogistics(c.Request.Context(), userID, orderID)
+	if err != nil {
+		if err == service.ErrOrderNotFound {
+			c.JSON(http.StatusNotFound, gin.H{
+				"code":    40400,
+				"message": "订单不存在",
+			})
+			return
+		}
+		if err == service.ErrOrderNotYours {
+			c.JSON(http.StatusForbidden, gin.H{
+				"code":    40300,
+				"message": "无权访问此订单",
+			})
+			return
+		}
+		h.logger.Error("获取物流信息失败", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    50000,
+			"message": "获取物流信息失败",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": 0,
+		"data": logistics,
+	})
+}
+
+// Reorder 一键复购
+// POST /orders/:id/reorder
+func (h *OrderHandler) Reorder(c *gin.Context) {
+	userID := c.GetUint64("user_id")
+
+	orderID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    40001,
+			"message": "无效的订单ID",
+		})
+		return
+	}
+
+	items, err := h.orderService.Reorder(c.Request.Context(), userID, orderID)
+	if err != nil {
+		if err == service.ErrOrderNotFound {
+			c.JSON(http.StatusNotFound, gin.H{
+				"code":    40400,
+				"message": "订单不存在",
+			})
+			return
+		}
+		if err == service.ErrOrderNotYours {
+			c.JSON(http.StatusForbidden, gin.H{
+				"code":    40300,
+				"message": "无权操作此订单",
+			})
+			return
+		}
+		h.logger.Error("一键复购失败", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    50000,
+			"message": "一键复购失败",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":    0,
+		"message": "已添加到购物车",
+		"data": gin.H{
+			"items": items,
+		},
+	})
+}
+
 // RegisterOrderRoutes 注册订单路由
 func RegisterOrderRoutes(r *gin.RouterGroup, handler *OrderHandler) {
 	orders := r.Group("/orders")
 	{
 		orders.POST("", handler.CreateOrder)
 		orders.GET("", handler.GetOrderList)
+		orders.GET("/no/:order_no", handler.GetOrderByNo)
+		orders.POST("/checkout/preview", handler.CheckoutPreview)
 		orders.GET("/:id", handler.GetOrderDetail)
 		orders.GET("/:id/status", handler.GetOrderStatus)
+		orders.GET("/:id/logistics", handler.GetLogistics)
+		orders.POST("/:id/reorder", handler.Reorder)
+		orders.POST("/:id/refund", handler.ApplyRefund)
 		orders.PUT("/:id/cancel", handler.CancelOrder)
 		orders.PUT("/:id/confirm", handler.ConfirmReceive)
 	}

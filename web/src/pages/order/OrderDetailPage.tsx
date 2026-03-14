@@ -9,10 +9,39 @@ import {
   Copy,
   MessageCircle,
 } from 'lucide-react';
+import { motion, AnimatePresence, type Variants } from 'motion/react';
 import orderService from '../../services/order';
 import { formatPriceWithSymbol, formatDateTime } from '../../lib/utils';
 import { OrderStatus, OrderStatusLabels, OrderStatusColors } from '../../types/order';
 import type { Order } from '../../types/order';
+
+// 动画变体配置
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4 },
+  },
+};
+
+const fadeVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { duration: 0.5 },
+  },
+};
 
 // 订单进度中的有效状态列表
 const PROGRESS_STATUSES = [
@@ -37,7 +66,12 @@ function LogisticsSection({ order }: { order: Order }) {
   const currentIndex = PROGRESS_STATUSES.indexOf(order.status as typeof PROGRESS_STATUSES[number]);
 
   return (
-    <section className="bg-white rounded-lg border border-gray-100 p-6">
+    <motion.section
+      className="bg-white rounded-lg border border-gray-100 p-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
       <h2 className="text-lg font-medium text-gray-900 mb-4">订单进度</h2>
       <div className="relative">
         {logisticsSteps.map((step, index) => {
@@ -51,25 +85,37 @@ function LogisticsSection({ order }: { order: Order }) {
           }
 
           return (
-            <div key={step.status} className="flex items-start gap-4 pb-6 last:pb-0">
+            <motion.div
+              key={step.status}
+              className="flex items-start gap-4 pb-6 last:pb-0"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1, duration: 0.4 }}
+            >
               {/* 连接线 */}
               {index < logisticsSteps.length - 1 && (
-                <div
+                <motion.div
                   className={`absolute left-[11px] top-6 w-0.5 h-8 ${
                     isCompleted ? 'bg-primary' : 'bg-gray-200'
                   }`}
+                  initial={{ scaleY: 0 }}
+                  animate={{ scaleY: 1 }}
+                  transition={{ delay: index * 0.1 + 0.2, duration: 0.3 }}
                 />
               )}
               {/* 状态点 */}
-              <div
+              <motion.div
                 className={`relative z-10 w-6 h-6 rounded-full flex items-center justify-center ${
                   isCompleted
                     ? 'bg-primary text-white'
                     : 'bg-gray-200 text-gray-400'
                 } ${isCurrent ? 'ring-4 ring-primary/20' : ''}`}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: index * 0.1, type: 'spring', stiffness: 300 }}
               >
                 {index + 1}
-              </div>
+              </motion.div>
               {/* 内容 */}
               <div className="flex-1">
                 <p
@@ -85,30 +131,37 @@ function LogisticsSection({ order }: { order: Order }) {
                   </p>
                 )}
               </div>
-            </div>
+            </motion.div>
           );
         })}
 
         {/* 取消/退款状态 */}
-        {(order.status === OrderStatus.Cancelled || order.status === OrderStatus.Refunded) && (
-          <div className="text-center py-8">
-            <p className="text-lg font-medium text-gray-900">
-              {OrderStatusLabels[order.status]}
-            </p>
-            {order.cancel_reason && (
-              <p className="text-sm text-gray-500 mt-2">
-                原因: {order.cancel_reason}
+        <AnimatePresence>
+          {(order.status === OrderStatus.Cancelled || order.status === OrderStatus.Refunded) && (
+            <motion.div
+              className="text-center py-8"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+            >
+              <p className="text-lg font-medium text-gray-900">
+                {OrderStatusLabels[order.status]}
               </p>
-            )}
-            {order.cancelled_at && (
-              <p className="text-sm text-gray-500 mt-1">
-                {formatDateTime(order.cancelled_at)}
-              </p>
-            )}
-          </div>
-        )}
+              {order.cancel_reason && (
+                <p className="text-sm text-gray-500 mt-2">
+                  原因: {order.cancel_reason}
+                </p>
+              )}
+              {order.cancelled_at && (
+                <p className="text-sm text-gray-500 mt-1">
+                  {formatDateTime(order.cancelled_at)}
+                </p>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-    </section>
+    </motion.section>
   );
 }
 
@@ -274,46 +327,85 @@ export default function OrderDetailPage() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 w-32 bg-gray-200 rounded" />
-          <div className="h-32 bg-gray-200 rounded-lg" />
-          <div className="h-64 bg-gray-200 rounded-lg" />
-          <div className="h-48 bg-gray-200 rounded-lg" />
-        </div>
-      </div>
+      <motion.div
+        className="max-w-4xl mx-auto px-4 py-8"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+      >
+        <motion.div className="space-y-6" variants={itemVariants}>
+          <motion.div
+            className="h-8 w-32 bg-gray-200 rounded"
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          />
+          <motion.div
+            className="h-32 bg-gray-200 rounded-lg"
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity, delay: 0.1 }}
+          />
+          <motion.div
+            className="h-64 bg-gray-200 rounded-lg"
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
+          />
+          <motion.div
+            className="h-48 bg-gray-200 rounded-lg"
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }}
+          />
+        </motion.div>
+      </motion.div>
     );
   }
 
   if (error || !order) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <motion.div
+        className="max-w-4xl mx-auto px-4 py-8"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4 }}
+      >
         <div className="text-center py-20">
           <p className="text-gray-500">{error || '订单不存在'}</p>
-          <button
+          <motion.button
             onClick={() => navigate('/orders')}
             className="mt-4 text-primary hover:underline"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             返回订单列表
-          </button>
+          </motion.button>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <motion.div
+      className="max-w-4xl mx-auto px-4 py-8"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
       {/* 返回按钮 */}
-      <button
+      <motion.button
         onClick={() => navigate('/orders')}
         className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
+        variants={itemVariants}
+        whileHover={{ x: -5 }}
       >
         <ChevronLeft className="w-5 h-5" />
         返回订单列表
-      </button>
+      </motion.button>
 
       {/* 订单状态头部 */}
-      <div className="bg-white rounded-lg border border-gray-100 p-6 mb-6">
+      <motion.div
+        className="bg-white rounded-lg border border-gray-100 p-6 mb-6"
+        variants={itemVariants}
+        whileHover={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}
+      >
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm text-gray-500">订单号: {order.order_no}</p>
@@ -321,24 +413,31 @@ export default function OrderDetailPage() {
               {OrderStatusLabels[order.status]}
             </h1>
           </div>
-          <span
+          <motion.span
             className={`px-4 py-2 rounded-lg text-sm font-medium ${
               OrderStatusColors[order.status]
             }`}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 300 }}
           >
             {OrderStatusLabels[order.status]}
-          </span>
+          </motion.span>
         </div>
-      </div>
+      </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* 左侧内容 */}
-        <div className="lg:col-span-2 space-y-6">
+        <motion.div className="lg:col-span-2 space-y-6" variants={containerVariants}>
           {/* 物流进度 */}
           <LogisticsSection order={order} />
 
           {/* 收货地址 */}
-          <section className="bg-white rounded-lg border border-gray-100 p-6">
+          <motion.section
+            className="bg-white rounded-lg border border-gray-100 p-6"
+            variants={itemVariants}
+            whileHover={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}
+          >
             <h2 className="text-lg font-medium text-gray-900 mb-4">收货信息</h2>
             <div className="flex items-start gap-3">
               <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
@@ -351,84 +450,127 @@ export default function OrderDetailPage() {
                 <p className="text-gray-600 mt-1">{order.address.full_address}</p>
               </div>
             </div>
-          </section>
+          </motion.section>
 
           {/* 商品清单 */}
-          <section className="bg-white rounded-lg border border-gray-100 p-6">
+          <motion.section
+            className="bg-white rounded-lg border border-gray-100 p-6"
+            variants={itemVariants}
+            whileHover={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}
+          >
             <h2 className="text-lg font-medium text-gray-900 mb-4">商品清单</h2>
-            <div className="space-y-4">
-              {order.items.map((item) => (
-                <Link
+            <motion.div
+              className="space-y-4"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              {order.items.map((item, index) => (
+                <motion.div
                   key={item.id}
-                  to={`/products/${item.product_id}`}
-                  className="flex items-center gap-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 -mx-2 px-2 rounded"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
                 >
-                  <img
-                    src={item.product_image ?? item.image ?? ''}
-                    alt={item.product_name}
-                    className="w-20 h-20 object-cover rounded-lg"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-gray-900 font-medium line-clamp-2">
-                      {item.product_name}
-                    </p>
-                    {item.sku_specs && (
-                      <p className="text-sm text-gray-500 mt-1">{item.sku_specs}</p>
-                    )}
-                    <p className="text-sm text-gray-500 mt-1">
-                      编码: {item.sku_code}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-gray-900">{formatPriceWithSymbol(item.price)}</p>
-                    <p className="text-sm text-gray-500">x{item.quantity}</p>
-                    <p className="text-primary font-medium mt-1">
-                      {formatPriceWithSymbol(item.total_price)}
-                    </p>
-                  </div>
-                </Link>
+                  <Link
+                    to={`/products/${item.product_id}`}
+                    className="flex items-center gap-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 -mx-2 px-2 rounded"
+                  >
+                    <motion.img
+                      src={item.product_image ?? item.image ?? ''}
+                      alt={item.product_name}
+                      className="w-20 h-20 object-cover rounded-lg"
+                      whileHover={{ scale: 1.05 }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-gray-900 font-medium line-clamp-2">
+                        {item.product_name}
+                      </p>
+                      {item.sku_specs && (
+                        <p className="text-sm text-gray-500 mt-1">{item.sku_specs}</p>
+                      )}
+                      <p className="text-sm text-gray-500 mt-1">
+                        编码: {item.sku_code}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-gray-900">{formatPriceWithSymbol(item.price)}</p>
+                      <p className="text-sm text-gray-500">x{item.quantity}</p>
+                      <p className="text-primary font-medium mt-1">
+                        {formatPriceWithSymbol(item.total_price)}
+                      </p>
+                    </div>
+                  </Link>
+                </motion.div>
               ))}
-            </div>
-          </section>
+            </motion.div>
+          </motion.section>
 
           {/* 订单信息 */}
-          <section className="bg-white rounded-lg border border-gray-100 p-6">
+          <motion.section
+            className="bg-white rounded-lg border border-gray-100 p-6"
+            variants={itemVariants}
+            whileHover={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}
+          >
             <h2 className="text-lg font-medium text-gray-900 mb-4">订单信息</h2>
             <div className="space-y-3 text-sm">
-              <div className="flex items-center gap-2">
+              <motion.div
+                className="flex items-center gap-2"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+              >
                 <Clock className="w-4 h-4 text-gray-400" />
                 <span className="text-gray-500">下单时间:</span>
                 <span className="text-gray-900">{formatDateTime(order.created_at)}</span>
-              </div>
+              </motion.div>
               {order.paid_at && (
-                <div className="flex items-center gap-2">
+                <motion.div
+                  className="flex items-center gap-2"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.15 }}
+                >
                   <Clock className="w-4 h-4 text-gray-400" />
                   <span className="text-gray-500">支付时间:</span>
                   <span className="text-gray-900">{formatDateTime(order.paid_at)}</span>
-                </div>
+                </motion.div>
               )}
               {order.shipped_at && (
-                <div className="flex items-center gap-2">
+                <motion.div
+                  className="flex items-center gap-2"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
                   <Truck className="w-4 h-4 text-gray-400" />
                   <span className="text-gray-500">发货时间:</span>
                   <span className="text-gray-900">{formatDateTime(order.shipped_at)}</span>
-                </div>
+                </motion.div>
               )}
               {order.remark && (
-                <div className="flex items-start gap-2 pt-2 border-t border-gray-100">
+                <motion.div
+                  className="flex items-start gap-2 pt-2 border-t border-gray-100"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.25 }}
+                >
                   <span className="text-gray-500">订单备注:</span>
                   <span className="text-gray-900">{order.remark}</span>
-                </div>
+                </motion.div>
               )}
             </div>
-          </section>
-        </div>
+          </motion.section>
+        </motion.div>
 
         {/* 右侧金额信息 */}
-        <div className="lg:col-span-1">
+        <motion.div className="lg:col-span-1" variants={fadeVariants}>
           <div className="sticky top-4 space-y-6">
             {/* 金额明细 */}
-            <div className="bg-white rounded-lg border border-gray-100 p-6">
+            <motion.div
+              className="bg-white rounded-lg border border-gray-100 p-6"
+              whileHover={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}
+            >
               <h2 className="text-lg font-medium text-gray-900 mb-4">金额明细</h2>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
@@ -436,22 +578,37 @@ export default function OrderDetailPage() {
                   <span className="text-gray-900">{formatPriceWithSymbol(order.total_amount)}</span>
                 </div>
                 {order.discount_amount > 0 && (
-                  <div className="flex justify-between text-primary">
+                  <motion.div
+                    className="flex justify-between text-primary"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.1 }}
+                  >
                     <span>优惠金额</span>
                     <span>-{formatPriceWithSymbol(order.discount_amount)}</span>
-                  </div>
+                  </motion.div>
                 )}
                 {order.coupon_discount > 0 && (
-                  <div className="flex justify-between text-primary">
+                  <motion.div
+                    className="flex justify-between text-primary"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.15 }}
+                  >
                     <span>优惠券</span>
                     <span>-{formatPriceWithSymbol(order.coupon_discount)}</span>
-                  </div>
+                  </motion.div>
                 )}
                 {order.points_discount > 0 && (
-                  <div className="flex justify-between text-primary">
+                  <motion.div
+                    className="flex justify-between text-primary"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                  >
                     <span>积分抵扣</span>
                     <span>-{formatPriceWithSymbol(order.points_discount)}</span>
-                  </div>
+                  </motion.div>
                 )}
                 <div className="flex justify-between">
                   <span className="text-gray-500">运费</span>
@@ -465,25 +622,32 @@ export default function OrderDetailPage() {
               <div className="mt-4 pt-4 border-t border-gray-100">
                 <div className="flex justify-between items-baseline">
                   <span className="text-gray-600">实付款</span>
-                  <span className="text-primary font-bold text-2xl">
+                  <motion.span
+                    className="text-primary font-bold text-2xl"
+                    initial={{ scale: 1.1 }}
+                    animate={{ scale: 1 }}
+                  >
                     {formatPriceWithSymbol(order.pay_amount)}
-                  </span>
+                  </motion.span>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* 操作按钮 */}
-            <div className="bg-white rounded-lg border border-gray-100 p-6">
+            <motion.div
+              className="bg-white rounded-lg border border-gray-100 p-6"
+              whileHover={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}
+            >
               <OrderActions
                 order={order}
                 onCancel={handleCancel}
                 onConfirm={handleConfirm}
                 onPay={handlePay}
               />
-            </div>
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -1,11 +1,41 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react'
+import { motion, type Variants } from 'motion/react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { authService } from '@/services/auth'
 import { useAuthStore } from '@/stores/auth'
 import { cn } from '@/utils'
+
+// 动画变体配置
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+}
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5 },
+  },
+}
+
+const slideVariants: Variants = {
+  hidden: { opacity: 0, x: -30 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.6 },
+  },
+}
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -86,12 +116,31 @@ export default function LoginPage() {
         </div>
 
         {/* 浮动装饰元素 */}
-        <div className="absolute top-20 left-20 w-64 h-64 bg-copper-500/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-20 w-80 h-80 bg-cream-100/10 rounded-full blur-3xl" />
+        <motion.div
+          className="absolute top-20 left-20 w-64 h-64 bg-copper-500/20 rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.2, 0.3, 0.2],
+          }}
+          transition={{ duration: 8, repeat: Infinity }}
+        />
+        <motion.div
+          className="absolute bottom-20 right-20 w-80 h-80 bg-cream-100/10 rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.3, 1],
+            opacity: [0.1, 0.15, 0.1],
+          }}
+          transition={{ duration: 10, repeat: Infinity }}
+        />
 
         {/* 品牌内容 */}
-        <div className="relative z-10 flex flex-col justify-center px-16 text-cream-100">
-          <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
+        <motion.div
+          className="relative z-10 flex flex-col justify-center px-16 text-cream-100"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.div variants={slideVariants}>
             <h1 className="font-display text-5xl font-semibold mb-6">
               欢迎回来
             </h1>
@@ -99,42 +148,64 @@ export default function LoginPage() {
               登录您的账户，继续探索精选好物，<br />
               开启品质生活之旅。
             </p>
-          </div>
+          </motion.div>
 
           {/* 特性列表 */}
-          <div className="space-y-4 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+          <motion.div className="space-y-4" variants={containerVariants}>
             {[
               { icon: '🌿', text: '精选优质商品' },
               { icon: '🚚', text: '极速配送服务' },
               { icon: '💝', text: '专属会员权益' },
             ].map((item, index) => (
-              <div
+              <motion.div
                 key={index}
                 className="flex items-center gap-3 text-cream-200"
+                variants={itemVariants}
+                whileHover={{ x: 5 }}
               >
                 <span className="text-2xl">{item.icon}</span>
                 <span className="text-lg">{item.text}</span>
-              </div>
+              </motion.div>
             ))}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
 
       {/* 右侧表单区 */}
       <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-cream-50">
-        <div className="w-full max-w-md">
+        <motion.div
+          className="w-full max-w-md"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+        >
           {/* 移动端品牌标识 */}
-          <div className="lg:hidden text-center mb-8 animate-fade-in">
+          <motion.div
+            className="lg:hidden text-center mb-8"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
             <Link to="/" className="inline-block">
               <span className="font-display text-3xl font-semibold text-forest-700">
                 NewShop
               </span>
             </Link>
-          </div>
+          </motion.div>
 
           {/* 表单卡片 */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 animate-scale-in">
-            <div className="text-center mb-8">
+          <motion.div
+            className="bg-white rounded-2xl shadow-lg p-8"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            <motion.div
+              className="text-center mb-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
               <h2 className="font-display text-2xl font-semibold text-charcoal mb-2">
                 登录账户
               </h2>
@@ -147,18 +218,28 @@ export default function LoginPage() {
                   立即注册
                 </Link>
               </p>
-            </div>
+            </motion.div>
 
             {/* 服务器错误提示 */}
             {serverError && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm animate-slide-down">
+              <motion.div
+                className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm"
+                initial={{ opacity: 0, y: -10, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: 'auto' }}
+                exit={{ opacity: 0, y: -10, height: 0 }}
+              >
                 {serverError}
-              </div>
+              </motion.div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* 邮箱输入 */}
-              <div className="space-y-2">
+              <motion.div
+                className="space-y-2"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+              >
                 <label htmlFor="email" className="block text-sm font-medium text-charcoal">
                   邮箱地址
                 </label>
@@ -172,10 +253,15 @@ export default function LoginPage() {
                   icon={<Mail className="w-5 h-5" />}
                   className={cn(errors.email && 'border-red-500')}
                 />
-              </div>
+              </motion.div>
 
               {/* 密码输入 */}
-              <div className="space-y-2">
+              <motion.div
+                className="space-y-2"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 }}
+              >
                 <div className="flex items-center justify-between">
                   <label htmlFor="password" className="block text-sm font-medium text-charcoal">
                     密码
@@ -210,36 +296,54 @@ export default function LoginPage() {
                     )}
                   </button>
                 </div>
-              </div>
+              </motion.div>
 
               {/* 登录按钮 */}
-              <Button
-                type="submit"
-                variant="default"
-                size="lg"
-                loading={isLoading}
-                className="w-full mt-6"
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
               >
-                {isLoading ? '登录中...' : '登录'}
-                {!isLoading && <ArrowRight className="w-5 h-5" />}
-              </Button>
+                <Button
+                  type="submit"
+                  variant="default"
+                  size="lg"
+                  loading={isLoading}
+                  className="w-full mt-6"
+                >
+                  {isLoading ? '登录中...' : '登录'}
+                  {!isLoading && <ArrowRight className="w-5 h-5" />}
+                </Button>
+              </motion.div>
             </form>
 
             {/* 分隔线 */}
-            <div className="relative my-8">
+            <motion.div
+              className="relative my-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7 }}
+            >
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-cream-300" />
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-4 bg-white text-stone">或</span>
               </div>
-            </div>
+            </motion.div>
 
             {/* 社交登录按钮 */}
-            <div className="space-y-3">
-              <button
+            <motion.div
+              className="space-y-3"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+            >
+              <motion.button
                 type="button"
                 className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-cream-300 rounded-lg text-charcoal hover:bg-cream-50 transition-colors"
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path
@@ -248,18 +352,23 @@ export default function LoginPage() {
                   />
                 </svg>
                 <span>使用 GitHub 登录</span>
-              </button>
-            </div>
-          </div>
+              </motion.button>
+            </motion.div>
+          </motion.div>
 
           {/* 底部链接 */}
-          <p className="mt-6 text-center text-sm text-stone">
+          <motion.p
+            className="mt-6 text-center text-sm text-stone"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.9 }}
+          >
             登录即表示您同意我们的
             <a href="#" className="text-copper-500 hover:text-copper-600 mx-1">服务条款</a>
             和
             <a href="#" className="text-copper-500 hover:text-copper-600 mx-1">隐私政策</a>
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
       </div>
     </div>
   )

@@ -323,3 +323,67 @@ func (h *AuthHandler) UpdatePassword(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"code": 0, "message": "密码修改成功"})
 }
+
+// Logout 退出登录
+func (h *AuthHandler) Logout(c *gin.Context) {
+	// JWT是无状态的，客户端删除token即可
+	// 如果需要服务端黑名单，可以在这里实现
+	c.JSON(http.StatusOK, gin.H{"code": 0, "message": "退出成功"})
+}
+
+// ResetPasswordRequest 重置密码请求
+type ResetPasswordRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Code     string `json:"code" binding:"required"`
+	Password string `json:"password" binding:"required,min=6,max=20"`
+}
+
+// ResetPassword 重置密码（忘记密码）
+func (h *AuthHandler) ResetPassword(c *gin.Context) {
+	var req ResetPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 40001, "message": "请求参数错误: " + err.Error()})
+		return
+	}
+
+	// 验证验证码
+	if h.emailService != nil {
+		valid, err := h.emailService.VerifyCode(c.Request.Context(), req.Email, "reset", req.Code)
+		if err != nil {
+			h.logger.Error("验证码校验失败", zap.Error(err), zap.String("email", req.Email))
+			c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "验证码校验失败"})
+			return
+		}
+		if !valid {
+			c.JSON(http.StatusBadRequest, gin.H{"code": 40002, "message": "验证码错误或已过期"})
+			return
+		}
+	}
+
+	// 查找用户
+	user, err := h.userService.GetByEmail(c.Request.Context(), req.Email)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusBadRequest, gin.H{"code": 40003, "message": "该邮箱未注册"})
+			return
+		}
+		h.logger.Error("查询用户失败", zap.Error(err), zap.String("email", req.Email))
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "查询用户失败"})
+		return
+	}
+
+	// 更新密码
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "密码加密失败"})
+		return
+	}
+	user.PasswordHash = string(hashedPassword)
+	if err := h.userService.Update(c.Request.Context(), user); err != nil {
+		h.logger.Error("更新密码失败", zap.Error(err), zap.Uint64("user_id", user.ID))
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "更新密码失败"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"code": 0, "message": "密码重置成功"})
+}

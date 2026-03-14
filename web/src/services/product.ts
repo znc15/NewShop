@@ -3,8 +3,15 @@ import type { Product, ProductListParams, PaginatedResponse, Category, SearchRes
 
 export const productService = {
   // 获取商品列表
-  getProducts(params: ProductListParams): Promise<PaginatedResponse<Product>> {
-    return http.get('/products', params as Record<string, unknown>)
+  async getProducts(params: ProductListParams): Promise<PaginatedResponse<Product>> {
+    const res = await http.get<{ products: Product[]; page: number; page_size: number; total: number }>('/products', params as Record<string, unknown>)
+    return {
+      data: res.products || [],
+      total: res.total || 0,
+      page: res.page || 1,
+      page_size: res.page_size || 20,
+      total_pages: Math.ceil((res.total || 0) / (res.page_size || 20)),
+    }
   },
 
   // 获取商品详情

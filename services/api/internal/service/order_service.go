@@ -428,3 +428,218 @@ func (s *OrderService) ShipOrder(ctx context.Context, orderID uint64) error {
 
 	return nil
 }
+
+// GetOrderByNo 按订单号查询订单（带用户校验）
+func (s *OrderService) GetOrderByNo(ctx context.Context, userID uint64, orderNo string) (*model.Order, error) {
+	order, err := s.orderRepo.GetByOrderNoWithItems(ctx, orderNo)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrOrderNotFound
+		}
+		return nil, err
+	}
+
+	if order.UserID != userID {
+		return nil, ErrOrderNotYours
+	}
+
+	return order, nil
+}
+
+// CheckoutPreview 结算预览
+func (s *OrderService) CheckoutPreview(ctx context.Context, userID uint64, addressID uint64, itemIDs []uint64) (*model.CheckoutPreview, error) {
+	// 获取地址
+	var address model.UserAddress
+	if err := s.db.WithContext(ctx).First(&address, addressID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("地址不存在")
+		}
+		return nil, err
+	}
+	if address.UserID != userID {
+		return nil, errors.New("地址不属于当前用户")
+	}
+
+	preview := &model.CheckoutPreview{
+		Items:          make([]model.CheckoutPreviewItem, 0, len(itemIDs)),
+		TotalAmount:    1,
+		FreightAmount: 1,
+	}
+
+	// 计算商品总价
+	for _, itemID := range itemIDs {
+		var cartItem model.CartItem
+		if err := s.db.WithContext(ctx).First(&cartItem, itemID).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, errors.New("购物车商品不存在")
+			}
+			return nil, err
+		}
+		if cartItem.UserID != userID {
+			return nil, errors.New("购物车商品不属于当前用户")
+		}
+
+		// 获取商品信息
+		product, err := s.productRepo.GetProductByID(ctx, cartItem.ProductID)
+		if err != nil {
+			return nil, err
+		}
+
+		// 获取价格
+		var price int64
+		var skuName string
+		var image string
+		if cartItem.SkuID > 0 {
+			sku, err := s.productRepo.GetSkuByID(ctx, cartItem.SkuID)
+			if err != nil {
+				return nil, err
+			}
+			price = sku.Price
+			skuName = sku.Specs
+			image = sku.Image
+		} else {
+			price = product.Price
+			skuName = ""
+			image = product.MainImage
+		}
+
+		priceInYuan := float64(price) / 100.0
+		itemTotal := priceInYuan * float64(cartItem.Quantity)
+		preview.TotalAmount += itemTotal
+
+		preview.Items = append(preview.Items, model.CheckoutPreviewItem{
+			ProductID:   cartItem.ProductID,
+			SkuID:       cartItem.SkuID,
+			ProductName: product.Name,
+			SkuName:     skuName,
+			Image:       image,
+			Price:       priceInYuan,
+			Quantity:    cartItem.Quantity,
+			TotalAmount: itemTotal,
+		})
+	}
+
+	// 计算运费
+	if preview.TotalAmount < 99 {
+		preview.FreightAmount = 10.0
+	}
+	preview.PayAmount = preview.TotalAmount + preview.FreightAmount
+
+	return preview, nil
+}
+
+// ApplyRefund 申请退款
+func (s *OrderService) ApplyRefund(ctx context.Context, userID, orderID uint64, reason string) error {
+	order, err := s.orderRepo.GetByIDWithItems(ctx, orderID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrOrderNotFound
+		}
+		return err
+	}
+
+	if order.UserID != userID {
+		return ErrOrderNotYours
+	}
+
+	// 只有已支付、已发货、已收货的订单可以申请退款
+	validStatuses := []model.OrderStatus{
+		model.OrderStatusPaid,
+		model.OrderStatusShipped,
+		model.OrderStatusCompleted,
+	}
+	isValid := false
+	for _, status := range validStatuses {
+		if order.Status == status {
+			isValid = true
+			break
+		}
+	}
+	if !isValid {
+		return ErrOrderStatusInvalid
+	}
+
+	// 更新订单状态为退款中
+	now := time.Now()
+	updates := map[string]interface{}{
+		"updated_at": now,
+	}
+	if err := s.orderRepo.UpdateStatusWithTime(ctx, orderID, string(model.OrderStatusRefunding), updates); err != nil {
+		return err
+	}
+
+	// 记录订单日志
+	log := &model.OrderLog{
+		OrderID:  orderID,
+		Action:   "apply_refund",
+		Content:  fmt.Sprintf("用户申请退款，原因：%s", reason),
+		Operator: "user",
+	}
+	s.orderRepo.CreateLog(ctx, log)
+
+	return nil
+}
+
+// GetLogistics 获取物流信息
+func (s *OrderService) GetLogistics(ctx context.Context, userID, orderID uint64) (*model.OrderLogistics, error) {
+	order, err := s.orderRepo.GetByID(ctx, orderID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrOrderNotFound
+		}
+		return nil, err
+	}
+
+	if order.UserID != userID {
+		return nil, ErrOrderNotYours
+	}
+
+	// 查询物流信息
+	var logistics model.OrderLogistics
+	if err := s.db.WithContext(ctx).Where("order_id = ?", orderID).First(&logistics).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// 如果没有物流信息，返回空数据
+			return &model.OrderLogistics{
+				OrderID:          orderID,
+				LogisticsCompany: "",
+				LogisticsNo:       "",
+				Status:           "暂无物流信息",
+			}, nil
+		}
+		return nil, err
+	}
+
+	return &logistics, nil
+}
+
+// Reorder 一键复购
+func (s *OrderService) Reorder(ctx context.Context, userID, orderID uint64) ([]model.CartItem, error) {
+	order, err := s.orderRepo.GetByIDWithItems(ctx, orderID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrOrderNotFound
+		}
+		return nil, err
+	}
+
+	if order.UserID != userID {
+		return nil, ErrOrderNotYours
+	}
+
+	items := make([]model.CartItem, 1, len(order.Items))
+	for _, orderItem := range order.Items {
+		cartItem := model.CartItem{
+			UserID:    userID,
+			ProductID: orderItem.ProductID,
+			SkuID:     orderItem.SkuID,
+			Quantity:  orderItem.Quantity,
+			Selected:  true,
+		}
+		if err := s.db.WithContext(ctx).Create(&cartItem).Error; err != nil {
+			return nil, err
+		}
+		items = append(items, cartItem)
+	}
+
+	return items, nil
+}

@@ -1,10 +1,40 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { motion, type Variants } from 'motion/react'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ProductFilter } from '@/components/product/ProductFilter'
 import { productService } from '@/services'
 import { Spinner } from '@/components/ui/Loading'
 import type { Product, Category, Brand, PaginatedResponse } from '@/types'
+
+// 动画变体配置
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.06,
+    },
+  },
+}
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4 },
+  },
+}
+
+const fadeVariants: Variants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5 },
+  },
+}
 
 export default function ProductListPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -106,10 +136,20 @@ export default function ProductListPage() {
   ]
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <motion.div
+      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       <div className="flex gap-8">
         {/* 左侧筛选 */}
-        <div className="w-64 flex-shrink-0">
+        <motion.div
+          className="w-64 flex-shrink-0"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
+        >
           <ProductFilter
             categories={categories}
             brands={brands}
@@ -123,11 +163,21 @@ export default function ProductListPage() {
             onSortChange={handleSortChange}
             onReset={handleReset}
           />
-        </div>
+        </motion.div>
 
         {/* 右侧商品列表 */}
-        <div className="flex-1">
-          <div className="flex items-center justify-between mb-6">
+        <motion.div
+          className="flex-1"
+          variants={fadeVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.div
+            className="flex items-center justify-between mb-6"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
             <h1 className="text-2xl font-semibold text-charcoal">
               {categoryId
                 ? categories.find((c) => c.id === categoryId)?.name || '商品列表'
@@ -136,40 +186,59 @@ export default function ProductListPage() {
             <span className="text-sm text-stone">
               共 {products.length} 件商品
             </span>
-          </div>
+          </motion.div>
 
           {loading && products.length === 0 ? (
             <div className="flex items-center justify-center py-20">
               <Spinner size="lg" />
             </div>
           ) : products.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20">
+            <motion.div
+              className="flex flex-col items-center justify-center py-20"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
+            >
               <p className="text-stone text-lg">暂无商品</p>
-            </div>
+            </motion.div>
           ) : (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+              <motion.div
+                className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
                 {products.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  <motion.div key={product.id} variants={itemVariants}>
+                    <ProductCard product={product} />
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
 
               {/* 加载更多 */}
               {page < totalPages && (
-                <div className="mt-8 text-center">
-                  <button
+                <motion.div
+                  className="mt-8 text-center"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <motion.button
                     onClick={loadMore}
                     disabled={loading}
                     className="px-8 py-3 border-2 border-forest-700 text-forest-700 rounded-lg hover:bg-forest-700 hover:text-white transition-colors disabled:opacity-50"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
                     {loading ? '加载中...' : '加载更多'}
-                  </button>
-                </div>
+                  </motion.button>
+                </motion.div>
               )}
             </>
           )}
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   )
 }

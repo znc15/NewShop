@@ -2,10 +2,36 @@ import { useEffect, useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useSearchParams } from 'react-router-dom'
 import { ShoppingBag, ChevronRight } from 'lucide-react'
+import { motion, AnimatePresence, type Variants } from 'motion/react'
 import { orderService } from '../../services/order'
 import { formatPriceWithSymbol, formatDate } from '../../lib/utils'
 import { OrderStatus, OrderStatusLabels, OrderStatusColors } from '../../types/order'
 import type { OrderListItem, OrderStatusType } from '../../types/order'
+
+// 动画变体配置
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+}
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4 },
+  },
+  exit: {
+    opacity: 0,
+    x: -20,
+    transition: { duration: 0.3 },
+  },
+}
 
 // 状态筛选标签
 const statusTabs: { value: string; label: string }[] = [
@@ -149,44 +175,86 @@ function OrderCard({
 // 空订单列表组件
 function EmptyOrders({ currentTab }: { currentTab: string }) {
   return (
-    <div className="flex flex-col items-center justify-center py-20">
-      <ShoppingBag className="w-24 h-24 text-gray-200 mb-6" />
+    <motion.div
+      className="flex flex-col items-center justify-center py-20"
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <motion.div
+        animate={{ y: [0, -10, 0] }}
+        transition={{ duration: 2, repeat: Infinity }}
+      >
+        <ShoppingBag className="w-24 h-24 text-gray-200 mb-6" />
+      </motion.div>
       <h2 className="text-xl font-medium text-gray-900 mb-2">
         {currentTab === '' ? '暂无订单' : `暂无${statusTabs.find(t => t.value === currentTab)?.label}订单`}
       </h2>
       <p className="text-gray-500 mb-6">去挑选心仪的商品吧</p>
-      <Link
-        to="/"
-        className="px-8 py-3 bg-primary text-white rounded-full hover:bg-primary/90 transition-colors"
-      >
-        去购物
-      </Link>
-    </div>
+      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+        <Link
+          to="/"
+          className="px-8 py-3 bg-primary text-white rounded-full hover:bg-primary/90 transition-colors"
+        >
+          去购物
+        </Link>
+      </motion.div>
+    </motion.div>
   );
 }
 
 // 加载骨架屏
 function OrderSkeleton() {
   return (
-    <div className="space-y-4">
+    <motion.div
+      className="space-y-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    >
       {[1, 2, 3].map((i) => (
-        <div key={i} className="bg-white rounded-lg border border-gray-100 overflow-hidden animate-pulse">
-          <div className="h-12 bg-gray-100" />
+        <motion.div
+          key={i}
+          className="bg-white rounded-lg border border-gray-100 overflow-hidden"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: i * 0.1 }}
+        >
+          <motion.div
+            className="h-12 bg-gray-100"
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+          />
           <div className="p-4 space-y-4">
             {[1, 2].map((j) => (
               <div key={j} className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-gray-200 rounded-lg" />
+                <motion.div
+                  className="w-16 h-16 bg-gray-200 rounded-lg"
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 1.5, repeat: Infinity, delay: (i + j) * 0.1 }}
+                />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-3/4" />
-                  <div className="h-3 bg-gray-200 rounded w-1/4" />
+                  <motion.div
+                    className="h-4 bg-gray-200 rounded w-3/4"
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 1.5, repeat: Infinity, delay: (i + j) * 0.15 }}
+                  />
+                  <motion.div
+                    className="h-3 bg-gray-200 rounded w-1/4"
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 1.5, repeat: Infinity, delay: (i + j) * 0.2 }}
+                  />
                 </div>
               </div>
             ))}
           </div>
-          <div className="h-16 bg-gray-50" />
-        </div>
+          <motion.div
+            className="h-16 bg-gray-50"
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.25 }}
+          />
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   );
 }
 
@@ -254,13 +322,29 @@ export default function OrderListPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">我的订单</h1>
+    <motion.div
+      className="max-w-4xl mx-auto px-4 py-8"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <motion.h1
+        className="text-2xl font-bold text-gray-900 mb-6"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        我的订单
+      </motion.h1>
 
       {/* 状态筛选标签 */}
-      <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
-        {statusTabs.map((tab) => (
-          <button
+      <motion.div
+        className="flex items-center gap-2 mb-6 overflow-x-auto pb-2"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        {statusTabs.map((tab, index) => (
+          <motion.button
             key={tab.value}
             onClick={() => handleTabChange(tab.value)}
             className={`flex-shrink-0 px-4 py-2 rounded-full text-sm transition-colors ${
@@ -268,11 +352,16 @@ export default function OrderListPage() {
                 ? 'bg-primary text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 + index * 0.05 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
             {tab.label}
-          </button>
+          </motion.button>
         ))}
-      </div>
+      </motion.div>
 
       {/* 订单列表 */}
       {loading && orders.length === 0 ? (
@@ -280,40 +369,62 @@ export default function OrderListPage() {
       ) : orders.length === 0 ? (
         <EmptyOrders currentTab={currentStatus} />
       ) : (
-        <>
-          <div className="space-y-4">
+        <motion.div
+          className="space-y-4"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <AnimatePresence mode="popLayout">
             {orders.map((order) => (
-              <OrderCard
+              <motion.div
                 key={order.id}
-                order={order}
-                onCancel={() => handleCancel(order.id)}
-                onConfirm={() => handleConfirm(order.id)}
-                onPay={() => handlePay(order.id)}
-              />
+                variants={itemVariants}
+                layout
+              >
+                <OrderCard
+                  order={order}
+                  onCancel={() => handleCancel(order.id)}
+                  onConfirm={() => handleConfirm(order.id)}
+                  onPay={() => handlePay(order.id)}
+                />
+              </motion.div>
             ))}
-          </div>
+          </AnimatePresence>
 
           {/* 加载更多 */}
           {hasMore && (
-            <div className="mt-6 text-center">
-              <button
+            <motion.div
+              className="mt-6 text-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              <motion.button
                 onClick={loadMore}
                 disabled={loading}
                 className="px-8 py-2 border border-gray-200 rounded-full text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
                 {loading ? '加载中...' : '加载更多'}
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
           )}
 
           {/* 没有更多了 */}
           {!hasMore && orders.length > 0 && (
-            <p className="mt-6 text-center text-gray-400 text-sm">
+            <motion.p
+              className="mt-6 text-center text-gray-400 text-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
               没有更多订单了
-            </p>
+            </motion.p>
           )}
-        </>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }
