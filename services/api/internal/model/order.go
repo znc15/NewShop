@@ -172,19 +172,4 @@ type CheckoutPreviewItem struct {
 	TotalAmount float64 `json:"total_amount"`
 }
 
-// OrderLogistics 订单物流信息
-type OrderLogistics struct {
-	ID               uint64    `gorm:"primaryKey" json:"id"`
-	OrderID          uint64    `gorm:"not null;uniqueIndex" json:"order_id"`
-	LogisticsCompany string    `gorm:"size:100" json:"logistics_company"`
-	LogisticsNo      string    `gorm:"size:100" json:"logistics_no"`
-	Status           string    `gorm:"size:50" json:"status"`
-	Traces           JSONB     `gorm:"type:jsonb" json:"traces"`
-	CreatedAt        time.Time `json:"created_at"`
-	UpdatedAt        time.Time `json:"updated_at"`
-}
-
-// TableName 指定表名
-func (OrderLogistics) TableName() string {
-	return "order_logistics"
-}
+// OrderLogistics 订单物流信息 - 定义在 logistics.go 中

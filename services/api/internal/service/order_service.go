@@ -600,10 +600,9 @@ func (s *OrderService) GetLogistics(ctx context.Context, userID, orderID uint64)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// 如果没有物流信息，返回空数据
 			return &model.OrderLogistics{
-				OrderID:          orderID,
-				LogisticsCompany: "",
-				LogisticsNo:       "",
-				Status:           "暂无物流信息",
+				OrderID:    orderID,
+				TrackingNo: "",
+				Status:     "pending",
 			}, nil
 		}
 		return nil, err
