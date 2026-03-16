@@ -23,7 +23,16 @@ func NewProductHandler(productService *service.ProductService, logger *zap.Logge
 }
 
 // GetProductList 获取商品列表
-// GET /products?page=1&page_size=20&category_id=1&brand_id=1&status=on_sale
+// @Summary 获取商品列表
+// @Tags 商品
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(20)
+// @Param category_id query int false "分类ID"
+// @Param brand_id query int false "品牌ID"
+// @Param status query string false "商品状态" Enums(on_sale, off_sale, sold_out)
+// @Success 200 {object} ProductListResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /products [get]
 func (h *ProductHandler) GetProductList(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
@@ -55,7 +64,14 @@ func (h *ProductHandler) GetProductList(c *gin.Context) {
 }
 
 // GetProductDetail 获取商品详情
-// GET /products/:id
+// @Summary 获取商品详情
+// @Tags 商品
+// @Param id path int true "商品ID"
+// @Success 200 {object} ProductDetailResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /products/{id} [get]
 func (h *ProductHandler) GetProductDetail(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -81,7 +97,15 @@ func (h *ProductHandler) GetProductDetail(c *gin.Context) {
 }
 
 // GetProductsByCategory 按分类获取商品
-// GET /categories/:id/products?page=1&page_size=20
+// @Summary 按分类获取商品
+// @Tags 分类
+// @Param id path int true "分类ID"
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(20)
+// @Success 200 {object} ProductListResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /categories/{id}/products [get]
 func (h *ProductHandler) GetProductsByCategory(c *gin.Context) {
 	categoryID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -111,7 +135,15 @@ func (h *ProductHandler) GetProductsByCategory(c *gin.Context) {
 }
 
 // SearchProducts 搜索商品
-// GET /search?keyword=xxx&page=1&page_size=20
+// @Summary 搜索商品
+// @Tags 搜索
+// @Param keyword query string true "搜索关键词"
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(20)
+// @Success 200 {object} ProductSearchResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /search [get]
 func (h *ProductHandler) SearchProducts(c *gin.Context) {
 	keyword := c.Query("keyword")
 	if keyword == "" {
@@ -142,7 +174,11 @@ func (h *ProductHandler) SearchProducts(c *gin.Context) {
 }
 
 // GetCategories 获取分类列表（树形结构）
-// GET /categories
+// @Summary 获取分类列表
+// @Tags 分类
+// @Success 200 {object} CategoryListResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /categories [get]
 func (h *ProductHandler) GetCategories(c *gin.Context) {
 	result, err := h.productService.GetCategories(c.Request.Context())
 	if err != nil {
@@ -160,7 +196,14 @@ func (h *ProductHandler) GetCategories(c *gin.Context) {
 }
 
 // GetCategoryDetail 获取单个分类详情
-// GET /categories/:id
+// @Summary 获取分类详情
+// @Tags 分类
+// @Param id path int true "分类ID"
+// @Success 200 {object} CategoryDetailResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /categories/{id} [get]
 func (h *ProductHandler) GetCategoryDetail(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -186,7 +229,13 @@ func (h *ProductHandler) GetCategoryDetail(c *gin.Context) {
 }
 
 // GetBrands 获取品牌列表
-// GET /brands?page=1&page_size=20
+// @Summary 获取品牌列表
+// @Tags 品牌
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(20)
+// @Success 200 {object} BrandListResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /brands [get]
 func (h *ProductHandler) GetBrands(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
@@ -210,7 +259,14 @@ func (h *ProductHandler) GetBrands(c *gin.Context) {
 }
 
 // GetBrandDetail 获取单个品牌详情
-// GET /brands/:id
+// @Summary 获取品牌详情
+// @Tags 品牌
+// @Param id path int true "品牌ID"
+// @Success 200 {object} BrandDetailResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /brands/{id} [get]
 func (h *ProductHandler) GetBrandDetail(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -236,7 +292,15 @@ func (h *ProductHandler) GetBrandDetail(c *gin.Context) {
 }
 
 // GetProductsByBrand 按品牌获取商品
-// GET /brands/:id/products?page=1&page_size=20
+// @Summary 按品牌获取商品
+// @Tags 品牌
+// @Param id path int true "品牌ID"
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(20)
+// @Success 200 {object} ProductListResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /brands/{id}/products [get]
 func (h *ProductHandler) GetProductsByBrand(c *gin.Context) {
 	brandID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -266,7 +330,12 @@ func (h *ProductHandler) GetProductsByBrand(c *gin.Context) {
 }
 
 // GetHotProducts 获取热门商品
-// GET /products/hot?limit=8
+// @Summary 获取热门商品
+// @Tags 商品
+// @Param limit query int false "数量限制" default(8)
+// @Success 200 {object} HotProductsResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /products/hot [get]
 func (h *ProductHandler) GetHotProducts(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "8"))
 	if limit <= 0 || limit > 50 {
@@ -289,7 +358,12 @@ func (h *ProductHandler) GetHotProducts(c *gin.Context) {
 }
 
 // GetNewProducts 获取新品推荐
-// GET /products/new?limit=8
+// @Summary 获取新品推荐
+// @Tags 商品
+// @Param limit query int false "数量限制" default(8)
+// @Success 200 {object} NewProductsResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /products/new [get]
 func (h *ProductHandler) GetNewProducts(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "8"))
 	if limit <= 0 || limit > 50 {
@@ -318,8 +392,8 @@ func RegisterProductRoutes(r *gin.RouterGroup, h *ProductHandler) {
 	{
 		// 注意：静态路由必须在动态路由（/:id）之前注册
 		products.GET("", h.GetProductList)
-		products.GET("/hot", h.GetHotProducts)    // 热门商品
-		products.GET("/new", h.GetNewProducts)    // 新品推荐
+		products.GET("/hot", h.GetHotProducts) // 热门商品
+		products.GET("/new", h.GetNewProducts) // 新品推荐
 		products.GET("/:id", h.GetProductDetail)
 	}
 
@@ -342,4 +416,80 @@ func RegisterProductRoutes(r *gin.RouterGroup, h *ProductHandler) {
 
 	// 搜索
 	r.GET("/search", h.SearchProducts)
+}
+
+// ProductListResponse 商品列表响应
+type ProductListResponse struct {
+	Code int `json:"code"`
+	Data struct {
+		Products interface{} `json:"products"`
+		Total    int64       `json:"total"`
+		Page     int         `json:"page"`
+		PageSize int         `json:"page_size"`
+	} `json:"data"`
+}
+
+// ProductDetailResponse 商品详情响应
+type ProductDetailResponse struct {
+	Code int         `json:"code"`
+	Data interface{} `json:"data"`
+}
+
+// ProductSearchResponse 商品搜索响应
+type ProductSearchResponse struct {
+	Code int `json:"code"`
+	Data struct {
+		Products interface{} `json:"products"`
+		Total    int64       `json:"total"`
+		Page     int         `json:"page"`
+		PageSize int         `json:"page_size"`
+		Keyword  string      `json:"keyword"`
+	} `json:"data"`
+}
+
+// CategoryListResponse 分类列表响应
+type CategoryListResponse struct {
+	Code int `json:"code"`
+	Data struct {
+		Categories interface{} `json:"categories"`
+	} `json:"data"`
+}
+
+// CategoryDetailResponse 分类详情响应
+type CategoryDetailResponse struct {
+	Code int         `json:"code"`
+	Data interface{} `json:"data"`
+}
+
+// BrandListResponse 品牌列表响应
+type BrandListResponse struct {
+	Code int `json:"code"`
+	Data struct {
+		Brands   interface{} `json:"brands"`
+		Total    int64       `json:"total"`
+		Page     int         `json:"page"`
+		PageSize int         `json:"page_size"`
+	} `json:"data"`
+}
+
+// BrandDetailResponse 品牌详情响应
+type BrandDetailResponse struct {
+	Code int         `json:"code"`
+	Data interface{} `json:"data"`
+}
+
+// HotProductsResponse 热门商品响应
+type HotProductsResponse struct {
+	Code int `json:"code"`
+	Data struct {
+		Products interface{} `json:"products"`
+	} `json:"data"`
+}
+
+// NewProductsResponse 新品推荐响应
+type NewProductsResponse struct {
+	Code int `json:"code"`
+	Data struct {
+		Products interface{} `json:"products"`
+	} `json:"data"`
 }

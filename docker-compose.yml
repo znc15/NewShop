@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:15-alpine
@@ -17,6 +15,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - newshop-network
 
   redis:
     image: redis:7-alpine
@@ -30,6 +30,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - newshop-network
 
   meilisearch:
     image: getmeili/meilisearch:v1.5
@@ -38,10 +40,57 @@ services:
       MEILI_MASTER_KEY: newshop-master-key
     ports:
       - "7700:7700"
-    volumes:
-      - meili_data:/meilisearch/data
+    networks:
+      - newshop-network
+
+  api:
+    build:
+      context: ./services/api
+      dockerfile: Dockerfile
+    container_name: newshop-api
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=newshop
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - MEILI_HOST=http://meilisearch:7700
+      - MEILI_API_KEY=newshop-master-key
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
+      - JWT_EXPIRY=24h
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      meilisearch:
+        condition: service_started
+    networks:
+      - newshop-network
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: newshop-web
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    networks:
+      - newshop-network
+    restart: unless-stopped
 
 volumes:
   postgres_data:
   redis_data:
-  meili_data:
+
+networks:
+  newshop-network:
+    driver: bridge

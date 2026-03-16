@@ -5,6 +5,7 @@ import (
 	"context"
 	"log"
 
+	_ "newshop/api/docs" // swagger docs，需要先运行 swag init 生成
 	"newshop/api/internal/config"
 	"newshop/api/internal/pkg/email"
 	"newshop/api/internal/pkg/jwt"
@@ -17,6 +18,25 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
+
+// @title NewShop API
+// @version 1.0
+// @description NewShop 电商平台 API 接口文档，支持商品管理、购物车、订单、预售、优惠券、积分、会员等核心电商功能
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
+// @contact.email support@swagger.io
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:8080
+// @BasePath /api/v1
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
+// @description JWT认证令牌，格式: Bearer {token}
 
 // Application 应用程序结构
 type Application struct {

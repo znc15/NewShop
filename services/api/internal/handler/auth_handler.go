@@ -16,16 +16,16 @@ import (
 type AuthHandler struct {
 	userService  *service.UserService
 	emailService *service.EmailService
-	jwtManager    *jwt.JWTManager
-	logger        *zap.Logger
+	jwtManager   *jwt.JWTManager
+	logger       *zap.Logger
 }
 
 func NewAuthHandler(userService *service.UserService, emailService *service.EmailService, jwtManager *jwt.JWTManager, logger *zap.Logger) *AuthHandler {
 	return &AuthHandler{
 		userService:  userService,
 		emailService: emailService,
-		jwtManager:    jwtManager,
-		logger:        logger,
+		jwtManager:   jwtManager,
+		logger:       logger,
 	}
 }
 
@@ -51,12 +51,23 @@ type RefreshRequest struct {
 }
 
 type SendCodeRequest struct {
-	Email     string `json:"email" binding:"required,email"`
-	Type      string `json:"type" binding:"required,oneof=register login reset"`
-	CaptchaID string `json:"captcha_id" binding:"required"`
+	Email        string `json:"email" binding:"required,email"`
+	Type         string `json:"type" binding:"required,oneof=register login reset"`
+	CaptchaID    string `json:"captcha_id" binding:"required"`
 	CaptchaToken string `json:"captcha_token" binding:"required"`
 }
 
+// Register 用户注册
+// @Summary 用户注册
+// @Tags 认证
+// @Accept json
+// @Produce json
+// @Param request body RegisterRequest true "注册请求"
+// @Success 201 {object} RegisterResponse
+// @Failure 400 {object} map[string]interface{} "请求参数错误"
+// @Failure 409 {object} map[string]interface{} "邮箱已被注册"
+// @Failure 500 {object} map[string]interface{} "服务器内部错误"
+// @Router /api/v1/auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -128,14 +139,25 @@ func (h *AuthHandler) Register(c *gin.Context) {
 			"access_token":  accessToken,
 			"refresh_token": refreshToken,
 			"user": gin.H{
-				"id":     user.ID,
-				"email":  user.Email,
+				"id":       user.ID,
+				"email":    user.Email,
 				"nickname": user.Nickname,
 			},
 		},
 	})
 }
 
+// Login 用户登录
+// @Summary 用户登录
+// @Tags 认证
+// @Accept json
+// @Produce json
+// @Param request body LoginRequest true "登录请求"
+// @Success 200 {object} LoginResponse
+// @Failure 400 {object} map[string]interface{} "请求参数错误"
+// @Failure 401 {object} map[string]interface{} "邮箱或密码错误"
+// @Failure 500 {object} map[string]interface{} "服务器内部错误"
+// @Router /api/v1/auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -181,6 +203,17 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	})
 }
 
+// Refresh 刷新令牌
+// @Summary 刷新令牌
+// @Tags 认证
+// @Accept json
+// @Produce json
+// @Param request body RefreshRequest true "刷新令牌请求"
+// @Success 200 {object} RefreshResponse
+// @Failure 400 {object} map[string]interface{} "请求参数错误"
+// @Failure 401 {object} map[string]interface{} "刷新令牌无效"
+// @Failure 500 {object} map[string]interface{} "服务器内部错误"
+// @Router /api/v1/auth/refresh [post]
 func (h *AuthHandler) Refresh(c *gin.Context) {
 	var req RefreshRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -216,6 +249,17 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	})
 }
 
+// SendCode 发送验证码
+// @Summary 发送验证码
+// @Tags 认证
+// @Accept json
+// @Produce json
+// @Param request body SendCodeRequest true "发送验证码请求"
+// @Success 200 {object} map[string]interface{} "验证码已发送"
+// @Failure 400 {object} map[string]interface{} "请求参数错误"
+// @Failure 409 {object} map[string]interface{} "邮箱已被注册"
+// @Failure 500 {object} map[string]interface{} "服务器内部错误"
+// @Router /api/v1/auth/send-code [post]
 func (h *AuthHandler) SendCode(c *gin.Context) {
 	var req SendCodeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -248,6 +292,15 @@ func (h *AuthHandler) SendCode(c *gin.Context) {
 	})
 }
 
+// GetProfile 获取用户信息
+// @Summary 获取用户信息
+// @Tags 认证
+// @Produce json
+// @Security ApiKeyAuth
+// @Success 200 {object} ProfileResponse
+// @Failure 401 {object} map[string]interface{} "未授权"
+// @Failure 404 {object} map[string]interface{} "用户不存在"
+// @Router /api/v1/auth/profile [get]
 func (h *AuthHandler) GetProfile(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -270,6 +323,19 @@ func (h *AuthHandler) GetProfile(c *gin.Context) {
 	})
 }
 
+// UpdatePassword 修改密码
+// @Summary 修改密码
+// @Tags 认证
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param request body UpdatePasswordRequest true "修改密码请求"
+// @Success 200 {object} map[string]interface{} "密码修改成功"
+// @Failure 400 {object} map[string]interface{} "请求参数错误或验证码错误"
+// @Failure 401 {object} map[string]interface{} "未授权或原密码错误"
+// @Failure 404 {object} map[string]interface{} "用户不存在"
+// @Failure 500 {object} map[string]interface{} "服务器内部错误"
+// @Router /api/v1/auth/password [put]
 func (h *AuthHandler) UpdatePassword(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 	var req struct {
@@ -325,6 +391,13 @@ func (h *AuthHandler) UpdatePassword(c *gin.Context) {
 }
 
 // Logout 退出登录
+// @Summary 退出登录
+// @Tags 认证
+// @Produce json
+// @Security ApiKeyAuth
+// @Success 200 {object} map[string]interface{} "退出成功"
+// @Failure 401 {object} map[string]interface{} "未授权"
+// @Router /api/v1/auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
 	// JWT是无状态的，客户端删除token即可
 	// 如果需要服务端黑名单，可以在这里实现
@@ -339,6 +412,15 @@ type ResetPasswordRequest struct {
 }
 
 // ResetPassword 重置密码（忘记密码）
+// @Summary 重置密码
+// @Tags 认证
+// @Accept json
+// @Produce json
+// @Param request body ResetPasswordRequest true "重置密码请求"
+// @Success 200 {object} map[string]interface{} "密码重置成功"
+// @Failure 400 {object} map[string]interface{} "请求参数错误或验证码错误"
+// @Failure 500 {object} map[string]interface{} "服务器内部错误"
+// @Router /api/v1/auth/reset-password [post]
 func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	var req ResetPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -386,4 +468,60 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"code": 0, "message": "密码重置成功"})
+}
+
+// UpdatePasswordRequest 修改密码请求
+type UpdatePasswordRequest struct {
+	OldPassword string `json:"old_password" binding:"required"`
+	NewPassword string `json:"new_password" binding:"required,min=6,max=20"`
+	Code        string `json:"code" binding:"required"`
+}
+
+// UserInfo 用户基本信息
+type UserInfo struct {
+	ID       uint64 `json:"id"`
+	Email    string `json:"email"`
+	Nickname string `json:"nickname"`
+}
+
+// RegisterResponse 注册响应
+type RegisterResponse struct {
+	Code int `json:"code"`
+	Data *struct {
+		AccessToken  string    `json:"access_token"`
+		RefreshToken string    `json:"refresh_token"`
+		User         *UserInfo `json:"user"`
+	} `json:"data"`
+}
+
+// LoginResponse 登录响应
+type LoginResponse struct {
+	Code int `json:"code"`
+	Data *struct {
+		AccessToken  string    `json:"access_token"`
+		RefreshToken string    `json:"refresh_token"`
+		User         *UserInfo `json:"user"`
+	} `json:"data"`
+}
+
+// RefreshResponse 刷新令牌响应
+type RefreshResponse struct {
+	Code int `json:"code"`
+	Data *struct {
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+	} `json:"data"`
+}
+
+// ProfileResponse 用户信息响应
+type ProfileResponse struct {
+	Code int `json:"code"`
+	Data *struct {
+		ID          uint64 `json:"id"`
+		Email       string `json:"email"`
+		Nickname    string `json:"nickname"`
+		Avatar      string `json:"avatar"`
+		MemberLevel int    `json:"member_level"`
+		Points      int    `json:"points"`
+	} `json:"data"`
 }

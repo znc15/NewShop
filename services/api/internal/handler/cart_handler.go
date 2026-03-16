@@ -45,7 +45,12 @@ type BatchRemoveRequest struct {
 }
 
 // GetCart 获取购物车
-// GET /cart
+// @Summary 获取购物车
+// @Tags 购物车
+// @Security ApiKeyAuth
+// @Success 200 {object} CartResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/v1/cart [get]
 func (h *CartHandler) GetCart(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -69,7 +74,14 @@ func (h *CartHandler) GetCart(c *gin.Context) {
 }
 
 // AddItem 添加商品到购物车
-// POST /cart
+// @Summary 添加商品到购物车
+// @Tags 购物车
+// @Security ApiKeyAuth
+// @Param request body AddItemRequest true "请求参数"
+// @Success 201 {object} CartItemResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/v1/cart [post]
 func (h *CartHandler) AddItem(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -98,7 +110,16 @@ func (h *CartHandler) AddItem(c *gin.Context) {
 }
 
 // UpdateQuantity 更新购物车商品数量
-// PUT /cart/:id
+// @Summary 更新购物车商品数量
+// @Tags 购物车
+// @Security ApiKeyAuth
+// @Param id path int true "购物车项ID"
+// @Param request body UpdateQuantityRequest true "请求参数"
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/v1/cart/{id} [put]
 func (h *CartHandler) UpdateQuantity(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -136,7 +157,16 @@ func (h *CartHandler) UpdateQuantity(c *gin.Context) {
 }
 
 // UpdateSelected 更新购物车商品选中状态
-// PUT /cart/:id/selected
+// @Summary 更新购物车商品选中状态
+// @Tags 购物车
+// @Security ApiKeyAuth
+// @Param id path int true "购物车项ID"
+// @Param request body UpdateSelectedRequest true "请求参数"
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/v1/cart/{id}/selected [put]
 func (h *CartHandler) UpdateSelected(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -170,7 +200,15 @@ func (h *CartHandler) UpdateSelected(c *gin.Context) {
 }
 
 // RemoveItem 删除购物车商品
-// DELETE /cart/:id
+// @Summary 删除购物车商品
+// @Tags 购物车
+// @Security ApiKeyAuth
+// @Param id path int true "购物车项ID"
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/v1/cart/{id} [delete]
 func (h *CartHandler) RemoveItem(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -198,7 +236,12 @@ func (h *CartHandler) RemoveItem(c *gin.Context) {
 }
 
 // ClearCart 清空购物车
-// DELETE /cart
+// @Summary 清空购物车
+// @Tags 购物车
+// @Security ApiKeyAuth
+// @Success 200 {object} MessageResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/v1/cart [delete]
 func (h *CartHandler) ClearCart(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -215,7 +258,14 @@ func (h *CartHandler) ClearCart(c *gin.Context) {
 }
 
 // BatchRemove 批量删除购物车商品
-// POST /cart/batch-remove
+// @Summary 批量删除购物车商品
+// @Tags 购物车
+// @Security ApiKeyAuth
+// @Param request body BatchRemoveRequest true "请求参数"
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/v1/cart/batch-remove [post]
 func (h *CartHandler) BatchRemove(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -238,7 +288,12 @@ func (h *CartHandler) BatchRemove(c *gin.Context) {
 }
 
 // GetSelectedItems 获取选中的购物车商品
-// GET /cart/selected
+// @Summary 获取选中的购物车商品
+// @Tags 购物车
+// @Security ApiKeyAuth
+// @Success 200 {object} SelectedItemsResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/v1/cart/selected [get]
 func (h *CartHandler) GetSelectedItems(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -258,7 +313,14 @@ func (h *CartHandler) GetSelectedItems(c *gin.Context) {
 }
 
 // BatchSelect 批量选择购物车商品
-// POST /cart/batch-select
+// @Summary 批量选择购物车商品
+// @Tags 购物车
+// @Security ApiKeyAuth
+// @Param request body BatchSelectRequest true "请求参数"
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/v1/cart/batch-select [post]
 func (h *CartHandler) BatchSelect(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -283,7 +345,14 @@ func (h *CartHandler) BatchSelect(c *gin.Context) {
 }
 
 // SelectAll 全选/取消全选
-// POST /cart/select-all
+// @Summary 全选/取消全选购物车商品
+// @Tags 购物车
+// @Security ApiKeyAuth
+// @Param request body SelectAllRequest true "请求参数"
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/v1/cart/select-all [post]
 func (h *CartHandler) SelectAll(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -308,7 +377,12 @@ func (h *CartHandler) SelectAll(c *gin.Context) {
 }
 
 // GetCartCount 获取购物车商品数量
-// GET /cart/count
+// @Summary 获取购物车商品数量
+// @Tags 购物车
+// @Security ApiKeyAuth
+// @Success 200 {object} CartCountResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /api/v1/cart/count [get]
 func (h *CartHandler) GetCartCount(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -342,6 +416,64 @@ func RegisterCartRoutes(r *gin.RouterGroup, h *CartHandler, authMiddleware gin.H
 		cart.POST("/batch-select", h.BatchSelect)   // 批量选择
 		cart.POST("/select-all", h.SelectAll)       // 全选/取消全选
 		cart.GET("/selected", h.GetSelectedItems)   // 获取选中商品
-		cart.GET("/count", h.GetCartCount)         // 获取购物车数量
+		cart.GET("/count", h.GetCartCount)          // 获取购物车数量
 	}
+}
+
+// BatchSelectRequest 批量选择请求
+type BatchSelectRequest struct {
+	IDs []uint64 `json:"ids" binding:"required"`
+}
+
+// SelectAllRequest 全选/取消全选请求
+type SelectAllRequest struct {
+	Selected bool `json:"selected" binding:"required"`
+}
+
+// CartItemData 购物车项数据
+type CartItemData struct {
+	ID        uint64 `json:"id"`
+	UserID    uint64 `json:"user_id"`
+	ProductID uint64 `json:"product_id"`
+	SkuID     uint64 `json:"sku_id"`
+	Quantity  int    `json:"quantity"`
+	Selected  bool   `json:"selected"`
+}
+
+// CartResponse 获取购物车响应
+type CartResponse struct {
+	Code int `json:"code"`
+	Data *struct {
+		Items []CartItemData `json:"items"`
+		Count int64          `json:"count"`
+	} `json:"data"`
+}
+
+// CartItemResponse 添加购物车项响应
+type CartItemResponse struct {
+	Code    int           `json:"code"`
+	Message string        `json:"message"`
+	Data    *CartItemData `json:"data"`
+}
+
+// SelectedItemsResponse 获取选中商品响应
+type SelectedItemsResponse struct {
+	Code int `json:"code"`
+	Data *struct {
+		Items []CartItemData `json:"items"`
+	} `json:"data"`
+}
+
+// CartCountResponse 获取购物车数量响应
+type CartCountResponse struct {
+	Code int `json:"code"`
+	Data *struct {
+		Count int64 `json:"count"`
+	} `json:"data"`
+}
+
+// MessageResponse 通用消息响应
+type MessageResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
 }

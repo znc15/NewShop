@@ -18,6 +18,109 @@ type OrderAdminHandler struct {
 	logger  *zap.Logger
 }
 
+// ==================== 响应结构体 ====================
+
+// OrderAdminListResponse 订单列表响应
+type OrderAdminListResponse struct {
+	Code int                `json:"code" example:"0"`
+	Data OrderAdminListData `json:"data"`
+}
+
+// OrderAdminListData 订单列表数据
+type OrderAdminListData struct {
+	Orders []OrderAdminListItem `json:"orders"`
+	Total  int64                `json:"total"`
+	Page   int                  `json:"page"`
+}
+
+// OrderAdminListItem 订单列表项
+type OrderAdminListItem struct {
+	ID             uint64  `json:"id" example:"1"`
+	OrderNo        string  `json:"order_no" example:"ORD202401010001"`
+	UserID         uint64  `json:"user_id" example:"1"`
+	UserName       string  `json:"user_name,omitempty" example:"张三"`
+	TotalAmount    float64 `json:"total_amount" example:"299.00"`
+	PayAmount      float64 `json:"pay_amount" example:"279.00"`
+	DiscountAmount float64 `json:"discount_amount" example:"20.00"`
+	Status         string  `json:"status" example:"paid"`
+	PaymentMethod  string  `json:"payment_method,omitempty" example:"alipay"`
+	PaymentTime    string  `json:"payment_time,omitempty" example:"2024-01-01T12:00:00Z"`
+	CreatedAt      string  `json:"created_at" example:"2024-01-01T10:00:00Z"`
+}
+
+// OrderAdminDetailResponse 订单详情响应
+type OrderAdminDetailResponse struct {
+	Code int                   `json:"code" example:"0"`
+	Data *OrderAdminDetailData `json:"data"`
+}
+
+// OrderAdminDetailData 订单详情数据
+type OrderAdminDetailData struct {
+	ID              uint64               `json:"id" example:"1"`
+	OrderNo         string               `json:"order_no" example:"ORD202401010001"`
+	UserID          uint64               `json:"user_id" example:"1"`
+	UserName        string               `json:"user_name,omitempty" example:"张三"`
+	UserPhone       string               `json:"user_phone,omitempty" example:"13800138000"`
+	TotalAmount     float64              `json:"total_amount" example:"299.00"`
+	PayAmount       float64              `json:"pay_amount" example:"279.00"`
+	DiscountAmount  float64              `json:"discount_amount" example:"20.00"`
+	Status          string               `json:"status" example:"paid"`
+	PaymentMethod   string               `json:"payment_method,omitempty" example:"alipay"`
+	PaymentTime     string               `json:"payment_time,omitempty" example:"2024-01-01T12:00:00Z"`
+	ReceiverName    string               `json:"receiver_name" example:"李四"`
+	ReceiverPhone   string               `json:"receiver_phone" example:"13900139000"`
+	ReceiverAddress string               `json:"receiver_address" example:"北京市朝阳区xxx街道xxx号"`
+	ExpressCompany  string               `json:"express_company,omitempty" example:"顺丰速运"`
+	ExpressNo       string               `json:"express_no,omitempty" example:"SF1234567890"`
+	ShippedAt       string               `json:"shipped_at,omitempty" example:"2024-01-02T10:00:00Z"`
+	Items           []OrderAdminItemData `json:"items"`
+	CreatedAt       string               `json:"created_at" example:"2024-01-01T10:00:00Z"`
+	UpdatedAt       string               `json:"updated_at" example:"2024-01-02T10:00:00Z"`
+}
+
+// OrderAdminItemData 订单商品项数据
+type OrderAdminItemData struct {
+	ID          uint64  `json:"id" example:"1"`
+	ProductID   uint64  `json:"product_id" example:"1"`
+	ProductName string  `json:"product_name" example:"iPhone 15 Pro"`
+	SkuID       uint64  `json:"sku_id" example:"1"`
+	SkuSpecs    string  `json:"sku_specs,omitempty" example:"颜色:深空黑;容量:256GB"`
+	Price       float64 `json:"price" example:"7999.00"`
+	Quantity    int     `json:"quantity" example:"1"`
+	Image       string  `json:"image,omitempty" example:"https://example.com/product.jpg"`
+}
+
+// OrderAdminStatisticsResponse 订单统计响应
+type OrderAdminStatisticsResponse struct {
+	Code int                       `json:"code" example:"0"`
+	Data *OrderAdminStatisticsData `json:"data"`
+}
+
+// OrderAdminStatisticsData 订单统计数据
+type OrderAdminStatisticsData struct {
+	TotalOrders     int64   `json:"total_orders" example:"1000"`
+	TotalAmount     float64 `json:"total_amount" example:"99999.00"`
+	TotalPayAmount  float64 `json:"total_pay_amount" example:"89999.00"`
+	PendingOrders   int64   `json:"pending_orders" example:"50"`
+	PaidOrders      int64   `json:"paid_orders" example:"800"`
+	ShippedOrders   int64   `json:"shipped_orders" example:"100"`
+	CompletedOrders int64   `json:"completed_orders" example:"40"`
+	CancelledOrders int64   `json:"cancelled_orders" example:"10"`
+	RefundedOrders  int64   `json:"refunded_orders" example:"5"`
+}
+
+// OrderAdminSuccessResponse 操作成功响应
+type OrderAdminSuccessResponse struct {
+	Code    int    `json:"code" example:"0"`
+	Message string `json:"message" example:"操作成功"`
+}
+
+// OrderAdminErrorResponse 错误响应
+type OrderAdminErrorResponse struct {
+	Code    int    `json:"code" example:"40001"`
+	Message string `json:"message" example:"请求参数错误"`
+}
+
 // NewOrderAdminHandler 创建订单管理 Handler
 func NewOrderAdminHandler(service *admin.OrderAdminService, logger *zap.Logger) *OrderAdminHandler {
 	return &OrderAdminHandler{
@@ -38,7 +141,20 @@ type OrderListQuery struct {
 }
 
 // ListOrders 获取订单列表
-// GET /admin/orders
+// @Summary 获取订单列表
+// @Tags 管理后台-订单
+// @Security ApiKeyAuth
+// @Param status query string false "订单状态"
+// @Param user_id query uint64 false "用户ID"
+// @Param order_no query string false "订单号"
+// @Param start_date query string false "开始日期 (YYYY-MM-DD)"
+// @Param end_date query string false "结束日期 (YYYY-MM-DD)"
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(20)
+// @Success 200 {object} OrderAdminListResponse
+// @Failure 400 {object} OrderAdminErrorResponse
+// @Failure 500 {object} OrderAdminErrorResponse
+// @Router /api/admin/orders [get]
 func (h *OrderAdminHandler) ListOrders(c *gin.Context) {
 	var query OrderListQuery
 	if err := c.ShouldBindQuery(&query); err != nil {
@@ -114,7 +230,15 @@ func (h *OrderAdminHandler) ListOrders(c *gin.Context) {
 }
 
 // GetOrderDetail 获取订单详情
-// GET /admin/orders/:id
+// @Summary 获取订单详情
+// @Tags 管理后台-订单
+// @Security ApiKeyAuth
+// @Param id path uint64 true "订单ID"
+// @Success 200 {object} OrderAdminDetailResponse
+// @Failure 400 {object} OrderAdminErrorResponse
+// @Failure 404 {object} OrderAdminErrorResponse
+// @Failure 500 {object} OrderAdminErrorResponse
+// @Router /api/admin/orders/{id} [get]
 func (h *OrderAdminHandler) GetOrderDetail(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
@@ -151,12 +275,27 @@ func (h *OrderAdminHandler) GetOrderDetail(c *gin.Context) {
 
 // ShipOrderRequest 发货请求
 type ShipOrderRequest struct {
-	ExpressCompany string `json:"express_company" binding:"required"` // 物流公司
-	ExpressNo      string `json:"express_no" binding:"required"`      // 物流单号
+	ExpressCompany string `json:"express_company" binding:"required" example:"顺丰速运"`    // 物流公司
+	ExpressNo      string `json:"express_no" binding:"required" example:"SF1234567890"` // 物流单号
+}
+
+// RefundOrderRequest 退款请求
+type RefundOrderRequest struct {
+	RefundAmount float64 `json:"refund_amount" binding:"required,gt=0" example:"299.00"` // 退款金额
+	RefundReason string  `json:"refund_reason" binding:"required" example:"用户申请退款"`      // 退款原因
 }
 
 // ShipOrder 发货
-// PUT /admin/orders/:id/ship
+// @Summary 订单发货
+// @Tags 管理后台-订单
+// @Security ApiKeyAuth
+// @Param id path uint64 true "订单ID"
+// @Param request body ShipOrderRequest true "发货信息"
+// @Success 200 {object} OrderAdminSuccessResponse
+// @Failure 400 {object} OrderAdminErrorResponse
+// @Failure 404 {object} OrderAdminErrorResponse
+// @Failure 500 {object} OrderAdminErrorResponse
+// @Router /api/admin/orders/{id}/ship [put]
 func (h *OrderAdminHandler) ShipOrder(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
@@ -214,14 +353,17 @@ func (h *OrderAdminHandler) ShipOrder(c *gin.Context) {
 	})
 }
 
-// RefundOrderRequest 退款请求
-type RefundOrderRequest struct {
-	RefundAmount float64 `json:"refund_amount" binding:"required,gt=0"` // 退款金额
-	RefundReason string  `json:"refund_reason" binding:"required"`      // 退款原因
-}
-
 // RefundOrder 退款
-// PUT /admin/orders/:id/refund
+// @Summary 订单退款
+// @Tags 管理后台-订单
+// @Security ApiKeyAuth
+// @Param id path uint64 true "订单ID"
+// @Param request body RefundOrderRequest true "退款信息"
+// @Success 200 {object} OrderAdminSuccessResponse
+// @Failure 400 {object} OrderAdminErrorResponse
+// @Failure 404 {object} OrderAdminErrorResponse
+// @Failure 500 {object} OrderAdminErrorResponse
+// @Router /api/admin/orders/{id}/refund [put]
 func (h *OrderAdminHandler) RefundOrder(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
@@ -247,7 +389,7 @@ func (h *OrderAdminHandler) RefundOrder(c *gin.Context) {
 
 	input := admin.RefundOrderInput{
 		RefundAmount: req.RefundAmount,
-		RefundReason:  req.RefundReason,
+		RefundReason: req.RefundReason,
 	}
 
 	err = h.service.RefundOrder(c.Request.Context(), id, adminID, input)
@@ -291,7 +433,15 @@ type StatisticsQuery struct {
 }
 
 // GetStatistics 获取订单统计
-// GET /admin/orders/statistics
+// @Summary 获取订单统计
+// @Tags 管理后台-订单
+// @Security ApiKeyAuth
+// @Param start_date query string false "开始日期 (YYYY-MM-DD)"
+// @Param end_date query string false "结束日期 (YYYY-MM-DD)"
+// @Success 200 {object} OrderAdminStatisticsResponse
+// @Failure 400 {object} OrderAdminErrorResponse
+// @Failure 500 {object} OrderAdminErrorResponse
+// @Router /api/admin/orders/statistics [get]
 func (h *OrderAdminHandler) GetStatistics(c *gin.Context) {
 	var query StatisticsQuery
 	if err := c.ShouldBindQuery(&query); err != nil {

@@ -11,6 +11,13 @@ import (
 	"go.uber.org/zap"
 )
 
+// Response 通用响应结构
+type Response struct {
+	Code    int         `json:"code"`
+	Message string      `json:"message,omitempty"`
+	Data    interface{} `json:"data,omitempty"`
+}
+
 // StatisticsAdminHandler 数据统计管理 Handler
 type StatisticsAdminHandler struct {
 	service *admin.StatisticsAdminService
@@ -42,12 +49,15 @@ type OverviewResponse struct {
 
 // GetOverview 获取总览数据
 // @Summary 获取总览数据
-// @Description 获取今日销售额、订单数、用户数等总览数据
-// @Tags 管理后台-数据统计
+// @Description 获取今日销售额、订单数、用户数等总览数据，包含环比数据
+// @Tags 管理后台-统计
 // @Accept json
 // @Produce json
-// @Success 200 {object} OverviewResponse
-// @Router /admin/statistics/overview [get]
+// @Security ApiKeyAuth
+// @Success 200 {object} Response{data=OverviewResponse} "成功"
+// @Failure 401 {object} Response "未授权"
+// @Failure 500 {object} Response "服务器错误"
+// @Router /api/admin/stats/overview [get]
 func (h *StatisticsAdminHandler) GetOverview(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -93,15 +103,19 @@ type SalesDetailItem struct {
 
 // GetSalesStatistics 获取销售统计
 // @Summary 获取销售统计
-// @Description 获取指定时间段内的销售统计数据
-// @Tags 管理后台-数据统计
+// @Description 获取指定时间段内的销售统计数据，支持按天/周/月统计
+// @Tags 管理后台-统计
 // @Accept json
 // @Produce json
-// @Param start_date query string true "开始日期"
-// @Param end_date query string true "结束日期"
-// @Param type query string false "统计类型"
-// @Success 200 {object} SalesStatisticsResponse
-// @Router /admin/statistics/sales [get]
+// @Security ApiKeyAuth
+// @Param start_date query string true "开始日期 (格式: YYYY-MM-DD)"
+// @Param end_date query string true "结束日期 (格式: YYYY-MM-DD)"
+// @Param type query string false "统计类型: day(按天)/week(按周)/month(按月)，默认day"
+// @Success 200 {object} Response{data=SalesStatisticsResponse} "成功"
+// @Failure 400 {object} Response "请求参数错误"
+// @Failure 401 {object} Response "未授权"
+// @Failure 500 {object} Response "服务器错误"
+// @Router /api/admin/stats/sales [get]
 func (h *StatisticsAdminHandler) GetSalesStatistics(c *gin.Context) {
 	var req SalesStatisticsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
@@ -180,14 +194,18 @@ type UserDetailItem struct {
 
 // GetUserStatistics 获取用户统计
 // @Summary 获取用户统计
-// @Description 获取指定时间段内的用户统计数据
-// @Tags 管理后台-数据统计
+// @Description 获取指定时间段内的用户统计数据，包括新增用户、活跃用户、会员用户等
+// @Tags 管理后台-统计
 // @Accept json
 // @Produce json
-// @Param start_date query string false "开始日期"
-// @Param end_date query string false "结束日期"
-// @Success 200 {object} UserStatisticsResponse
-// @Router /admin/statistics/users [get]
+// @Security ApiKeyAuth
+// @Param start_date query string false "开始日期 (格式: YYYY-MM-DD)，默认最近30天"
+// @Param end_date query string false "结束日期 (格式: YYYY-MM-DD)，默认今天"
+// @Success 200 {object} Response{data=UserStatisticsResponse} "成功"
+// @Failure 400 {object} Response "请求参数错误"
+// @Failure 401 {object} Response "未授权"
+// @Failure 500 {object} Response "服务器错误"
+// @Router /api/admin/stats/users [get]
 func (h *StatisticsAdminHandler) GetUserStatistics(c *gin.Context) {
 	var req UserStatisticsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
@@ -272,16 +290,20 @@ type ProductSalesItem struct {
 
 // GetProductStatistics 获取商品统计
 // @Summary 获取商品统计
-// @Description 获取商品统计数据，包括销量排行
-// @Tags 管理后台-数据统计
+// @Description 获取商品统计数据，包括商品总数、在售/下架数量、库存预警、销量排行和销售额排行
+// @Tags 管理后台-统计
 // @Accept json
 // @Produce json
-// @Param start_date query string false "开始日期"
-// @Param end_date query string false "结束日期"
-// @Param limit query int false "返回数量"
-// @Param sort_by query string false "排序字段"
-// @Success 200 {object} ProductStatisticsResponse
-// @Router /admin/statistics/products [get]
+// @Security ApiKeyAuth
+// @Param start_date query string false "开始日期 (格式: YYYY-MM-DD)，默认最近30天"
+// @Param end_date query string false "结束日期 (格式: YYYY-MM-DD)，默认今天"
+// @Param limit query int false "返回排行数量，默认10，最大100"
+// @Param sort_by query string false "排序字段: sales(销量)/amount(销售额)，默认sales"
+// @Success 200 {object} Response{data=ProductStatisticsResponse} "成功"
+// @Failure 400 {object} Response "请求参数错误"
+// @Failure 401 {object} Response "未授权"
+// @Failure 500 {object} Response "服务器错误"
+// @Router /api/admin/stats/products [get]
 func (h *StatisticsAdminHandler) GetProductStatistics(c *gin.Context) {
 	var req ProductStatisticsRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
@@ -371,15 +393,19 @@ type TrendValue struct {
 
 // GetTrendData 获取趋势数据
 // @Summary 获取趋势数据
-// @Description 获取指定时间段内的趋势图数据
-// @Tags 管理后台-数据统计
+// @Description 获取指定时间段内的趋势图数据，支持销售趋势、用户趋势、订单趋势
+// @Tags 管理后台-统计
 // @Accept json
 // @Produce json
-// @Param start_date query string true "开始日期"
-// @Param end_date query string true "结束日期"
-// @Param type query string false "数据类型"
-// @Success 200 {object} TrendDataResponse
-// @Router /admin/statistics/trend [get]
+// @Security ApiKeyAuth
+// @Param start_date query string true "开始日期 (格式: YYYY-MM-DD)"
+// @Param end_date query string true "结束日期 (格式: YYYY-MM-DD)"
+// @Param type query string false "数据类型: sales(销售)/users(用户)/orders(订单)，默认sales"
+// @Success 200 {object} Response{data=TrendDataResponse} "成功"
+// @Failure 400 {object} Response "请求参数错误"
+// @Failure 401 {object} Response "未授权"
+// @Failure 500 {object} Response "服务器错误"
+// @Router /api/admin/stats/trend [get]
 func (h *StatisticsAdminHandler) GetTrendData(c *gin.Context) {
 	var req TrendDataRequest
 	if err := c.ShouldBindQuery(&req); err != nil {

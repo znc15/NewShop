@@ -4,6 +4,7 @@ package router
 import (
 	"time"
 
+	_ "newshop/api/docs" // swagger docs，需要先运行 swag init 生成
 	"newshop/api/internal/config"
 	"newshop/api/internal/handler"
 	adminhandler "newshop/api/internal/handler/admin"
@@ -15,6 +16,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -45,35 +48,35 @@ type Router struct {
 	configRepo      *repository.ConfigRepo
 
 	// Services
-	userService      *service.UserService
-	emailService     *service.EmailService
-	productService   *service.ProductService
-	cartService       *service.CartService
-	orderService      *service.OrderService
-	adminService      *service.AdminService
-	paymentService    *service.PaymentService
-	addressService    *service.AddressService
-	productAdminSvc  *adminservice.ProductAdminService
-	orderAdminSvc    *adminservice.OrderAdminService
-	statisticsSvc    *adminservice.StatisticsAdminService
-	presaleService    *service.PresaleService
-	couponService     *service.CouponService
-	pointsService     *service.PointsService
-	membershipSvc     *service.MembershipService
-	configService     *service.ConfigService
+	userService     *service.UserService
+	emailService    *service.EmailService
+	productService  *service.ProductService
+	cartService     *service.CartService
+	orderService    *service.OrderService
+	adminService    *service.AdminService
+	paymentService  *service.PaymentService
+	addressService  *service.AddressService
+	productAdminSvc *adminservice.ProductAdminService
+	orderAdminSvc   *adminservice.OrderAdminService
+	statisticsSvc   *adminservice.StatisticsAdminService
+	presaleService  *service.PresaleService
+	couponService   *service.CouponService
+	pointsService   *service.PointsService
+	membershipSvc   *service.MembershipService
+	configService   *service.ConfigService
 
 	// Handlers
-	authHandler         *handler.AuthHandler
-	productHandler      *handler.ProductHandler
-	cartHandler         *handler.CartHandler
-	orderHandler        *handler.OrderHandler
-	paymentHandler       *handler.PaymentHandler
-	adminHandler        *handler.AdminHandler
-	addressHandler      *handler.AddressHandler
-	presaleHandler      *handler.PresaleHandler
-	couponHandler       *handler.CouponHandler
-	pointsHandler       *handler.PointsHandler
-	membershipHandler   *handler.MembershipHandler
+	authHandler       *handler.AuthHandler
+	productHandler    *handler.ProductHandler
+	cartHandler       *handler.CartHandler
+	orderHandler      *handler.OrderHandler
+	paymentHandler    *handler.PaymentHandler
+	adminHandler      *handler.AdminHandler
+	addressHandler    *handler.AddressHandler
+	presaleHandler    *handler.PresaleHandler
+	couponHandler     *handler.CouponHandler
+	pointsHandler     *handler.PointsHandler
+	membershipHandler *handler.MembershipHandler
 	// Admin handlers
 	productAdminHandler    *adminhandler.ProductAdminHandler
 	orderAdminHandler      *adminhandler.OrderAdminHandler
@@ -149,11 +152,11 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 	configAdminHandler := adminhandler.NewConfigAdminHandler(configService, logger)
 
 	return &Router{
-		db:          db,
-		rdb:         rdb,
-		cfg:         cfg,
-		logger:      logger,
-		jwtManager:  jwtManager,
+		db:         db,
+		rdb:        rdb,
+		cfg:        cfg,
+		logger:     logger,
+		jwtManager: jwtManager,
 		// Repositories
 		productRepo:     productRepo,
 		cartRepo:        cartRepo,
@@ -173,18 +176,18 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 		// Services
 		userService:     userService,
 		productService:  productService,
-		cartService:       cartService,
-		orderService:      orderService,
-		adminService:      adminService,
-		addressService:    addressService,
-		productAdminSvc:   productAdminSvc,
-		orderAdminSvc:     orderAdminSvc,
-		statisticsSvc:     statisticsSvc,
-		presaleService:    presaleService,
-		couponService:     couponService,
-		pointsService:     pointsService,
-		membershipSvc:     membershipSvc,
-		configService:     configService,
+		cartService:     cartService,
+		orderService:    orderService,
+		adminService:    adminService,
+		addressService:  addressService,
+		productAdminSvc: productAdminSvc,
+		orderAdminSvc:   orderAdminSvc,
+		statisticsSvc:   statisticsSvc,
+		presaleService:  presaleService,
+		couponService:   couponService,
+		pointsService:   pointsService,
+		membershipSvc:   membershipSvc,
+		configService:   configService,
 		// Handlers
 		authHandler:       authHandler,
 		productHandler:    productHandler,
@@ -242,6 +245,9 @@ func (r *Router) Setup(engine *gin.Engine) {
 	engine.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok", "message": "服务运行正常"})
 	})
+
+	// Swagger API 文档
+	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// API v1 路由组
 	v1 := engine.Group("/api/v1")
@@ -313,10 +319,10 @@ func (r *Router) setupProductRoutes(rg *gin.RouterGroup) {
 	{
 		// 公开路由 - 注意：静态路由必须在动态路由（/:id）之前注册
 		products.GET("", r.productHandler.GetProductList)
-		products.GET("/hot", r.productHandler.GetHotProducts)    // 热门商品
-		products.GET("/new", r.productHandler.GetNewProducts)    // 新品推荐
+		products.GET("/hot", r.productHandler.GetHotProducts) // 热门商品
+		products.GET("/new", r.productHandler.GetNewProducts) // 新品推荐
 		products.GET("/search", r.productHandler.SearchProducts)
-		products.GET("/:id", r.productHandler.GetProductDetail)  // 动态路由放最后
+		products.GET("/:id", r.productHandler.GetProductDetail) // 动态路由放最后
 	}
 
 	// 分类路由

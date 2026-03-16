@@ -43,7 +43,7 @@ services:
     ports:
       - "7700:7700"
     volumes:
-      - meili_data:/meili_data
+      - meili_data:/meilisearch/data
 
   # Prometheus 监控
   prometheus:

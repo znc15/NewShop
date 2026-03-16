@@ -25,8 +25,9 @@ export interface RegisterRequest {
 }
 
 export interface AuthResponse {
+  access_token: string
+  refresh_token: string
   user: User
-  token: string
 }
 
 // 商品相关类型（与后端 Product 模型一致）

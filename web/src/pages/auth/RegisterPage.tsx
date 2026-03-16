@@ -135,7 +135,7 @@ export default function RegisterPage() {
         password: formData.password,
       })
       setUser(response.user)
-      setToken(response.token)
+      setToken(response.access_token)
       navigate('/')
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } }

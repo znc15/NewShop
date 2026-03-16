@@ -26,7 +26,14 @@ func NewOrderHandler(orderService *service.OrderService, logger *zap.Logger) *Or
 }
 
 // CreateOrder 创建订单
-// POST /orders
+// @Summary 创建订单
+// @Tags 订单
+// @Security ApiKeyAuth
+// @Param request body model.CreateOrderRequest true "请求参数"
+// @Success 201 {object} OrderCreateResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /orders [post]
 func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -61,7 +68,15 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 }
 
 // GetOrderList 获取订单列表
-// GET /orders
+// @Summary 获取订单列表
+// @Tags 订单
+// @Security ApiKeyAuth
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(10)
+// @Param status query string false "订单状态筛选"
+// @Success 200 {object} OrderListResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /orders [get]
 func (h *OrderHandler) GetOrderList(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -123,7 +138,16 @@ func (h *OrderHandler) GetOrderList(c *gin.Context) {
 }
 
 // GetOrderDetail 获取订单详情
-// GET /orders/:id
+// @Summary 获取订单详情
+// @Tags 订单
+// @Security ApiKeyAuth
+// @Param id path int true "订单ID"
+// @Success 200 {object} OrderDetailResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /orders/{id} [get]
 func (h *OrderHandler) GetOrderDetail(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -203,7 +227,17 @@ func (h *OrderHandler) GetOrderDetail(c *gin.Context) {
 }
 
 // CancelOrder 取消订单
-// PUT /orders/:id/cancel
+// @Summary 取消订单
+// @Tags 订单
+// @Security ApiKeyAuth
+// @Param id path int true "订单ID"
+// @Param request body CancelOrderRequest true "取消原因"
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /orders/{id}/cancel [put]
 func (h *OrderHandler) CancelOrder(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -265,7 +299,16 @@ func (h *OrderHandler) CancelOrder(c *gin.Context) {
 }
 
 // ConfirmReceive 确认收货
-// PUT /orders/:id/confirm
+// @Summary 确认收货
+// @Tags 订单
+// @Security ApiKeyAuth
+// @Param id path int true "订单ID"
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /orders/{id}/confirm [put]
 func (h *OrderHandler) ConfirmReceive(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -315,7 +358,16 @@ func (h *OrderHandler) ConfirmReceive(c *gin.Context) {
 }
 
 // GetOrderStatus 获取订单状态
-// GET /orders/:id/status
+// @Summary 获取订单状态
+// @Tags 订单
+// @Security ApiKeyAuth
+// @Param id path int true "订单ID"
+// @Success 200 {object} OrderStatusResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /orders/{id}/status [get]
 func (h *OrderHandler) GetOrderStatus(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -361,7 +413,16 @@ func (h *OrderHandler) GetOrderStatus(c *gin.Context) {
 }
 
 // GetOrderByNo 按订单号查询
-// GET /orders/no/:order_no
+// @Summary 按订单号查询订单
+// @Tags 订单
+// @Security ApiKeyAuth
+// @Param order_no path string true "订单号"
+// @Success 200 {object} OrderSimpleResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /orders/no/{order_no} [get]
 func (h *OrderHandler) GetOrderByNo(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -415,7 +476,14 @@ func (h *OrderHandler) GetOrderByNo(c *gin.Context) {
 }
 
 // CheckoutPreview 结算预览
-// POST /orders/checkout/preview
+// @Summary 结算预览
+// @Tags 订单
+// @Security ApiKeyAuth
+// @Param request body CheckoutPreviewRequest true "请求参数"
+// @Success 200 {object} CheckoutPreviewResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /orders/checkout/preview [post]
 func (h *OrderHandler) CheckoutPreview(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -448,7 +516,17 @@ func (h *OrderHandler) CheckoutPreview(c *gin.Context) {
 }
 
 // ApplyRefund 申请退款
-// POST /orders/:id/refund
+// @Summary 申请退款
+// @Tags 订单
+// @Security ApiKeyAuth
+// @Param id path int true "订单ID"
+// @Param request body RefundRequest true "退款原因"
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /orders/{id}/refund [post]
 func (h *OrderHandler) ApplyRefund(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -509,7 +587,16 @@ func (h *OrderHandler) ApplyRefund(c *gin.Context) {
 }
 
 // GetLogistics 获取物流信息
-// GET /orders/:id/logistics
+// @Summary 获取物流信息
+// @Tags 订单
+// @Security ApiKeyAuth
+// @Param id path int true "订单ID"
+// @Success 200 {object} LogisticsResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /orders/{id}/logistics [get]
 func (h *OrderHandler) GetLogistics(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -553,7 +640,16 @@ func (h *OrderHandler) GetLogistics(c *gin.Context) {
 }
 
 // Reorder 一键复购
-// POST /orders/:id/reorder
+// @Summary 一键复购
+// @Tags 订单
+// @Security ApiKeyAuth
+// @Param id path int true "订单ID"
+// @Success 200 {object} ReorderResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 403 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /orders/{id}/reorder [post]
 func (h *OrderHandler) Reorder(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -615,4 +711,154 @@ func RegisterOrderRoutes(r *gin.RouterGroup, handler *OrderHandler) {
 		orders.PUT("/:id/cancel", handler.CancelOrder)
 		orders.PUT("/:id/confirm", handler.ConfirmReceive)
 	}
+}
+
+// ==================== Swagger 响应结构体 ====================
+
+// OrderCreateResponse 创建订单响应
+type OrderCreateResponse struct {
+	Code int `json:"code"`
+	Data struct {
+		OrderID   uint64  `json:"order_id"`
+		OrderNo   string  `json:"order_no"`
+		Status    string  `json:"status"`
+		PayAmount float64 `json:"pay_amount"`
+	} `json:"data"`
+}
+
+// OrderListItem 订单列表项
+type OrderListItem struct {
+	ID              uint64      `json:"id"`
+	OrderNo         string      `json:"order_no"`
+	Status          string      `json:"status"`
+	TotalAmount     float64     `json:"total_amount"`
+	PayAmount       float64     `json:"pay_amount"`
+	FreightAmount   float64     `json:"freight_amount"`
+	ReceiverName    string      `json:"receiver_name"`
+	ReceiverPhone   string      `json:"receiver_phone"`
+	ReceiverAddress string      `json:"receiver_address"`
+	Items           []OrderItem `json:"items"`
+	CreatedAt       string      `json:"created_at"`
+}
+
+// OrderItem 订单商品项
+type OrderItem struct {
+	ProductID   uint64  `json:"product_id"`
+	ProductName string  `json:"product_name"`
+	SkuName     string  `json:"sku_name"`
+	Image       string  `json:"image"`
+	Price       float64 `json:"price"`
+	Quantity    int     `json:"quantity"`
+	TotalAmount float64 `json:"total_amount"`
+}
+
+// OrderListResponse 订单列表响应
+type OrderListResponse struct {
+	Code int `json:"code"`
+	Data struct {
+		List     []OrderListItem `json:"list"`
+		Total    int64           `json:"total"`
+		Page     int             `json:"page"`
+		PageSize int             `json:"page_size"`
+	} `json:"data"`
+}
+
+// OrderDetailItem 订单详情商品项
+type OrderDetailItem struct {
+	ID          uint64  `json:"id"`
+	ProductID   uint64  `json:"product_id"`
+	SkuID       uint64  `json:"sku_id"`
+	ProductName string  `json:"product_name"`
+	SkuName     string  `json:"sku_name"`
+	Image       string  `json:"image"`
+	Price       float64 `json:"price"`
+	Quantity    int     `json:"quantity"`
+	TotalAmount float64 `json:"total_amount"`
+	Attributes  string  `json:"attributes"`
+}
+
+// OrderDetailResponse 订单详情响应
+type OrderDetailResponse struct {
+	Code int `json:"code"`
+	Data struct {
+		ID              uint64            `json:"id"`
+		OrderNo         string            `json:"order_no"`
+		Status          string            `json:"status"`
+		TotalAmount     float64           `json:"total_amount"`
+		PayAmount       float64           `json:"pay_amount"`
+		DiscountAmount  float64           `json:"discount_amount"`
+		FreightAmount   float64           `json:"freight_amount"`
+		PaymentMethod   string            `json:"payment_method"`
+		PaymentTime     string            `json:"payment_time"`
+		ShipTime        string            `json:"ship_time"`
+		ReceiveTime     string            `json:"receive_time"`
+		ReceiverName    string            `json:"receiver_name"`
+		ReceiverPhone   string            `json:"receiver_phone"`
+		ReceiverAddress string            `json:"receiver_address"`
+		Remark          string            `json:"remark"`
+		Items           []OrderDetailItem `json:"items"`
+		CreatedAt       string            `json:"created_at"`
+		UpdatedAt       string            `json:"updated_at"`
+	} `json:"data"`
+}
+
+// OrderStatusResponse 订单状态响应
+type OrderStatusResponse struct {
+	Code int `json:"code"`
+	Data struct {
+		Status string `json:"status"`
+	} `json:"data"`
+}
+
+// OrderSimpleResponse 简单订单响应
+type OrderSimpleResponse struct {
+	Code int `json:"code"`
+	Data struct {
+		ID              uint64  `json:"id"`
+		OrderNo         string  `json:"order_no"`
+		Status          string  `json:"status"`
+		TotalAmount     float64 `json:"total_amount"`
+		PayAmount       float64 `json:"pay_amount"`
+		ReceiverName    string  `json:"receiver_name"`
+		ReceiverPhone   string  `json:"receiver_phone"`
+		ReceiverAddress string  `json:"receiver_address"`
+		CreatedAt       string  `json:"created_at"`
+	} `json:"data"`
+}
+
+// CancelOrderRequest 取消订单请求
+type CancelOrderRequest struct {
+	Reason string `json:"reason"`
+}
+
+// CheckoutPreviewRequest 结算预览请求
+type CheckoutPreviewRequest struct {
+	AddressID uint64   `json:"address_id"`
+	ItemIDs   []uint64 `json:"item_ids"`
+}
+
+// CheckoutPreviewResponse 结算预览响应
+type CheckoutPreviewResponse struct {
+	Code int         `json:"code"`
+	Data interface{} `json:"data"`
+}
+
+// RefundRequest 退款请求
+type RefundRequest struct {
+	Reason string `json:"reason"`
+}
+
+// LogisticsResponse 物流信息响应
+type LogisticsResponse struct {
+	Code int         `json:"code"`
+	Data interface{} `json:"data"`
+}
+
+// ReorderResponse 一键复购响应
+type ReorderResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Data    struct {
+		Items interface{} `json:"items"`
+	} `json:"data"`
 }

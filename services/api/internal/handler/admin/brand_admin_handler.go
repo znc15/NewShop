@@ -81,6 +81,19 @@ type BrandDetailResponse struct {
 }
 
 // List 获取品牌列表
+// @Summary 获取品牌列表
+// @Description 管理后台获取品牌列表，支持分页和状态筛选
+// @Tags 管理后台-品牌
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(20)
+// @Param status query string false "状态筛选 (active/inactive)"
+// @Success 200 {object} map[string]interface{} "code=0 表示成功，data.list 为品牌列表，data.total 为总数"
+// @Failure 401 {object} map[string]interface{} "未授权"
+// @Failure 500 {object} map[string]interface{} "服务器错误"
+// @Router /api/admin/brands [get]
 func (h *BrandAdminHandler) List(c *gin.Context) {
 	var req BrandListRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
@@ -126,6 +139,19 @@ func (h *BrandAdminHandler) List(c *gin.Context) {
 }
 
 // Create 创建品牌
+// @Summary 创建品牌
+// @Description 管理后台创建新品牌，品牌名称不能重复
+// @Tags 管理后台-品牌
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param request body CreateBrandRequest true "品牌信息"
+// @Success 201 {object} map[string]interface{} "code=0 表示成功，data.id 为新创建的品牌ID"
+// @Failure 400 {object} map[string]interface{} "请求参数错误"
+// @Failure 401 {object} map[string]interface{} "未授权"
+// @Failure 409 {object} map[string]interface{} "品牌名称已存在"
+// @Failure 500 {object} map[string]interface{} "服务器错误"
+// @Router /api/admin/brands [post]
 func (h *BrandAdminHandler) Create(c *gin.Context) {
 	var req CreateBrandRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -167,6 +193,21 @@ func (h *BrandAdminHandler) Create(c *gin.Context) {
 }
 
 // Update 更新品牌
+// @Summary 更新品牌
+// @Description 管理后台更新品牌信息，品牌名称不能与其他品牌重复
+// @Tags 管理后台-品牌
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "品牌ID"
+// @Param request body UpdateBrandRequest true "品牌信息"
+// @Success 200 {object} map[string]interface{} "code=0 表示成功"
+// @Failure 400 {object} map[string]interface{} "请求参数错误"
+// @Failure 401 {object} map[string]interface{} "未授权"
+// @Failure 404 {object} map[string]interface{} "品牌不存在"
+// @Failure 409 {object} map[string]interface{} "品牌名称已存在"
+// @Failure 500 {object} map[string]interface{} "服务器错误"
+// @Router /api/admin/brands/{id} [put]
 func (h *BrandAdminHandler) Update(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
@@ -219,6 +260,19 @@ func (h *BrandAdminHandler) Update(c *gin.Context) {
 }
 
 // Delete 删除品牌
+// @Summary 删除品牌
+// @Description 管理后台删除品牌，品牌下存在商品时无法删除
+// @Tags 管理后台-品牌
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "品牌ID"
+// @Success 200 {object} map[string]interface{} "code=0 表示成功"
+// @Failure 400 {object} map[string]interface{} "请求参数错误或品牌下存在商品"
+// @Failure 401 {object} map[string]interface{} "未授权"
+// @Failure 404 {object} map[string]interface{} "品牌不存在"
+// @Failure 500 {object} map[string]interface{} "服务器错误"
+// @Router /api/admin/brands/{id} [delete]
 func (h *BrandAdminHandler) Delete(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)

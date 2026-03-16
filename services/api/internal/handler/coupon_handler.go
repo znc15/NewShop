@@ -23,7 +23,13 @@ func NewCouponHandler(couponService *service.CouponService, logger *zap.Logger) 
 }
 
 // GetCouponList 获取可领取的优惠券列表
-// GET /api/v1/coupons
+// @Summary 获取可领取的优惠券列表
+// @Description 获取当前可领取的优惠券列表，无需登录
+// @Tags 优惠券
+// @Produce json
+// @Success 200 {object} CouponListResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /coupons [get]
 func (h *CouponHandler) GetCouponList(c *gin.Context) {
 	coupons, err := h.couponService.GetCouponList(c.Request.Context())
 	if err != nil {
@@ -42,7 +48,18 @@ func (h *CouponHandler) GetCouponList(c *gin.Context) {
 }
 
 // ReceiveCoupon 领取优惠券
-// POST /api/v1/coupons/:id/receive
+// @Summary 领取优惠券
+// @Description 用户领取指定优惠券
+// @Tags 优惠券
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path int true "优惠券ID"
+// @Success 200 {object} ReceiveCouponResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /coupons/{id}/receive [post]
 func (h *CouponHandler) ReceiveCoupon(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -104,7 +121,15 @@ func (h *CouponHandler) ReceiveCoupon(c *gin.Context) {
 }
 
 // GetUserCoupons 获取用户优惠券列表
-// GET /api/v1/user/coupons
+// @Summary 获取用户优惠券列表
+// @Description 获取当前用户的优惠券列表，可按状态筛选
+// @Tags 优惠券
+// @Produce json
+// @Security ApiKeyAuth
+// @Param status query int false "优惠券状态：0-全部 1-未使用 2-已使用 3-已过期" default(0)
+// @Success 200 {object} UserCouponListResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /user/coupons [get]
 func (h *CouponHandler) GetUserCoupons(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -128,7 +153,16 @@ func (h *CouponHandler) GetUserCoupons(c *gin.Context) {
 }
 
 // GetAvailableCoupons 获取订单可用优惠券
-// GET /api/v1/user/coupons/available
+// @Summary 获取订单可用优惠券
+// @Description 根据订单金额获取当前用户可用的优惠券列表
+// @Tags 优惠券
+// @Produce json
+// @Security ApiKeyAuth
+// @Param amount query number true "订单金额"
+// @Success 200 {object} AvailableCouponListResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /user/coupons/available [get]
 func (h *CouponHandler) GetAvailableCoupons(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -173,7 +207,18 @@ type UseCouponRequest struct {
 }
 
 // UseCoupon 使用优惠券
-// POST /api/v1/user/coupons/use
+// @Summary 使用优惠券
+// @Description 在订单中使用优惠券
+// @Tags 优惠券
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param request body UseCouponRequest true "使用优惠券请求"
+// @Success 200 {object} SuccessResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /user/coupons/use [post]
 func (h *CouponHandler) UseCoupon(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -231,7 +276,18 @@ type CalculateDiscountRequest struct {
 }
 
 // CalculateDiscount 计算优惠金额
-// POST /api/v1/coupons/calculate
+// @Summary 计算优惠金额
+// @Description 根据优惠券和订单金额计算优惠金额
+// @Tags 优惠券
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param request body CalculateDiscountRequest true "计算优惠金额请求"
+// @Success 200 {object} CalculateDiscountResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 404 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /coupons/calculate [post]
 func (h *CouponHandler) CalculateDiscount(c *gin.Context) {
 	var req CalculateDiscountRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -285,4 +341,95 @@ func RegisterCouponRoutes(r *gin.RouterGroup, handler *CouponHandler, authMiddle
 		userGroup.POST("/user/coupons/use", handler.UseCoupon)
 		userGroup.POST("/coupons/calculate", handler.CalculateDiscount)
 	}
+}
+
+// ErrorResponse 统一错误响应
+type ErrorResponse struct {
+	Code    int    `json:"code" example:"50000"`
+	Message string `json:"message" example:"操作失败"`
+}
+
+// SuccessResponse 统一成功响应
+type SuccessResponse struct {
+	Code    int    `json:"code" example:"0"`
+	Message string `json:"message" example:"操作成功"`
+}
+
+// CouponInfo 优惠券信息
+type CouponInfo struct {
+	ID           uint64  `json:"id" example:"1"`
+	Name         string  `json:"name" example:"满100减20优惠券"`
+	Type         int     `json:"type" example:"1"`
+	Value        float64 `json:"value" example:"20"`
+	MinAmount    float64 `json:"min_amount" example:"100"`
+	StartTime    string  `json:"start_time" example:"2024-01-01T00:00:00Z"`
+	EndTime      string  `json:"end_time" example:"2024-12-31T23:59:59Z"`
+	TotalCount   int     `json:"total_count" example:"1000"`
+	UsedCount    int     `json:"used_count" example:"500"`
+	LimitPerUser int     `json:"limit_per_user" example:"1"`
+}
+
+// CouponListResponse 优惠券列表响应
+type CouponListResponse struct {
+	Code int          `json:"code" example:"0"`
+	Data []CouponInfo `json:"data"`
+}
+
+// ReceiveCouponResponse 领取优惠券响应
+type ReceiveCouponResponse struct {
+	Code    int    `json:"code" example:"0"`
+	Message string `json:"message" example:"领取成功"`
+	Data    struct {
+		ID        uint64 `json:"id" example:"1"`
+		CouponID  uint64 `json:"coupon_id" example:"1"`
+		Status    int    `json:"status" example:"1"`
+		CreatedAt string `json:"created_at" example:"2024-01-01T00:00:00Z"`
+	} `json:"data"`
+}
+
+// UserCouponInfo 用户优惠券信息
+type UserCouponInfo struct {
+	ID          uint64  `json:"id" example:"1"`
+	CouponID    uint64  `json:"coupon_id" example:"1"`
+	CouponName  string  `json:"coupon_name" example:"满100减20优惠券"`
+	CouponType  int     `json:"coupon_type" example:"1"`
+	CouponValue float64 `json:"coupon_value" example:"20"`
+	MinAmount   float64 `json:"min_amount" example:"100"`
+	Status      int     `json:"status" example:"1"`
+	StartTime   string  `json:"start_time" example:"2024-01-01T00:00:00Z"`
+	EndTime     string  `json:"end_time" example:"2024-12-31T23:59:59Z"`
+	UsedAt      string  `json:"used_at" example:""`
+	OrderID     uint64  `json:"order_id" example:"0"`
+	CreatedAt   string  `json:"created_at" example:"2024-01-01T00:00:00Z"`
+}
+
+// UserCouponListResponse 用户优惠券列表响应
+type UserCouponListResponse struct {
+	Code int              `json:"code" example:"0"`
+	Data []UserCouponInfo `json:"data"`
+}
+
+// AvailableCouponInfo 可用优惠券信息
+type AvailableCouponInfo struct {
+	UserCouponID uint64  `json:"user_coupon_id" example:"1"`
+	CouponName   string  `json:"coupon_name" example:"满100减20优惠券"`
+	CouponType   int     `json:"coupon_type" example:"1"`
+	CouponValue  float64 `json:"coupon_value" example:"20"`
+	MinAmount    float64 `json:"min_amount" example:"100"`
+	Discount     float64 `json:"discount" example:"20"`
+	EndTime      string  `json:"end_time" example:"2024-12-31T23:59:59Z"`
+}
+
+// AvailableCouponListResponse 可用优惠券列表响应
+type AvailableCouponListResponse struct {
+	Code int                   `json:"code" example:"0"`
+	Data []AvailableCouponInfo `json:"data"`
+}
+
+// CalculateDiscountResponse 计算优惠金额响应
+type CalculateDiscountResponse struct {
+	Code int `json:"code" example:"0"`
+	Data struct {
+		Discount float64 `json:"discount" example:"20"`
+	} `json:"data"`
 }

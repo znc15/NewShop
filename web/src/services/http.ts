@@ -15,7 +15,8 @@ const instance: AxiosInstance = axios.create({
 // 请求拦截器
 instance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token')
+    const authStorage = localStorage.getItem('auth-storage')
+    const token = authStorage ? JSON.parse(authStorage)?.state?.token : null
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }

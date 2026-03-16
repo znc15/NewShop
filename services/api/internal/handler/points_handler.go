@@ -23,7 +23,14 @@ func NewPointsHandler(pointsService *service.PointsService, logger *zap.Logger) 
 }
 
 // CheckIn 用户签到
-// POST /api/v1/points/checkin
+// @Summary 用户签到
+// @Tags 积分
+// @Security ApiKeyAuth
+// @Success 200 {object} CheckInResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /points/checkin [post]
 func (h *PointsHandler) CheckIn(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 	if userID == 0 {
@@ -57,7 +64,13 @@ func (h *PointsHandler) CheckIn(c *gin.Context) {
 }
 
 // GetCheckInStatus 获取签到状态
-// GET /api/v1/points/status
+// @Summary 获取签到状态
+// @Tags 积分
+// @Security ApiKeyAuth
+// @Success 200 {object} CheckInStatusResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /points/status [get]
 func (h *PointsHandler) GetCheckInStatus(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 	if userID == 0 {
@@ -85,7 +98,15 @@ func (h *PointsHandler) GetCheckInStatus(c *gin.Context) {
 }
 
 // GetPointsHistory 获取积分历史
-// GET /api/v1/points/history?page=1&page_size=20
+// @Summary 获取积分历史
+// @Tags 积分
+// @Security ApiKeyAuth
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(20)
+// @Success 200 {object} PointsHistoryResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /points/history [get]
 func (h *PointsHandler) GetPointsHistory(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 	if userID == 0 {
@@ -129,7 +150,13 @@ func (h *PointsHandler) GetPointsHistory(c *gin.Context) {
 }
 
 // GetContinuousDays 获取连续签到天数
-// GET /api/v1/points/continuous
+// @Summary 获取连续签到天数
+// @Tags 积分
+// @Security ApiKeyAuth
+// @Success 200 {object} ContinuousDaysResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /points/continuous [get]
 func (h *PointsHandler) GetContinuousDays(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 	if userID == 0 {
@@ -160,7 +187,15 @@ type AddPointsRequest struct {
 }
 
 // AddPoints 手动增加积分（管理员接口）
-// POST /api/v1/admin/points/add
+// @Summary 手动增加积分
+// @Tags 积分
+// @Security ApiKeyAuth
+// @Param request body AddPointsRequest true "请求参数"
+// @Success 200 {object} SuccessResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /admin/points/add [post]
 func (h *PointsHandler) AddPoints(c *gin.Context) {
 	var req AddPointsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -196,7 +231,15 @@ type DeductPointsRequest struct {
 }
 
 // DeductPoints 手动扣减积分（管理员接口）
-// POST /api/v1/admin/points/deduct
+// @Summary 手动扣减积分
+// @Tags 积分
+// @Security ApiKeyAuth
+// @Param request body DeductPointsRequest true "请求参数"
+// @Success 200 {object} SuccessResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /admin/points/deduct [post]
 func (h *PointsHandler) DeductPoints(c *gin.Context) {
 	var req DeductPointsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -229,7 +272,13 @@ func (h *PointsHandler) DeductPoints(c *gin.Context) {
 }
 
 // GetUserPoints 获取用户积分
-// GET /api/v1/points/balance
+// @Summary 获取用户积分
+// @Tags 积分
+// @Security ApiKeyAuth
+// @Success 200 {object} UserPointsResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /points/balance [get]
 func (h *PointsHandler) GetUserPoints(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 	if userID == 0 {
@@ -257,11 +306,11 @@ func RegisterPointsRoutes(r *gin.RouterGroup, h *PointsHandler) {
 	points := r.Group("/points")
 	{
 		// 用户接口（需要登录）
-		points.POST("/checkin", h.CheckIn)              // 签到
-		points.GET("/status", h.GetCheckInStatus)       // 签到状态
-		points.GET("/history", h.GetPointsHistory)      // 积分历史
-		points.GET("/continuous", h.GetContinuousDays)  // 连续签到天数
-		points.GET("/balance", h.GetUserPoints)         // 积分余额
+		points.POST("/checkin", h.CheckIn)             // 签到
+		points.GET("/status", h.GetCheckInStatus)      // 签到状态
+		points.GET("/history", h.GetPointsHistory)     // 积分历史
+		points.GET("/continuous", h.GetContinuousDays) // 连续签到天数
+		points.GET("/balance", h.GetUserPoints)        // 积分余额
 	}
 }
 
@@ -272,4 +321,68 @@ func RegisterAdminPointsRoutes(r *gin.RouterGroup, h *PointsHandler) {
 		adminPoints.POST("/add", h.AddPoints)       // 增加积分
 		adminPoints.POST("/deduct", h.DeductPoints) // 扣减积分
 	}
+}
+
+// CheckInResponse 签到响应
+type CheckInResponse struct {
+	Code int `json:"code"`
+	Data *struct {
+		Checked        bool   `json:"checked"`
+		PointsEarned   int    `json:"points_earned"`
+		BasePoints     int    `json:"base_points"`
+		BonusPoints    int    `json:"bonus_points"`
+		ContinuousDays int    `json:"continuous_days"`
+		CheckDate      string `json:"check_date"`
+		Message        string `json:"message"`
+	} `json:"data"`
+}
+
+// CheckInStatusResponse 签到状态响应
+type CheckInStatusResponse struct {
+	Code int `json:"code"`
+	Data *struct {
+		TodayChecked   bool   `json:"today_checked"`
+		ContinuousDays int    `json:"continuous_days"`
+		TotalPoints    int    `json:"total_points"`
+		NextBonusDays  int    `json:"next_bonus_days"`
+		NextBonusType  string `json:"next_bonus_type"`
+	} `json:"data"`
+}
+
+// PointsRecord 积分记录
+type PointsRecord struct {
+	ID          uint64 `json:"id"`
+	Points      int    `json:"points"`
+	Balance     int    `json:"balance"`
+	Type        string `json:"type"`
+	Description string `json:"description"`
+	RelatedID   uint64 `json:"related_id"`
+	CreatedAt   string `json:"created_at"`
+}
+
+// PointsHistoryResponse 积分历史响应
+type PointsHistoryResponse struct {
+	Code int `json:"code"`
+	Data *struct {
+		Records  []PointsRecord `json:"records"`
+		Total    int            `json:"total"`
+		Page     int            `json:"page"`
+		PageSize int            `json:"page_size"`
+	} `json:"data"`
+}
+
+// ContinuousDaysResponse 连续签到天数响应
+type ContinuousDaysResponse struct {
+	Code int `json:"code"`
+	Data *struct {
+		ContinuousDays int `json:"continuous_days"`
+	} `json:"data"`
+}
+
+// UserPointsResponse 用户积分响应
+type UserPointsResponse struct {
+	Code int `json:"code"`
+	Data *struct {
+		Points int `json:"points"`
+	} `json:"data"`
 }

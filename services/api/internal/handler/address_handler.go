@@ -10,6 +10,53 @@ import (
 	"go.uber.org/zap"
 )
 
+// Response 通用响应结构
+type Response struct {
+	Code    int         `json:"code"`
+	Message string      `json:"message,omitempty"`
+	Data    interface{} `json:"data,omitempty"`
+}
+
+// AddressResponse 地址响应结构
+type AddressResponse struct {
+	ID        uint64 `json:"id"`
+	UserID    uint64 `json:"user_id"`
+	Name      string `json:"name"`
+	Phone     string `json:"phone"`
+	Province  string `json:"province"`
+	City      string `json:"city"`
+	District  string `json:"district"`
+	Address   string `json:"address"`
+	IsDefault bool   `json:"is_default"`
+}
+
+// AddressListResponse 地址列表响应
+type AddressListResponse struct {
+	Addresses []AddressResponse `json:"addresses"`
+}
+
+// AddressCreateRequest 创建地址请求
+type AddressCreateRequest struct {
+	Name      string `json:"name" binding:"required" example:"张三"`
+	Phone     string `json:"phone" binding:"required" example:"13800138000"`
+	Province  string `json:"province" binding:"required" example:"浙江省"`
+	City      string `json:"city" binding:"required" example:"杭州市"`
+	District  string `json:"district" binding:"required" example:"西湖区"`
+	Address   string `json:"address" binding:"required" example:"文三路123号"`
+	IsDefault bool   `json:"is_default" example:"false"`
+}
+
+// AddressUpdateRequest 更新地址请求
+type AddressUpdateRequest struct {
+	Name      *string `json:"name" example:"张三"`
+	Phone     *string `json:"phone" example:"13800138000"`
+	Province  *string `json:"province" example:"浙江省"`
+	City      *string `json:"city" example:"杭州市"`
+	District  *string `json:"district" example:"西湖区"`
+	Address   *string `json:"address" example:"文三路123号"`
+	IsDefault *bool   `json:"is_default" example:"false"`
+}
+
 type AddressHandler struct {
 	addressService *service.AddressService
 	logger         *zap.Logger
@@ -23,7 +70,16 @@ func NewAddressHandler(addressService *service.AddressService, logger *zap.Logge
 }
 
 // ListAddresses 获取地址列表
-// GET /user/addresses
+// @Summary 获取地址列表
+// @Description 获取当前用户的所有收货地址
+// @Tags 地址
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Success 200 {object} Response{data=AddressListResponse} "成功"
+// @Failure 401 {object} Response "未授权"
+// @Failure 500 {object} Response "服务器错误"
+// @Router /api/v1/user/addresses [get]
 func (h *AddressHandler) ListAddresses(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -43,7 +99,19 @@ func (h *AddressHandler) ListAddresses(c *gin.Context) {
 }
 
 // GetAddress 获取单个地址
-// GET /user/addresses/:id
+// @Summary 获取单个地址
+// @Description 根据ID获取地址详情
+// @Tags 地址
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path int true "地址ID"
+// @Success 200 {object} Response{data=AddressResponse} "成功"
+// @Failure 400 {object} Response "无效的地址ID"
+// @Failure 401 {object} Response "未授权"
+// @Failure 404 {object} Response "地址不存在"
+// @Failure 500 {object} Response "服务器错误"
+// @Router /api/v1/user/addresses/{id} [get]
 func (h *AddressHandler) GetAddress(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -71,7 +139,18 @@ func (h *AddressHandler) GetAddress(c *gin.Context) {
 }
 
 // CreateAddress 创建地址
-// POST /user/addresses
+// @Summary 创建地址
+// @Description 创建新的收货地址，每个用户最多20个地址
+// @Tags 地址
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param request body AddressCreateRequest true "地址信息"
+// @Success 201 {object} Response{data=AddressResponse} "创建成功"
+// @Failure 400 {object} Response "请求参数错误或地址数量已达上限"
+// @Failure 401 {object} Response "未授权"
+// @Failure 500 {object} Response "服务器错误"
+// @Router /api/v1/user/addresses [post]
 func (h *AddressHandler) CreateAddress(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -99,7 +178,20 @@ func (h *AddressHandler) CreateAddress(c *gin.Context) {
 }
 
 // UpdateAddress 更新地址
-// PUT /user/addresses/:id
+// @Summary 更新地址
+// @Description 更新指定地址的信息
+// @Tags 地址
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path int true "地址ID"
+// @Param request body AddressUpdateRequest true "地址更新信息"
+// @Success 200 {object} Response{data=AddressResponse} "更新成功"
+// @Failure 400 {object} Response "请求参数错误"
+// @Failure 401 {object} Response "未授权"
+// @Failure 404 {object} Response "地址不存在"
+// @Failure 500 {object} Response "服务器错误"
+// @Router /api/v1/user/addresses/{id} [put]
 func (h *AddressHandler) UpdateAddress(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -133,7 +225,19 @@ func (h *AddressHandler) UpdateAddress(c *gin.Context) {
 }
 
 // DeleteAddress 删除地址
-// DELETE /user/addresses/:id
+// @Summary 删除地址
+// @Description 删除指定的收货地址
+// @Tags 地址
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path int true "地址ID"
+// @Success 200 {object} Response "删除成功"
+// @Failure 400 {object} Response "无效的地址ID"
+// @Failure 401 {object} Response "未授权"
+// @Failure 404 {object} Response "地址不存在"
+// @Failure 500 {object} Response "服务器错误"
+// @Router /api/v1/user/addresses/{id} [delete]
 func (h *AddressHandler) DeleteAddress(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
@@ -160,7 +264,19 @@ func (h *AddressHandler) DeleteAddress(c *gin.Context) {
 }
 
 // SetDefaultAddress 设置默认地址
-// PUT /user/addresses/:id/default
+// @Summary 设置默认地址
+// @Description 将指定地址设为默认收货地址
+// @Tags 地址
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param id path int true "地址ID"
+// @Success 200 {object} Response "设置成功"
+// @Failure 400 {object} Response "无效的地址ID"
+// @Failure 401 {object} Response "未授权"
+// @Failure 404 {object} Response "地址不存在"
+// @Failure 500 {object} Response "服务器错误"
+// @Router /api/v1/user/addresses/{id}/default [put]
 func (h *AddressHandler) SetDefaultAddress(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 

@@ -196,6 +196,23 @@ type AttrInfo struct {
 }
 
 // List 获取商品列表
+// @Summary 获取商品列表
+// @Description 管理后台获取商品列表，支持按分类、品牌、状态、关键词筛选
+// @Tags 管理后台-商品
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param category_id query int false "分类ID"
+// @Param brand_id query int false "品牌ID"
+// @Param status query string false "状态 (draft/active/inactive)"
+// @Param keyword query string false "搜索关键词"
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(20)
+// @Success 200 {object} map[string]interface{} "code=0 表示成功，data 包含 list、total、page"
+// @Failure 400 {object} map[string]interface{} "参数错误"
+// @Failure 401 {object} map[string]interface{} "未授权"
+// @Failure 500 {object} map[string]interface{} "服务器错误"
+// @Router /api/admin/products [get]
 func (h *ProductAdminHandler) List(c *gin.Context) {
 	var req ProductListRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
@@ -261,6 +278,18 @@ func (h *ProductAdminHandler) List(c *gin.Context) {
 }
 
 // Create 创建商品
+// @Summary 创建商品
+// @Description 管理后台创建新商品，支持SKU和属性配置
+// @Tags 管理后台-商品
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param request body CreateProductRequest true "商品信息"
+// @Success 201 {object} map[string]interface{} "code=0 表示成功，data.id 为新商品ID"
+// @Failure 400 {object} map[string]interface{} "参数错误"
+// @Failure 401 {object} map[string]interface{} "未授权"
+// @Failure 500 {object} map[string]interface{} "服务器错误"
+// @Router /api/admin/products [post]
 func (h *ProductAdminHandler) Create(c *gin.Context) {
 	var req CreateProductRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -363,6 +392,18 @@ func (h *ProductAdminHandler) Create(c *gin.Context) {
 }
 
 // Get 获取商品详情
+// @Summary 获取商品详情
+// @Description 管理后台获取商品详情，包含SKU、属性、分类、品牌信息
+// @Tags 管理后台-商品
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "商品ID"
+// @Success 200 {object} map[string]interface{} "code=0 表示成功，data 为商品详情"
+// @Failure 400 {object} map[string]interface{} "无效的商品ID"
+// @Failure 401 {object} map[string]interface{} "未授权"
+// @Failure 404 {object} map[string]interface{} "商品不存在"
+// @Router /api/admin/products/{id} [get]
 func (h *ProductAdminHandler) Get(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
@@ -447,6 +488,20 @@ func (h *ProductAdminHandler) Get(c *gin.Context) {
 }
 
 // Update 更新商品
+// @Summary 更新商品
+// @Description 管理后台更新商品信息，支持更新SKU和属性
+// @Tags 管理后台-商品
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "商品ID"
+// @Param request body UpdateProductRequest true "商品更新信息"
+// @Success 200 {object} map[string]interface{} "code=0 表示成功"
+// @Failure 400 {object} map[string]interface{} "参数错误"
+// @Failure 401 {object} map[string]interface{} "未授权"
+// @Failure 404 {object} map[string]interface{} "商品不存在"
+// @Failure 500 {object} map[string]interface{} "服务器错误"
+// @Router /api/admin/products/{id} [put]
 func (h *ProductAdminHandler) Update(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
@@ -569,6 +624,19 @@ func (h *ProductAdminHandler) Update(c *gin.Context) {
 }
 
 // Delete 删除商品
+// @Summary 删除商品
+// @Description 管理后台删除商品
+// @Tags 管理后台-商品
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "商品ID"
+// @Success 200 {object} map[string]interface{} "code=0 表示成功"
+// @Failure 400 {object} map[string]interface{} "无效的商品ID"
+// @Failure 401 {object} map[string]interface{} "未授权"
+// @Failure 404 {object} map[string]interface{} "商品不存在"
+// @Failure 500 {object} map[string]interface{} "服务器错误"
+// @Router /api/admin/products/{id} [delete]
 func (h *ProductAdminHandler) Delete(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
@@ -597,6 +665,19 @@ func (h *ProductAdminHandler) Delete(c *gin.Context) {
 }
 
 // UpdateStatus 更新商品状态（上下架）
+// @Summary 更新商品状态
+// @Description 管理后台更新商品状态（draft草稿/active上架/inactive下架）
+// @Tags 管理后台-商品
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "商品ID"
+// @Param request body UpdateStatusRequest true "状态信息"
+// @Success 200 {object} map[string]interface{} "code=0 表示成功"
+// @Failure 400 {object} map[string]interface{} "参数错误"
+// @Failure 401 {object} map[string]interface{} "未授权"
+// @Failure 500 {object} map[string]interface{} "服务器错误"
+// @Router /api/admin/products/{id}/status [put]
 func (h *ProductAdminHandler) UpdateStatus(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
@@ -624,6 +705,19 @@ func (h *ProductAdminHandler) UpdateStatus(c *gin.Context) {
 }
 
 // UpdateStock 更新商品库存
+// @Summary 更新商品库存
+// @Description 管理后台更新商品库存数量
+// @Tags 管理后台-商品
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "商品ID"
+// @Param request body UpdateStockRequest true "库存信息"
+// @Success 200 {object} map[string]interface{} "code=0 表示成功"
+// @Failure 400 {object} map[string]interface{} "参数错误"
+// @Failure 401 {object} map[string]interface{} "未授权"
+// @Failure 500 {object} map[string]interface{} "服务器错误"
+// @Router /api/admin/products/{id}/stock [put]
 func (h *ProductAdminHandler) UpdateStock(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)

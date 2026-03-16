@@ -17,6 +17,57 @@ type PaymentHandler struct {
 	logger         *zap.Logger
 }
 
+// PaymentErrorResponse 支付错误响应
+type PaymentErrorResponse struct {
+	Code    int    `json:"code" example:"50000"`
+	Message string `json:"message" example:"操作失败"`
+}
+
+// CreatePaymentResponse 创建支付响应
+type CreatePaymentResponse struct {
+	Code int               `json:"code" example:"0"`
+	Data CreatePaymentData `json:"data"`
+}
+
+// CreatePaymentData 创建支付数据
+type CreatePaymentData struct {
+	PayURL     string `json:"pay_url" example:"https://openapi.alipay.com/gateway.do?..."`
+	OutTradeNo string `json:"out_trade_no" example:"ORDER20240101123456"`
+}
+
+// QueryPaymentResponse 查询支付响应
+type QueryPaymentResponse struct {
+	Code int              `json:"code" example:"0"`
+	Data QueryPaymentData `json:"data"`
+}
+
+// QueryPaymentData 查询支付数据
+type QueryPaymentData struct {
+	OutTradeNo     string `json:"out_trade_no" example:"ORDER20240101123456"`
+	TradeNo        string `json:"trade_no" example:"2024010122001412341234567890"`
+	TotalAmount    string `json:"total_amount" example:"100.00"`
+	PaidAmount     string `json:"paid_amount" example:"100.00"`
+	Status         int    `json:"status" example:"1"`
+	Subject        string `json:"subject" example:"商品订单支付"`
+	CreatedAt      string `json:"created_at" example:"2024-01-01T10:00:00Z"`
+	PaidAt         string `json:"paid_at" example:"2024-01-01T10:05:00Z"`
+	RefundedAmount string `json:"refunded_amount" example:"0.00"`
+	RefundedAt     string `json:"refunded_at" example:""`
+}
+
+// RefundPaymentResponse 退款响应
+type RefundPaymentResponse struct {
+	Code int               `json:"code" example:"0"`
+	Data RefundPaymentData `json:"data"`
+}
+
+// RefundPaymentData 退款数据
+type RefundPaymentData struct {
+	TradeNo    string `json:"trade_no" example:"2024010122001412341234567890"`
+	OutTradeNo string `json:"out_trade_no" example:"ORDER20240101123456"`
+	RefundFee  string `json:"refund_fee" example:"100.00"`
+}
+
 // NewPaymentHandler 创建支付处理器
 func NewPaymentHandler(paymentService *service.PaymentService, logger *zap.Logger) *PaymentHandler {
 	return &PaymentHandler{
@@ -36,7 +87,18 @@ type CreatePaymentRequest struct {
 }
 
 // CreatePayment 创建支付
-// POST /payment/create
+// @Summary 创建支付
+// @Description 创建支付宝支付订单，返回支付链接
+// @Tags 支付
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param request body CreatePaymentRequest true "支付请求参数"
+// @Success 200 {object} CreatePaymentResponse "支付创建成功"
+// @Failure 400 {object} PaymentErrorResponse "请求参数错误或订单已支付"
+// @Failure 401 {object} PaymentErrorResponse "未登录"
+// @Failure 500 {object} PaymentErrorResponse "服务器内部错误"
+// @Router /api/v1/payment/create [post]
 func (h *PaymentHandler) CreatePayment(c *gin.Context) {
 	var req CreatePaymentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -99,7 +161,14 @@ func (h *PaymentHandler) CreatePayment(c *gin.Context) {
 }
 
 // HandleNotify 处理支付宝回调
-// POST /payment/notify
+// @Summary 处理支付宝回调
+// @Description 处理支付宝异步通知，更新支付状态（支付宝服务器调用，无需认证）
+// @Tags 支付
+// @Accept json
+// @Produce text/plain
+// @Success 200 {string} string "success"
+// @Failure 400 {string} string "fail"
+// @Router /api/v1/payment/notify [post]
 func (h *PaymentHandler) HandleNotify(c *gin.Context) {
 	if err := h.paymentService.HandleNotify(c.Request.Context(), c.Request); err != nil {
 		h.logger.Error("处理支付回调失败", zap.Error(err))
@@ -117,7 +186,18 @@ type QueryPaymentRequest struct {
 }
 
 // QueryPayment 查询支付状态
-// GET /payment/query
+// @Summary 查询支付状态
+// @Description 根据商户订单号查询支付状态和详细信息
+// @Tags 支付
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param out_trade_no query string true "商户订单号"
+// @Success 200 {object} QueryPaymentResponse "查询成功"
+// @Failure 400 {object} PaymentErrorResponse "请求参数错误"
+// @Failure 404 {object} PaymentErrorResponse "支付记录不存在"
+// @Failure 500 {object} PaymentErrorResponse "服务器内部错误"
+// @Router /api/v1/payment/query [get]
 func (h *PaymentHandler) QueryPayment(c *gin.Context) {
 	var req QueryPaymentRequest
 	if err := c.ShouldBindQuery(&req); err != nil {
@@ -147,29 +227,40 @@ func (h *PaymentHandler) QueryPayment(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
 		"data": gin.H{
-			"out_trade_no":   record.OutTradeNo,
-			"trade_no":       record.TradeNo,
-			"total_amount":   record.TotalAmount,
-			"paid_amount":    record.PaidAmount,
-			"status":         record.Status,
-			"subject":        record.Subject,
-			"created_at":     record.CreatedAt,
-			"paid_at":        record.PaidAt,
+			"out_trade_no":    record.OutTradeNo,
+			"trade_no":        record.TradeNo,
+			"total_amount":    record.TotalAmount,
+			"paid_amount":     record.PaidAmount,
+			"status":          record.Status,
+			"subject":         record.Subject,
+			"created_at":      record.CreatedAt,
+			"paid_at":         record.PaidAt,
 			"refunded_amount": record.RefundedAmount,
-			"refunded_at":    record.RefundedAt,
+			"refunded_at":     record.RefundedAt,
 		},
 	})
 }
 
 // RefundPaymentRequest 退款请求
 type RefundPaymentRequest struct {
-	OutTradeNo   string `json:"out_trade_no" binding:"required"`   // 商户订单号
-	RefundAmount string `json:"refund_amount" binding:"required"`  // 退款金额
-	RefundReason string `json:"refund_reason" binding:"required"`  // 退款原因
+	OutTradeNo   string `json:"out_trade_no" binding:"required"`  // 商户订单号
+	RefundAmount string `json:"refund_amount" binding:"required"` // 退款金额
+	RefundReason string `json:"refund_reason" binding:"required"` // 退款原因
 }
 
 // RefundPayment 申请退款
-// POST /payment/refund
+// @Summary 申请退款
+// @Description 对已支付的订单申请退款
+// @Tags 支付
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param request body RefundPaymentRequest true "退款请求参数"
+// @Success 200 {object} RefundPaymentResponse "退款成功"
+// @Failure 400 {object} PaymentErrorResponse "请求参数错误或订单未支付/已退款"
+// @Failure 404 {object} PaymentErrorResponse "支付记录不存在"
+// @Failure 500 {object} PaymentErrorResponse "服务器内部错误"
+// @Router /api/v1/payment/refund [post]
 func (h *PaymentHandler) RefundPayment(c *gin.Context) {
 	var req RefundPaymentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -242,7 +333,18 @@ type ClosePaymentRequest struct {
 }
 
 // GeneratePayForm 生成支付表单 HTML
-// POST /payment/form
+// @Summary 生成支付表单
+// @Description 生成支付表单HTML页面，自动跳转到支付宝支付页面
+// @Tags 支付
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce html
+// @Param request body CreatePaymentRequest true "支付请求参数"
+// @Success 200 {string} string "HTML页面"
+// @Failure 400 {object} PaymentErrorResponse "请求参数错误"
+// @Failure 401 {object} PaymentErrorResponse "未登录"
+// @Failure 500 {object} PaymentErrorResponse "服务器内部错误"
+// @Router /api/v1/payment/form [post]
 func (h *PaymentHandler) GeneratePayForm(c *gin.Context) {
 	var req CreatePaymentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

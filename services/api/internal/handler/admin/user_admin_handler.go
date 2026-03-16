@@ -24,8 +24,83 @@ func NewUserAdminHandler(userAdminSvc *admin.UserAdminService, logger *zap.Logge
 	}
 }
 
+// ========== 响应结构体定义 ==========
+
+// UserListItem 用户列表项
+type UserListItem struct {
+	ID          uint64 `json:"id"`
+	Email       string `json:"email"`
+	Phone       string `json:"phone"`
+	Nickname    string `json:"nickname"`
+	Avatar      string `json:"avatar"`
+	MemberLevel int    `json:"member_level"`
+	Points      int    `json:"points"`
+	Status      string `json:"status"`
+	CreatedAt   string `json:"created_at"`
+}
+
+// UserListResponse 用户列表响应
+type UserListResponse struct {
+	Users    []UserListItem `json:"users"`
+	Total    int64          `json:"total"`
+	Page     int            `json:"page"`
+	PageSize int            `json:"page_size"`
+}
+
+// UserDetailResponse 用户详情响应
+type UserDetailResponse struct {
+	ID          uint64 `json:"id"`
+	Email       string `json:"email"`
+	Phone       string `json:"phone"`
+	Nickname    string `json:"nickname"`
+	Avatar      string `json:"avatar"`
+	MemberLevel int    `json:"member_level"`
+	Points      int    `json:"points"`
+	Status      string `json:"status"`
+	CreatedAt   string `json:"created_at"`
+	UpdatedAt   string `json:"updated_at"`
+}
+
+// UserStatsResponse 用户统计响应
+type UserStatsResponse struct {
+	TotalUsers     int64 `json:"total_users"`
+	ActiveUsers    int64 `json:"active_users"`
+	InactiveUsers  int64 `json:"inactive_users"`
+	TodayNewUsers  int64 `json:"today_new_users"`
+	MonthNewUsers  int64 `json:"month_new_users"`
+	VipUsers       int64 `json:"vip_users"`
+	TotalPoints    int64 `json:"total_points"`
+	AvgMemberLevel int   `json:"avg_member_level"`
+}
+
+// UpdateUserRequest 更新用户请求
+type UpdateUserRequest struct {
+	Nickname    string `json:"nickname"`
+	Phone       string `json:"phone"`
+	Avatar      string `json:"avatar"`
+	Status      string `json:"status"`
+	MemberLevel int    `json:"member_level"`
+	Points      int    `json:"points"`
+}
+
+// ========== API 方法 ==========
+
 // List 获取用户列表
-// GET /api/admin/users
+// @Summary 获取用户列表
+// @Description 管理后台获取用户列表，支持按关键词、状态筛选，支持分页
+// @Tags 管理后台-用户
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(20)
+// @Param keyword query string false "搜索关键词（邮箱/昵称/手机号）"
+// @Param status query string false "用户状态 (active/inactive/banned)"
+// @Success 200 {object} map[string]interface{} "code=0 表示成功，data 包含 users、total、page、page_size"
+// @Failure 400 {object} map[string]interface{} "参数错误"
+// @Failure 401 {object} map[string]interface{} "未授权"
+// @Failure 500 {object} map[string]interface{} "服务器错误"
+// @Router /api/admin/users [get]
 func (h *UserAdminHandler) List(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
@@ -70,7 +145,19 @@ func (h *UserAdminHandler) List(c *gin.Context) {
 }
 
 // Get 获取用户详情
-// GET /api/admin/users/:id
+// @Summary 获取用户详情
+// @Description 管理后台根据用户ID获取用户详细信息
+// @Tags 管理后台-用户
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "用户ID"
+// @Success 200 {object} map[string]interface{} "code=0 表示成功，data 包含用户详细信息"
+// @Failure 400 {object} map[string]interface{} "无效的用户ID"
+// @Failure 401 {object} map[string]interface{} "未授权"
+// @Failure 404 {object} map[string]interface{} "用户不存在"
+// @Failure 500 {object} map[string]interface{} "服务器错误"
+// @Router /api/admin/users/{id} [get]
 func (h *UserAdminHandler) Get(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -116,7 +203,20 @@ func (h *UserAdminHandler) Get(c *gin.Context) {
 }
 
 // Update 更新用户信息
-// PUT /api/admin/users/:id
+// @Summary 更新用户信息
+// @Description 管理后台更新用户信息，包括昵称、手机号、头像、状态、会员等级、积分等
+// @Tags 管理后台-用户
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "用户ID"
+// @Param request body UpdateUserRequest true "更新用户请求"
+// @Success 200 {object} map[string]interface{} "code=0 表示更新成功"
+// @Failure 400 {object} map[string]interface{} "参数错误"
+// @Failure 401 {object} map[string]interface{} "未授权"
+// @Failure 404 {object} map[string]interface{} "用户不存在"
+// @Failure 500 {object} map[string]interface{} "服务器错误"
+// @Router /api/admin/users/{id} [put]
 func (h *UserAdminHandler) Update(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -176,7 +276,19 @@ func (h *UserAdminHandler) Update(c *gin.Context) {
 }
 
 // Delete 删除用户
-// DELETE /api/admin/users/:id
+// @Summary 删除用户
+// @Description 管理后台删除指定用户（软删除）
+// @Tags 管理后台-用户
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "用户ID"
+// @Success 200 {object} map[string]interface{} "code=0 表示删除成功"
+// @Failure 400 {object} map[string]interface{} "无效的用户ID"
+// @Failure 401 {object} map[string]interface{} "未授权"
+// @Failure 404 {object} map[string]interface{} "用户不存在"
+// @Failure 500 {object} map[string]interface{} "服务器错误"
+// @Router /api/admin/users/{id} [delete]
 func (h *UserAdminHandler) Delete(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
@@ -211,7 +323,16 @@ func (h *UserAdminHandler) Delete(c *gin.Context) {
 }
 
 // Stats 获取用户统计
-// GET /api/admin/users/stats
+// @Summary 获取用户统计
+// @Description 管理后台获取用户统计数据，包括总用户数、活跃用户、今日新增、会员统计等
+// @Tags 管理后台-用户
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{} "code=0 表示成功，data 包含统计数据"
+// @Failure 401 {object} map[string]interface{} "未授权"
+// @Failure 500 {object} map[string]interface{} "服务器错误"
+// @Router /api/admin/users/stats [get]
 func (h *UserAdminHandler) Stats(c *gin.Context) {
 	stats, err := h.userAdminSvc.GetUserStats(c.Request.Context())
 	if err != nil {

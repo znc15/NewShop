@@ -12,6 +12,71 @@ import (
 	"go.uber.org/zap"
 )
 
+// ConfigResponse 配置响应
+type ConfigResponse struct {
+	ID          uint64 `json:"id"`
+	Key         string `json:"key"`
+	Value       string `json:"value"`
+	Type        string `json:"type"`
+	Category    string `json:"category"`
+	Description string `json:"description"`
+	IsPublic    bool   `json:"is_public"`
+	CreatedAt   string `json:"created_at"`
+	UpdatedAt   string `json:"updated_at"`
+}
+
+// ConfigListResponse 配置列表响应
+type ConfigListResponse struct {
+	Code int              `json:"code"`
+	Data []ConfigResponse `json:"data"`
+}
+
+// ConfigDetailResponse 配置详情响应
+type ConfigDetailResponse struct {
+	Code int            `json:"code"`
+	Data ConfigResponse `json:"data"`
+}
+
+// ConfigCreateResponse 创建配置响应
+type ConfigCreateResponse struct {
+	Code    int            `json:"code"`
+	Message string         `json:"message"`
+	Data    ConfigResponse `json:"data"`
+}
+
+// ConfigUpdateResponse 更新配置响应
+type ConfigUpdateResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
+// ConfigDeleteResponse 删除配置响应
+type ConfigDeleteResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
+
+// ConfigHistoryItem 配置历史项
+type ConfigHistoryItem struct {
+	ID         uint64 `json:"id"`
+	ConfigID   uint64 `json:"config_id"`
+	OldValue   string `json:"old_value"`
+	NewValue   string `json:"new_value"`
+	OperatorID uint64 `json:"operator_id"`
+	OperatedAt string `json:"operated_at"`
+}
+
+// ConfigHistoriesResponse 配置历史列表响应
+type ConfigHistoriesResponse struct {
+	Code int `json:"code"`
+	Data struct {
+		Histories []ConfigHistoryItem `json:"histories"`
+		Total     int64               `json:"total"`
+		Page      int                 `json:"page"`
+		PageSize  int                 `json:"page_size"`
+	} `json:"data"`
+}
+
 // ConfigAdminHandler 配置管理处理器
 type ConfigAdminHandler struct {
 	configService *service.ConfigService
@@ -27,7 +92,14 @@ func NewConfigAdminHandler(configService *service.ConfigService, logger *zap.Log
 }
 
 // List 获取配置列表
-// GET /api/admin/configs
+// @Summary 获取配置列表
+// @Description 获取所有系统配置，支持按分类筛选
+// @Tags 管理后台-配置
+// @Security ApiKeyAuth
+// @Param category query string false "配置分类"
+// @Success 200 {object} ConfigListResponse
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/admin/configs [get]
 func (h *ConfigAdminHandler) List(c *gin.Context) {
 	category := c.Query("category")
 
@@ -56,7 +128,14 @@ func (h *ConfigAdminHandler) List(c *gin.Context) {
 }
 
 // Get 获取配置详情
-// GET /api/admin/configs/:key
+// @Summary 获取配置详情
+// @Description 根据配置键获取配置详情
+// @Tags 管理后台-配置
+// @Security ApiKeyAuth
+// @Param key path string true "配置键"
+// @Success 200 {object} ConfigDetailResponse
+// @Failure 404 {object} map[string]interface{}
+// @Router /api/admin/configs/{key} [get]
 func (h *ConfigAdminHandler) Get(c *gin.Context) {
 	key := c.Param("key")
 
@@ -82,7 +161,17 @@ type UpdateRequest struct {
 }
 
 // Update 更新配置
-// PUT /api/admin/configs/:key
+// @Summary 更新配置
+// @Description 更新指定配置的值，配置值必须是有效的 JSON 格式
+// @Tags 管理后台-配置
+// @Security ApiKeyAuth
+// @Param key path string true "配置键"
+// @Param request body UpdateRequest true "请求参数"
+// @Success 200 {object} ConfigUpdateResponse
+// @Failure 400 {object} map[string]interface{}
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/admin/configs/{key} [put]
 func (h *ConfigAdminHandler) Update(c *gin.Context) {
 	key := c.Param("key")
 
@@ -141,7 +230,15 @@ type CreateRequest struct {
 }
 
 // Create 创建配置
-// POST /api/admin/configs
+// @Summary 创建配置
+// @Description 创建新的系统配置，配置值必须是有效的 JSON 格式
+// @Tags 管理后台-配置
+// @Security ApiKeyAuth
+// @Param request body CreateRequest true "请求参数"
+// @Success 200 {object} ConfigCreateResponse
+// @Failure 400 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/admin/configs [post]
 func (h *ConfigAdminHandler) Create(c *gin.Context) {
 	var req CreateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -189,7 +286,14 @@ func (h *ConfigAdminHandler) Create(c *gin.Context) {
 }
 
 // Delete 删除配置
-// DELETE /api/admin/configs/:key
+// @Summary 删除配置
+// @Description 删除指定的系统配置
+// @Tags 管理后台-配置
+// @Security ApiKeyAuth
+// @Param key path string true "配置键"
+// @Success 200 {object} ConfigDeleteResponse
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/admin/configs/{key} [delete]
 func (h *ConfigAdminHandler) Delete(c *gin.Context) {
 	key := c.Param("key")
 
@@ -210,7 +314,17 @@ func (h *ConfigAdminHandler) Delete(c *gin.Context) {
 }
 
 // GetHistories 获取配置变更历史
-// GET /api/admin/configs/:key/histories
+// @Summary 获取配置变更历史
+// @Description 获取指定配置的变更历史记录，支持分页
+// @Tags 管理后台-配置
+// @Security ApiKeyAuth
+// @Param key path string true "配置键"
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(20)
+// @Success 200 {object} ConfigHistoriesResponse
+// @Failure 404 {object} map[string]interface{}
+// @Failure 500 {object} map[string]interface{}
+// @Router /api/admin/configs/{key}/histories [get]
 func (h *ConfigAdminHandler) GetHistories(c *gin.Context) {
 	key := c.Param("key")
 

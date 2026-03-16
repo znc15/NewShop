@@ -73,6 +73,16 @@ type CategoryDetailResponse struct {
 }
 
 // List 获取分类列表（树形结构）
+// @Summary 获取分类列表
+// @Description 管理后台获取分类列表，返回树形结构的分类数据
+// @Tags 管理后台-分类
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Success 200 {object} map[string]interface{} "code=0 表示成功，data.list 为分类树形列表"
+// @Failure 401 {object} map[string]interface{} "未授权"
+// @Failure 500 {object} map[string]interface{} "服务器错误"
+// @Router /api/admin/categories [get]
 func (h *CategoryAdminHandler) List(c *gin.Context) {
 	categories, err := h.categoryService.GetCategoryTree(c.Request.Context())
 	if err != nil {
@@ -90,6 +100,18 @@ func (h *CategoryAdminHandler) List(c *gin.Context) {
 }
 
 // Create 创建分类
+// @Summary 创建分类
+// @Description 管理后台创建新分类，支持多级分类（最多3级）
+// @Tags 管理后台-分类
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param request body CreateCategoryRequest true "分类信息"
+// @Success 201 {object} map[string]interface{} "code=0 表示成功，data.id 为新分类ID"
+// @Failure 400 {object} map[string]interface{} "参数错误"
+// @Failure 401 {object} map[string]interface{} "未授权"
+// @Failure 500 {object} map[string]interface{} "服务器错误"
+// @Router /api/admin/categories [post]
 func (h *CategoryAdminHandler) Create(c *gin.Context) {
 	var req CreateCategoryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -140,6 +162,20 @@ func (h *CategoryAdminHandler) Create(c *gin.Context) {
 }
 
 // Update 更新分类
+// @Summary 更新分类
+// @Description 管理后台更新分类信息，包括名称、排序、图标、状态
+// @Tags 管理后台-分类
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "分类ID"
+// @Param request body UpdateCategoryRequest true "分类更新信息"
+// @Success 200 {object} map[string]interface{} "code=0 表示成功"
+// @Failure 400 {object} map[string]interface{} "参数错误"
+// @Failure 401 {object} map[string]interface{} "未授权"
+// @Failure 404 {object} map[string]interface{} "分类不存在"
+// @Failure 500 {object} map[string]interface{} "服务器错误"
+// @Router /api/admin/categories/{id} [put]
 func (h *CategoryAdminHandler) Update(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
@@ -182,6 +218,19 @@ func (h *CategoryAdminHandler) Update(c *gin.Context) {
 }
 
 // Delete 删除分类
+// @Summary 删除分类
+// @Description 管理后台删除分类，存在子分类或商品的分类无法删除
+// @Tags 管理后台-分类
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "分类ID"
+// @Success 200 {object} map[string]interface{} "code=0 表示成功"
+// @Failure 400 {object} map[string]interface{} "参数错误或分类下存在子分类/商品"
+// @Failure 401 {object} map[string]interface{} "未授权"
+// @Failure 404 {object} map[string]interface{} "分类不存在"
+// @Failure 500 {object} map[string]interface{} "服务器错误"
+// @Router /api/admin/categories/{id} [delete]
 func (h *CategoryAdminHandler) Delete(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
