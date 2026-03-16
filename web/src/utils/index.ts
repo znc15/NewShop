@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import type { ApiError, ApiResponse } from '@/types'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -68,4 +69,34 @@ export function generateId(): string {
 
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+export function getApiErrorMessage(error: unknown, fallback: string): string {
+  if (!isRecord(error)) {
+    return fallback
+  }
+
+  const apiError = error as Partial<ApiError>
+  if (typeof apiError.message === 'string' && apiError.message.trim()) {
+    return apiError.message
+  }
+
+  const response = error.response
+  if (!isRecord(response)) {
+    return fallback
+  }
+
+  const data = response.data
+  if (!isRecord(data)) {
+    return fallback
+  }
+
+  const apiResponse = data as Partial<ApiResponse>
+  return typeof apiResponse.message === 'string' && apiResponse.message.trim()
+    ? apiResponse.message
+    : fallback
 }

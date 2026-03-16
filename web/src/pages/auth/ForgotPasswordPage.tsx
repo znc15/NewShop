@@ -5,7 +5,7 @@ import { motion, AnimatePresence, type Variants } from 'motion/react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { authService } from '@/services/auth'
-import { cn } from '@/utils'
+import { cn, getApiErrorMessage } from '@/utils'
 
 type Step = 'email' | 'verify' | 'reset' | 'success'
 
@@ -121,8 +121,7 @@ export default function ForgotPasswordPage() {
       setCurrentStep('verify')
       setCountdown(60)
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } }
-      setServerError(err.response?.data?.message || '验证码发送失败，请稍后重试')
+      setServerError(getApiErrorMessage(error, '验证码发送失败，请稍后重试'))
     } finally {
       setIsLoading(false)
     }
@@ -135,8 +134,7 @@ export default function ForgotPasswordPage() {
       await authService.sendVerifyCode(formData.email)
       setCountdown(60)
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } }
-      setServerError(err.response?.data?.message || '验证码发送失败，请稍后重试')
+      setServerError(getApiErrorMessage(error, '验证码发送失败，请稍后重试'))
     } finally {
       setIsLoading(false)
     }
@@ -152,8 +150,7 @@ export default function ForgotPasswordPage() {
       setDirection(1)
       setCurrentStep('reset')
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } }
-      setServerError(err.response?.data?.message || '验证码验证失败')
+      setServerError(getApiErrorMessage(error, '验证码验证失败'))
     } finally {
       setIsLoading(false)
     }
@@ -169,8 +166,7 @@ export default function ForgotPasswordPage() {
       setDirection(1)
       setCurrentStep('success')
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } }
-      setServerError(err.response?.data?.message || '密码重置失败，请稍后重试')
+      setServerError(getApiErrorMessage(error, '密码重置失败，请稍后重试'))
     } finally {
       setIsLoading(false)
     }

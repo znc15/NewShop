@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type SyntheticEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react'
 import { motion, type Variants } from 'motion/react'
@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { authService } from '@/services/auth'
 import { useAuthStore } from '@/stores/auth'
-import { cn } from '@/utils'
+import { cn, getApiErrorMessage } from '@/utils'
 
 // 动画变体配置
 const containerVariants: Variants = {
@@ -69,7 +69,7 @@ export default function LoginPage() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     setServerError('')
 
@@ -82,8 +82,7 @@ export default function LoginPage() {
       setToken(response.access_token)
       navigate('/')
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } }
-      setServerError(err.response?.data?.message || '登录失败，请检查邮箱和密码')
+      setServerError(getApiErrorMessage(error, '登录失败，请检查邮箱和密码'))
     } finally {
       setIsLoading(false)
     }

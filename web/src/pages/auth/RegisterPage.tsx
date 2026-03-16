@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type SyntheticEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { User, Mail, Lock, ArrowRight, Eye, EyeOff, Send } from 'lucide-react'
 import { motion, type Variants } from 'motion/react'
@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { authService } from '@/services/auth'
 import { useAuthStore } from '@/stores/auth'
+import { getApiErrorMessage } from '@/utils'
 
 // 动画变体配置
 const containerVariants: Variants = {
@@ -116,12 +117,11 @@ export default function RegisterPage() {
       setCodeSent(true)
       setCountdown(60)
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } }
-      setServerError(err.response?.data?.message || '验证码发送失败，请稍后重试')
+      setServerError(getApiErrorMessage(error, '验证码发送失败，请稍后重试'))
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault()
     setServerError('')
 
@@ -138,8 +138,7 @@ export default function RegisterPage() {
       setToken(response.access_token)
       navigate('/')
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } }
-      setServerError(err.response?.data?.message || '注册失败，请稍后重试')
+      setServerError(getApiErrorMessage(error, '注册失败，请稍后重试'))
     } finally {
       setIsLoading(false)
     }

@@ -4,6 +4,21 @@ import type { AxiosInstance, AxiosRequestConfig } from 'axios'
 import type { ApiResponse, ApiError } from '@/types'
 
 const BASE_URL = '/api/v1'
+const AUTH_PAGES = ['/auth/login', '/auth/register', '/auth/send-code', '/auth/reset-password']
+
+function clearAuthState() {
+  localStorage.removeItem('token')
+  localStorage.removeItem('auth-storage')
+}
+
+function shouldRedirectToLogin(error: AxiosError<ApiResponse>): boolean {
+  if (error.response?.status !== 401) {
+    return false
+  }
+
+  const requestUrl = error.config?.url ?? ''
+  return !AUTH_PAGES.some((path) => requestUrl.includes(path))
+}
 
 const instance: AxiosInstance = axios.create({
   baseURL: BASE_URL,
@@ -51,9 +66,11 @@ instance.interceptors.response.use(
           message = data?.message || '请求参数错误'
           break
         case 401:
-          message = '登录已过期，请重新登录'
-          localStorage.removeItem('token')
-          window.location.href = '/login'
+          message = data?.message || '登录已过期，请重新登录'
+          if (shouldRedirectToLogin(error)) {
+            clearAuthState()
+            window.location.href = '/login'
+          }
           break
         case 403:
           message = '没有权限访问'
