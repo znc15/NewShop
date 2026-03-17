@@ -90,7 +90,7 @@ export default function PointsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <Link to="/" className="text-stone hover:text-forest-600">
+        <Link to="/" className="text-stone hover:text-blue-600">
           首页
         </Link>
         <span className="text-stone">/</span>
@@ -98,7 +98,7 @@ export default function PointsPage() {
       </motion.div>
 
       <motion.div
-        className="bg-gradient-to-r from-forest-600 to-forest-700 rounded-xl p-8 mb-8 text-white overflow-hidden relative"
+        className="bg-gradient-to-r from-blue-600 to-slate-800 rounded-xl p-8 mb-8 text-white overflow-hidden relative"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6 }}
@@ -125,7 +125,7 @@ export default function PointsPage() {
             积分中心
           </motion.h1>
           <motion.p
-            className="text-cream-100"
+            className="text-white"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3, duration: 0.5 }}
@@ -144,19 +144,19 @@ export default function PointsPage() {
       >
         <motion.div
           variants={itemVariants}
-          className="bg-white rounded-xl border border-cream-300 p-6 text-center overflow-hidden relative"
+          className="bg-white rounded-xl border border-slate-200 p-6 text-center overflow-hidden relative"
           whileHover={{ scale: 1.02, y: -2 }}
           transition={{ duration: 0.3 }}
         >
           <motion.div
-            className="absolute -right-10 -top-10 w-32 h-32 bg-forest-50 rounded-full"
+            className="absolute -right-10 -top-10 w-32 h-32 bg-blue-50 rounded-full"
             animate={{ scale: [1, 1.1, 1] }}
             transition={{ duration: 4, repeat: Infinity }}
           />
           <div className="relative z-10">
             <p className="text-sm text-stone mb-1">当前积分</p>
             <motion.p
-              className="text-3xl font-bold text-forest-700"
+              className="text-3xl font-bold text-blue-700"
               key={points}
               variants={numberVariants}
               initial="initial"
@@ -168,19 +168,19 @@ export default function PointsPage() {
         </motion.div>
         <motion.div
           variants={itemVariants}
-          className="bg-white rounded-xl border border-cream-300 p-6 text-center overflow-hidden relative"
+          className="bg-white rounded-xl border border-slate-200 p-6 text-center overflow-hidden relative"
           whileHover={{ scale: 1.02, y: -2 }}
           transition={{ duration: 0.3 }}
         >
           <motion.div
-            className="absolute -right-10 -top-10 w-32 h-32 bg-copper-50 rounded-full"
+            className="absolute -right-10 -top-10 w-32 h-32 bg-blue-50 rounded-full"
             animate={{ scale: [1, 1.1, 1] }}
             transition={{ duration: 4, repeat: Infinity, delay: 0.5 }}
           />
           <div className="relative z-10">
             <p className="text-sm text-stone mb-1">连续签到</p>
             <motion.p
-              className="text-3xl font-bold text-copper-600"
+              className="text-3xl font-bold text-blue-600"
               key={streakDays}
               animate={{ scale: [1, 1.1, 1] }}
               transition={{ duration: 0.3 }}
@@ -191,7 +191,7 @@ export default function PointsPage() {
         </motion.div>
         <motion.div
           variants={itemVariants}
-          className="bg-white rounded-xl border border-cream-300 p-6 text-center overflow-hidden relative"
+          className="bg-white rounded-xl border border-slate-200 p-6 text-center overflow-hidden relative"
           whileHover={{ scale: 1.02, y: -2 }}
           transition={{ duration: 0.3 }}
         >
@@ -200,7 +200,7 @@ export default function PointsPage() {
             <p className="text-sm">
               {checkedIn ? (
                 <motion.span
-                  className="text-forest-600"
+                  className="text-blue-600"
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3 }}
@@ -211,7 +211,7 @@ export default function PointsPage() {
                 <motion.button
                   onClick={handleCheckIn}
                   disabled={checkedIn || isCheckingIn}
-                  className="px-4 py-2 bg-copper-500 text-white rounded-lg hover:bg-copper-600 transition-colors disabled:opacity-50"
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -226,7 +226,7 @@ export default function PointsPage() {
 
       {/* 签到日历 */}
       <motion.div
-        className="bg-white rounded-xl border border-cream-300 p-6 mb-8"
+        className="bg-white rounded-xl border border-slate-200 p-6 mb-8"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.5 }}
@@ -243,10 +243,10 @@ export default function PointsPage() {
               whileHover={{ scale: 1.05, y: -2 }}
               className={`aspect-square rounded-lg flex items-center justify-center cursor-default ${
                 i < streakDays
-                  ? 'bg-forest-100 text-forest-600'
+                  ? 'bg-blue-100 text-blue-600'
                   : i === streakDays && !checkedIn
-                  ? 'bg-copper-100 text-copper-600'
-                  : 'bg-cream-100 text-stone'
+                  ? 'bg-blue-100 text-blue-600'
+                  : 'bg-blue-50 text-stone'
               }`}
             >
               <span className="text-sm">第{i + 1}天</span>
@@ -257,7 +257,7 @@ export default function PointsPage() {
 
       {/* 积分记录 */}
       <motion.div
-        className="bg-white rounded-xl border border-cream-300 p-6"
+        className="bg-white rounded-xl border border-slate-200 p-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6, duration: 0.5 }}
@@ -285,11 +285,11 @@ export default function PointsPage() {
                 key={record.id}
                 variants={itemVariants}
                 whileHover={{ x: 5 }}
-                className="flex items-center justify-between py-2 border-b border-cream-200 last:border-0"
+                className="flex items-center justify-between py-2 border-b border-slate-200 last:border-0"
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    record.points > 0 ? 'bg-forest-100 text-forest-600' : 'bg-red-100 text-red-600'
+                    record.points > 0 ? 'bg-blue-100 text-blue-600' : 'bg-red-100 text-red-600'
                   }`}>
                     <span className="text-lg">{record.points > 0 ? '+' : '-'}</span>
                   </div>
@@ -298,7 +298,7 @@ export default function PointsPage() {
                     <p className="text-xs text-stone">{new Date(record.created_at).toLocaleString('zh-CN')}</p>
                   </div>
                 </div>
-                <span className={`font-semibold ${record.points > 0 ? 'text-forest-600' : 'text-red-600'}`}>
+                <span className={`font-semibold ${record.points > 0 ? 'text-blue-600' : 'text-red-600'}`}>
                   {record.points > 0 ? '+' : ''}{record.points}
                 </span>
               </motion.div>

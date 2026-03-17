@@ -58,7 +58,7 @@ export default function NewProductsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        <Link to="/" className="text-stone hover:text-forest-600">
+        <Link to="/" className="text-stone hover:text-blue-600">
           首页
         </Link>
         <span className="text-stone">/</span>
@@ -66,7 +66,7 @@ export default function NewProductsPage() {
       </motion.div>
 
       <motion.div
-        className="bg-gradient-to-r from-forest-600 to-forest-700 rounded-xl p-8 mb-8 text-white overflow-hidden relative"
+        className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-8 mb-8 text-white overflow-hidden relative"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.2, duration: 0.5 }}
@@ -85,7 +85,7 @@ export default function NewProductsPage() {
         />
         <div className="relative z-10">
           <h1 className="text-3xl font-semibold mb-2">新品上市</h1>
-          <p className="text-cream-100">最新上架的精选好物，抢先体验</p>
+          <p className="text-blue-50">最新上架的精选好物，抢先体验</p>
         </div>
       </motion.div>
 

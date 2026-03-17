@@ -289,6 +289,7 @@ func (r *Router) setupAuthRoutes(rg *gin.RouterGroup) {
 		{
 			authProtected.GET("/profile", r.authHandler.GetProfile)
 			authProtected.GET("/me", r.authHandler.GetProfile) // 别名，前端兼容
+			authProtected.PUT("/profile", r.authHandler.UpdateProfile)
 			authProtected.PUT("/password", r.authHandler.UpdatePassword)
 			authProtected.POST("/logout", r.authHandler.Logout) // 退出登录
 		}
@@ -302,7 +303,7 @@ func (r *Router) setupUserRoutes(rg *gin.RouterGroup) {
 	{
 		// 用户信息相关
 		user.GET("/info", r.authHandler.GetProfile)
-		user.PUT("/info", r.authHandler.GetProfile) // 暂时复用 GetProfile，后续可扩展
+		user.PUT("/info", r.authHandler.UpdateProfile)
 		// 用户地址相关
 		user.GET("/addresses", r.addressHandler.ListAddresses)
 		user.GET("/addresses/:id", r.addressHandler.GetAddress)

@@ -150,7 +150,7 @@ export default function CouponsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <Link to="/" className="text-stone hover:text-forest-600">
+        <Link to="/" className="text-stone hover:text-blue-600">
           首页
         </Link>
         <span className="text-stone">/</span>
@@ -158,7 +158,7 @@ export default function CouponsPage() {
       </motion.div>
 
       <motion.div
-        className="bg-gradient-to-r from-copper-500 to-copper-600 rounded-xl p-8 mb-8 text-white overflow-hidden relative"
+        className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-8 mb-8 text-white overflow-hidden relative"
         variants={headerVariants}
         initial="hidden"
         animate="visible"
@@ -185,7 +185,7 @@ export default function CouponsPage() {
             优惠券中心
           </motion.h1>
           <motion.p
-            className="text-cream-100"
+            className="text-blue-50"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3, duration: 0.5 }}
@@ -209,8 +209,8 @@ export default function CouponsPage() {
             whileTap={{ scale: 0.98 }}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               activeTab === tab
-                ? 'bg-forest-700 text-white'
-                : 'bg-cream-200 text-charcoal hover:bg-cream-300'
+                ? 'bg-blue-700 text-white'
+                : 'bg-slate-100 text-charcoal hover:bg-slate-200'
             }`}
             onClick={() => setActiveTab(tab as 'available' | 'my')}
           >
@@ -249,10 +249,10 @@ export default function CouponsPage() {
                     layout
                     whileHover={{ y: -5, scale: 1.02 }}
                     transition={{ duration: 0.3 }}
-                    className="bg-white rounded-xl border border-cream-300 p-4 hover:shadow-lg overflow-hidden relative"
+                    className="bg-white rounded-xl border border-slate-300 p-4 hover:shadow-lg overflow-hidden relative"
                   >
                     <motion.div
-                      className="absolute top-0 right-0 w-20 h-20 bg-copper-100/50 rounded-full -translate-y-1/2 translate-x-1/2"
+                      className="absolute top-0 right-0 w-20 h-20 bg-blue-100/50 rounded-full -translate-y-1/2 translate-x-1/2"
                       animate={{
                         scale: [1, 1.2, 1],
                       }}
@@ -267,8 +267,8 @@ export default function CouponsPage() {
                         <h3 className="font-semibold text-charcoal">{coupon.name}</h3>
                         <motion.span
                           className={`px-2 py-1 rounded text-xs ${
-                            coupon.type === 'fixed' ? 'bg-copper-100 text-copper-700' :
-                            coupon.type === 'percent' ? 'bg-forest-100 text-forest-700' :
+                            coupon.type === 'fixed' ? 'bg-blue-100 text-blue-700' :
+                            coupon.type === 'percent' ? 'bg-blue-100 text-blue-700' :
                             'bg-amber-100 text-amber-700'
                           }`}
                           whileHover={{ scale: 1.1 }}
@@ -279,7 +279,7 @@ export default function CouponsPage() {
                       <p className="text-sm text-stone mb-3">{coupon.code}</p>
                       <div className="flex items-baseline gap-2 mb-3">
                         <motion.span
-                          className="text-2xl font-bold text-copper-600"
+                          className="text-2xl font-bold text-blue-600"
                           whileHover={{ scale: 1.1 }}
                         >
                           {coupon.type === 'percent'
@@ -299,7 +299,7 @@ export default function CouponsPage() {
                       <motion.button
                         onClick={() => handleClaim(typeof coupon.id === 'number' ? coupon.id : parseInt(coupon.id as string))}
                         disabled={claimingId !== null}
-                        className="w-full py-2 bg-forest-700 text-white rounded-lg hover:bg-forest-600 transition-colors disabled:opacity-50"
+                        className="w-full py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
@@ -326,7 +326,7 @@ export default function CouponsPage() {
                 <Link
                   to="/coupons"
                   onClick={() => setActiveTab('available')}
-                  className="px-4 py-2 bg-forest-700 text-white rounded-lg"
+                  className="px-4 py-2 bg-blue-700 text-white rounded-lg"
                 >
                   去领取优惠券
                 </Link>
@@ -346,13 +346,13 @@ export default function CouponsPage() {
                   key={coupon.id}
                   variants={itemVariants}
                   whileHover={{ x: 5 }}
-                  className="bg-white rounded-xl border border-forest-300 p-4"
+                  className="bg-white rounded-xl border border-blue-300 p-4"
                 >
                   <div className="flex justify-between items-start">
                     <h3 className="font-semibold text-charcoal">{coupon.name}</h3>
                     <motion.span
                       className={`px-2 py-1 rounded text-xs ${
-                        coupon.status === 'claimed' ? 'bg-forest-100 text-forest-700' :
+                        coupon.status === 'claimed' ? 'bg-blue-100 text-blue-700' :
                         coupon.status === 'used' ? 'bg-stone-100 text-stone' :
                         'bg-amber-100 text-amber-700'
                       }`}
@@ -362,7 +362,7 @@ export default function CouponsPage() {
                     </motion.span>
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-bold text-copper-600">
+                    <span className="text-2xl font-bold text-blue-600">
                       {coupon.type === 'percent'
                         ? `${coupon.discount_value}折`
                         : `¥${coupon.discount_value / 100}`

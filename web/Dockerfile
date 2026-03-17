@@ -1,5 +1,5 @@
 # 构建阶段
-FROM node:20-alpine AS builder
+FROM node:22-alpine3.22 AS builder
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ COPY . .
 RUN npm run build
 
 # 运行阶段
-FROM nginx:alpine
+FROM nginx:1.28-alpine3.22
 
 # 复制 nginx 配置
 COPY nginx.conf /etc/nginx/nginx.conf

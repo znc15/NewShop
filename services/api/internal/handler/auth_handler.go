@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 
 	"newshop/api/internal/model"
@@ -304,7 +305,7 @@ func (h *AuthHandler) SendCode(c *gin.Context) {
 func (h *AuthHandler) GetProfile(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
-	user, err := h.userService.GetByID(c.Request.Context(), userID)
+	profile, err := h.userService.GetProfile(c.Request.Context(), userID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"code": 40400, "message": "用户不存在"})
 		return
@@ -312,14 +313,61 @@ func (h *AuthHandler) GetProfile(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
-		"data": gin.H{
-			"id":           user.ID,
-			"email":        user.Email,
-			"nickname":     user.Nickname,
-			"avatar":       user.Avatar,
-			"member_level": user.MemberLevel,
-			"points":       user.Points,
-		},
+		"data": profile,
+	})
+}
+
+type UpdateProfileRequest struct {
+	Username *string `json:"username"`
+	Nickname *string `json:"nickname"`
+	Phone    *string `json:"phone"`
+	Avatar   *string `json:"avatar"`
+}
+
+// UpdateProfile 更新用户资料
+// @Summary 更新用户资料
+// @Tags 认证
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Param request body UpdateProfileRequest true "更新用户资料请求"
+// @Success 200 {object} ProfileResponse
+// @Failure 400 {object} map[string]interface{} "请求参数错误"
+// @Failure 404 {object} map[string]interface{} "用户不存在"
+// @Failure 409 {object} map[string]interface{} "手机号已被使用"
+// @Failure 500 {object} map[string]interface{} "服务器内部错误"
+// @Router /api/v1/auth/profile [put]
+func (h *AuthHandler) UpdateProfile(c *gin.Context) {
+	userID := c.GetUint64("user_id")
+
+	var req UpdateProfileRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 40001, "message": "请求参数错误: " + err.Error()})
+		return
+	}
+
+	profile, err := h.userService.UpdateProfile(c.Request.Context(), userID, &service.UpdateProfileRequest{
+		Username: req.Username,
+		Nickname: req.Nickname,
+		Phone:    req.Phone,
+		Avatar:   req.Avatar,
+	})
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrUserNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"code": 40400, "message": "用户不存在"})
+		case errors.Is(err, gorm.ErrDuplicatedKey):
+			c.JSON(http.StatusConflict, gin.H{"code": 40901, "message": "手机号已被使用"})
+		default:
+			h.logger.Error("更新用户资料失败", zap.Error(err), zap.Uint64("user_id", userID))
+			c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "更新用户资料失败"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": 0,
+		"data": profile,
 	})
 }
 
@@ -517,11 +565,19 @@ type RefreshResponse struct {
 type ProfileResponse struct {
 	Code int `json:"code"`
 	Data *struct {
-		ID          uint64 `json:"id"`
-		Email       string `json:"email"`
-		Nickname    string `json:"nickname"`
-		Avatar      string `json:"avatar"`
-		MemberLevel int    `json:"member_level"`
-		Points      int    `json:"points"`
+		ID          uint64  `json:"id"`
+		Email       string  `json:"email"`
+		Phone       string  `json:"phone"`
+		Username    string  `json:"username"`
+		Nickname    string  `json:"nickname"`
+		Avatar      string  `json:"avatar"`
+		MemberLevel int     `json:"member_level"`
+		Level       int     `json:"level"`
+		Points      int     `json:"points"`
+		Status      string  `json:"status"`
+		OrderCount  int64   `json:"order_count"`
+		TotalSpent  float64 `json:"total_spent"`
+		CreatedAt   string  `json:"created_at"`
+		UpdatedAt   string  `json:"updated_at"`
 	} `json:"data"`
 }

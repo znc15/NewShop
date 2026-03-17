@@ -99,7 +99,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-[calc(100vh-64px)] flex">
       {/* 左侧品牌展示区 - 仅在大屏幕显示 */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-forest-700 via-forest-600 to-forest-500">
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-blue-700 via-blue-600 to-blue-500">
         {/* 装饰性背景图案 */}
         <div className="absolute inset-0 opacity-10">
           <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -116,7 +116,7 @@ export default function LoginPage() {
 
         {/* 浮动装饰元素 */}
         <motion.div
-          className="absolute top-20 left-20 w-64 h-64 bg-copper-500/20 rounded-full blur-3xl"
+          className="absolute top-20 left-20 w-64 h-64 bg-blue-400/20 rounded-full blur-3xl"
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.2, 0.3, 0.2],
@@ -124,7 +124,7 @@ export default function LoginPage() {
           transition={{ duration: 8, repeat: Infinity }}
         />
         <motion.div
-          className="absolute bottom-20 right-20 w-80 h-80 bg-cream-100/10 rounded-full blur-3xl"
+          className="absolute bottom-20 right-20 w-80 h-80 bg-blue-100/10 rounded-full blur-3xl"
           animate={{
             scale: [1, 1.3, 1],
             opacity: [0.1, 0.15, 0.1],
@@ -134,7 +134,7 @@ export default function LoginPage() {
 
         {/* 品牌内容 */}
         <motion.div
-          className="relative z-10 flex flex-col justify-center px-16 text-cream-100"
+          className="relative z-10 flex flex-col justify-center px-16 text-white"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -143,7 +143,7 @@ export default function LoginPage() {
             <h1 className="font-display text-5xl font-semibold mb-6">
               欢迎回来
             </h1>
-            <p className="text-xl text-cream-200 mb-8 leading-relaxed">
+            <p className="text-xl text-blue-100 mb-8 leading-relaxed">
               登录您的账户，继续探索精选好物，<br />
               开启品质生活之旅。
             </p>
@@ -158,7 +158,7 @@ export default function LoginPage() {
             ].map((item, index) => (
               <motion.div
                 key={index}
-                className="flex items-center gap-3 text-cream-200"
+                className="flex items-center gap-3 text-blue-100"
                 variants={itemVariants}
                 whileHover={{ x: 5 }}
               >
@@ -171,7 +171,7 @@ export default function LoginPage() {
       </div>
 
       {/* 右侧表单区 */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-cream-50">
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-slate-50">
         <motion.div
           className="w-full max-w-md"
           initial={{ opacity: 0, scale: 0.95 }}
@@ -186,7 +186,7 @@ export default function LoginPage() {
             transition={{ duration: 0.4 }}
           >
             <Link to="/" className="inline-block">
-              <span className="font-display text-3xl font-semibold text-forest-700">
+              <span className="font-display text-3xl font-semibold text-blue-700">
                 NewShop
               </span>
             </Link>
@@ -212,7 +212,7 @@ export default function LoginPage() {
                 还没有账户？{' '}
                 <Link
                   to="/register"
-                  className="text-copper-500 hover:text-copper-600 font-medium transition-colors"
+                    className="text-blue-500 hover:text-blue-600 font-medium transition-colors"
                 >
                   立即注册
                 </Link>
@@ -267,7 +267,7 @@ export default function LoginPage() {
                   </label>
                   <Link
                     to="/forgot-password"
-                    className="text-sm text-stone hover:text-copper-500 transition-colors"
+                     className="text-sm text-stone hover:text-blue-500 transition-colors"
                   >
                     忘记密码？
                   </Link>
@@ -324,7 +324,7 @@ export default function LoginPage() {
               transition={{ delay: 0.7 }}
             >
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-cream-300" />
+                  <div className="w-full border-t border-slate-200" />
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-4 bg-white text-stone">或</span>
@@ -340,7 +340,7 @@ export default function LoginPage() {
             >
               <motion.button
                 type="button"
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-cream-300 rounded-lg text-charcoal hover:bg-cream-50 transition-colors"
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-slate-200 rounded-lg text-charcoal hover:bg-slate-50 transition-colors"
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
               >
@@ -363,9 +363,9 @@ export default function LoginPage() {
             transition={{ delay: 0.9 }}
           >
             登录即表示您同意我们的
-            <a href="#" className="text-copper-500 hover:text-copper-600 mx-1">服务条款</a>
+             <a href="#" className="text-blue-500 hover:text-blue-600 mx-1">服务条款</a>
             和
-            <a href="#" className="text-copper-500 hover:text-copper-600 mx-1">隐私政策</a>
+             <a href="#" className="text-blue-500 hover:text-blue-600 mx-1">隐私政策</a>
           </motion.p>
         </motion.div>
       </div>

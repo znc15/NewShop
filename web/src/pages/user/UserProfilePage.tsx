@@ -9,6 +9,62 @@ import { userService } from '@/services/user'
 import { MemberLevels, type UserProfile } from '@/types/user'
 import { cn } from '@/utils'
 
+type UserProfileResponse = Partial<UserProfile> & {
+  member_level?: number
+  level?: number
+  email?: string
+  nickname?: string | null
+  username?: string | null
+  phone?: string | null
+  avatar?: string | null
+  points?: number
+  order_count?: number
+  total_spent?: number
+  created_at?: string
+  updated_at?: string
+  status?: string
+}
+
+function getDefaultUsername(data: UserProfileResponse): string {
+  if (data.username?.trim()) return data.username.trim()
+  if (data.nickname?.trim()) return data.nickname.trim()
+
+  const emailPrefix = data.email?.split('@')[0]?.trim()
+  return emailPrefix || '用户'
+}
+
+function normalizeUserProfile(data: UserProfileResponse): UserProfile {
+  const level = typeof data.level === 'number'
+    ? data.level
+    : typeof data.member_level === 'number'
+      ? data.member_level
+      : 1
+
+  return {
+    id: data.id ?? 0,
+    email: data.email ?? '',
+    phone: data.phone ?? null,
+    username: getDefaultUsername(data),
+    nickname: data.nickname ?? null,
+    avatar: data.avatar || null,
+    member_level: typeof data.member_level === 'number' ? data.member_level : level,
+    level,
+    points: data.points ?? 0,
+    status: data.status ?? 'active',
+    order_count: data.order_count ?? 0,
+    total_spent: data.total_spent ?? 0,
+    created_at: data.created_at ?? '',
+    updated_at: data.updated_at ?? '',
+  }
+}
+
+function formatRegisterDate(value: string): string {
+  if (!value) return '-'
+
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleDateString('zh-CN')
+}
+
 // 动画变体配置
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -69,9 +125,9 @@ function StatCard({ icon: Icon, label, value, suffix }: {
   suffix?: string
 }) {
   return (
-    <div className="flex items-center gap-3 p-4 bg-cream-50 rounded-xl">
-      <div className="w-10 h-10 flex items-center justify-center bg-forest-100 rounded-lg">
-        <Icon className="w-5 h-5 text-forest-600" />
+    <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl">
+      <div className="w-10 h-10 flex items-center justify-center bg-blue-100 rounded-lg">
+        <Icon className="w-5 h-5 text-blue-600" />
       </div>
       <div>
         <p className="text-sm text-stone">{label}</p>
@@ -102,7 +158,7 @@ export default function UserProfilePage() {
 
   const fetchProfile = async () => {
     try {
-      const data = await userService.getProfile()
+      const data = normalizeUserProfile(await userService.getProfile() as UserProfileResponse)
       setProfile(data)
       setFormData({
         username: data.username ?? '',
@@ -138,11 +194,11 @@ export default function UserProfilePage() {
 
     setSaving(true)
     try {
-      const updated = await userService.updateProfile({
+      const updated = normalizeUserProfile(await userService.updateProfile({
         username: formData.username,
         nickname: formData.nickname || undefined,
         phone: formData.phone || undefined,
-      })
+      }) as UserProfileResponse)
       setProfile(updated)
       setEditing(false)
     } catch (error) {
@@ -174,17 +230,17 @@ export default function UserProfilePage() {
       >
         <motion.div className="space-y-6" variants={itemVariants}>
           <motion.div
-            className="h-32 bg-cream-200 rounded-2xl"
+            className="h-32 bg-slate-100 rounded-2xl"
             animate={{ opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 1.5, repeat: Infinity }}
           />
           <motion.div
-            className="h-64 bg-cream-200 rounded-2xl"
+            className="h-64 bg-slate-100 rounded-2xl"
             animate={{ opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 1.5, repeat: Infinity, delay: 0.1 }}
           />
           <motion.div
-            className="h-48 bg-cream-200 rounded-2xl"
+            className="h-48 bg-slate-100 rounded-2xl"
             animate={{ opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
           />
@@ -231,7 +287,7 @@ export default function UserProfilePage() {
         <motion.div variants={itemVariants}>
           <Card className="overflow-hidden">
             <motion.div
-              className="h-24 bg-gradient-to-r from-forest-600 to-forest-500"
+              className="h-24 bg-gradient-to-r from-blue-600 to-blue-500"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
@@ -249,7 +305,7 @@ export default function UserProfilePage() {
                   whileHover={{ scale: 1.05 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <div className="w-24 h-24 rounded-full border-4 border-white bg-cream-200 overflow-hidden shadow-lg">
+                  <div className="w-24 h-24 rounded-full border-4 border-white bg-slate-100 overflow-hidden shadow-lg">
                     {profile.avatar ? (
                       <img
                         src={profile.avatar}
@@ -257,13 +313,13 @@ export default function UserProfilePage() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-forest-100">
-                        <User className="w-10 h-10 text-forest-400" />
+                      <div className="w-full h-full flex items-center justify-center bg-blue-100">
+                        <User className="w-10 h-10 text-blue-400" />
                       </div>
                     )}
                   </div>
                   <motion.button
-                    className="absolute bottom-0 right-0 w-8 h-8 bg-forest-600 text-white rounded-full flex items-center justify-center hover:bg-forest-700 transition-colors shadow-md"
+                    className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors shadow-md"
                     title="更换头像"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
@@ -289,7 +345,7 @@ export default function UserProfilePage() {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.4 }}
                   >
-                    注册于 {new Date(profile.created_at).toLocaleDateString('zh-CN')}
+                    注册于 {formatRegisterDate(profile.created_at)}
                   </motion.p>
                 </div>
 
@@ -389,7 +445,7 @@ export default function UserProfilePage() {
                       <Input
                         value={profile.email}
                         disabled
-                        className="bg-cream-100"
+                        className="bg-blue-50"
                       />
                     </div>
                   </div>
@@ -422,7 +478,7 @@ export default function UserProfilePage() {
                   ].map((item, index) => (
                     <motion.div
                       key={item.label}
-                      className="flex items-center gap-3 py-3 border-b border-cream-200 last:border-b-0"
+                      className="flex items-center gap-3 py-3 border-b border-slate-200 last:border-b-0"
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
@@ -447,12 +503,12 @@ export default function UserProfilePage() {
             <CardContent className="p-0">
               <motion.button
                 onClick={() => navigate('/user/addresses')}
-                className="w-full flex items-center justify-between px-6 py-4 hover:bg-cream-50 transition-colors"
+                className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors"
                 whileHover={{ x: 5 }}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 flex items-center justify-center bg-forest-100 rounded-lg">
-                    <User className="w-5 h-5 text-forest-600" />
+                  <div className="w-10 h-10 flex items-center justify-center bg-blue-100 rounded-lg">
+                    <User className="w-5 h-5 text-blue-600" />
                   </div>
                   <div className="text-left">
                     <p className="text-charcoal font-medium">收货地址</p>
@@ -461,15 +517,15 @@ export default function UserProfilePage() {
                 </div>
                 <ChevronRight className="w-5 h-5 text-stone" />
               </motion.button>
-              <div className="border-t border-cream-200" />
+              <div className="border-t border-slate-200" />
               <motion.button
                 onClick={() => {/* TODO: 打开修改密码弹窗 */}}
-                className="w-full flex items-center justify-between px-6 py-4 hover:bg-cream-50 transition-colors"
+                className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors"
                 whileHover={{ x: 5 }}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 flex items-center justify-center bg-forest-100 rounded-lg">
-                    <Lock className="w-5 h-5 text-forest-600" />
+                  <div className="w-10 h-10 flex items-center justify-center bg-blue-100 rounded-lg">
+                    <Lock className="w-5 h-5 text-blue-600" />
                   </div>
                   <div className="text-left">
                     <p className="text-charcoal font-medium">修改密码</p>
@@ -500,7 +556,7 @@ export default function UserProfilePage() {
                     key={level.level}
                     className={cn(
                       'flex items-center justify-between p-4 rounded-xl',
-                      level.level === profile.level ? 'bg-forest-50 border-2 border-forest-200' : 'bg-cream-50'
+                       level.level === profile.level ? 'bg-blue-50 border-2 border-blue-200' : 'bg-slate-50'
                     )}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -516,7 +572,7 @@ export default function UserProfilePage() {
                     <div className="flex items-center gap-2">
                       {level.level === profile.level && (
                         <motion.span
-                          className="text-sm text-forest-600 font-medium"
+                          className="text-sm text-blue-600 font-medium"
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           transition={{ type: 'spring', stiffness: 300 }}
@@ -524,7 +580,7 @@ export default function UserProfilePage() {
                           当前等级
                         </motion.span>
                       )}
-                      <span className="text-sm text-copper-500">{level.discount / 10}折</span>
+                      <span className="text-sm text-blue-500">{level.discount / 10}折</span>
                     </div>
                   </motion.div>
                 ))}

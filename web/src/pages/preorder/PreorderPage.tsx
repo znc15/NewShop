@@ -108,7 +108,7 @@ export default function PreorderPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <Link to="/" className="text-stone hover:text-forest-600">
+        <Link to="/" className="text-stone hover:text-blue-600">
           首页
         </Link>
         <span className="text-stone">/</span>
@@ -116,7 +116,7 @@ export default function PreorderPage() {
       </motion.div>
 
       <motion.div
-        className="bg-gradient-to-r from-copper-500 to-copper-600 rounded-xl p-8 mb-8 text-white overflow-hidden relative"
+        className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-8 mb-8 text-white overflow-hidden relative"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6 }}
@@ -134,7 +134,7 @@ export default function PreorderPage() {
         />
         <div className="relative z-10">
           <h1 className="text-3xl font-semibold mb-2">预售专区</h1>
-          <p className="text-cream-100">抢先预订，享受专属折扣</p>
+          <p className="text-blue-50">抢先预订，享受专属折扣</p>
         </div>
       </motion.div>
 
@@ -161,9 +161,9 @@ export default function PreorderPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: index * 0.1 }}
               whileHover={{ y: -8 }}
-              className="bg-white rounded-xl border border-cream-300 overflow-hidden hover:shadow-lg transition-shadow"
+              className="bg-white rounded-xl border border-slate-300 overflow-hidden hover:shadow-lg transition-shadow"
             >
-              <div className="aspect-video bg-cream-100 overflow-hidden">
+              <div className="aspect-video bg-blue-50 overflow-hidden">
                 <motion.img
                   src={campaign.product?.main_image || 'https://picsum.photos/seed/product/400/400'}
                   alt={campaign.name}
@@ -176,7 +176,7 @@ export default function PreorderPage() {
                 <h3 className="font-semibold text-charcoal mb-1">{campaign.name}</h3>
                 <p className="text-sm text-stone mb-2 line-clamp-2">{campaign.product?.description}</p>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="text-lg font-bold text-copper-600">
+                  <span className="text-lg font-bold text-blue-600">
                     ¥{(campaign.product?.price || 0) / 100}
                   </span>
                   {(campaign.product?.original_price || 0) > (campaign.product?.price || 0) && (
@@ -186,11 +186,11 @@ export default function PreorderPage() {
                   )}
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="px-2 py-1 bg-forest-100 text-forest-700 rounded">
+                  <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded">
                     {discountModes.find(m => m.value === campaign.discount_mode)?.label || campaign.discount_mode}
                   </span>
                   <span className={`px-2 py-1 rounded ${
-                    campaign.status === 'depositing' ? 'bg-copper-100 text-copper-700' :
+                    campaign.status === 'depositing' ? 'bg-blue-100 text-blue-700' :
                     campaign.status === 'balance_due' ? 'bg-amber-100 text-amber-700' :
                     'bg-stone-100 text-stone'
                   }`}>
@@ -200,7 +200,7 @@ export default function PreorderPage() {
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Link
                     to={`/preorder/${campaign.id}`}
-                    className="block mt-3 text-center py-2 bg-forest-700 text-white rounded-lg hover:bg-forest-600 transition-colors"
+                    className="block mt-3 text-center py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-600 transition-colors"
                   >
                     立即预订
                   </Link>

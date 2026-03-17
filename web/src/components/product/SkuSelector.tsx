@@ -104,10 +104,10 @@ export function SkuSelector({
                   className={cn(
                     'px-4 py-2 rounded-lg text-sm font-medium transition-all',
                     isSelected
-                      ? 'bg-forest-700 text-white shadow-md'
+                      ? 'bg-blue-700 text-white shadow-md'
                       : isAvailable
-                        ? 'bg-cream-100 text-charcoal hover:bg-cream-200 border border-cream-300'
-                        : 'bg-cream-100 text-stone/40 cursor-not-allowed line-through'
+                        ? 'bg-blue-50 text-charcoal hover:bg-slate-100 border border-slate-300'
+                        : 'bg-blue-50 text-stone/40 cursor-not-allowed line-through'
                   )}
                 >
                   {value}
@@ -122,13 +122,13 @@ export function SkuSelector({
       <div>
         <h4 className="text-sm font-medium text-charcoal mb-3">数量</h4>
         <div className="flex items-center gap-4">
-          <div className="flex items-center border border-cream-300 rounded-lg overflow-hidden">
+          <div className="flex items-center border border-slate-300 rounded-lg overflow-hidden">
             <button
               onClick={() => handleQuantityChange(-1)}
               disabled={quantity <= 1}
               className={cn(
                 'w-10 h-10 flex items-center justify-center text-charcoal',
-                quantity <= 1 ? 'text-stone/40' : 'hover:bg-cream-100'
+                quantity <= 1 ? 'text-stone/40' : 'hover:bg-blue-50'
               )}
             >
               -
@@ -144,14 +144,14 @@ export function SkuSelector({
                   onQuantityChange(val)
                 }
               }}
-              className="w-16 h-10 text-center border-x border-cream-300 focus:outline-none"
+              className="w-16 h-10 text-center border-x border-slate-300 focus:outline-none"
             />
             <button
               onClick={() => handleQuantityChange(1)}
               disabled={!selectedSku || quantity >= effectiveMaxQuantity}
               className={cn(
                 'w-10 h-10 flex items-center justify-center text-charcoal',
-                (!selectedSku || quantity >= effectiveMaxQuantity) ? 'text-stone/40' : 'hover:bg-cream-100'
+                (!selectedSku || quantity >= effectiveMaxQuantity) ? 'text-stone/40' : 'hover:bg-blue-50'
               )}
             >
               +
@@ -163,7 +163,7 @@ export function SkuSelector({
               currentStock > 10 ? (
                 '库存充足'
               ) : currentStock > 0 ? (
-                <span className="text-copper-500">仅剩 {currentStock} 件</span>
+                <span className="text-blue-500">仅剩 {currentStock} 件</span>
               ) : (
                 <span className="text-red-500">已售罄</span>
               )
@@ -176,7 +176,7 @@ export function SkuSelector({
 
       {/* 选中信息 */}
       {selectedSku && (
-        <div className="p-4 bg-cream-50 rounded-lg">
+        <div className="p-4 bg-blue-50 rounded-lg">
           <p className="text-sm text-charcoal">
             已选：
             <span className="font-medium">

@@ -1,5 +1,5 @@
 # 构建阶段
-FROM golang:alpine AS builder
+FROM golang:1.25-alpine3.22 AS builder
 
 WORKDIR /app
 
@@ -21,7 +21,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /server ./cmd/server
 
 # 运行阶段
-FROM alpine:latest
+FROM alpine:3.22
 
 # 安装运行时依赖
 RUN apk --no-cache add ca-certificates tzdata

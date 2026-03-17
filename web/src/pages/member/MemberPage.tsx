@@ -74,7 +74,7 @@ export default function MemberPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <Link to="/" className="text-stone hover:text-forest-600">
+        <Link to="/" className="text-stone hover:text-blue-600">
           首页
         </Link>
         <span className="text-stone">/</span>
@@ -112,7 +112,7 @@ export default function MemberPage() {
               会员中心
             </motion.h1>
             <motion.p
-              className="text-cream-100"
+              className="text-white"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3, duration: 0.5 }}
@@ -138,7 +138,7 @@ export default function MemberPage() {
 
       {/* 当前等级 */}
       <motion.div
-        className="bg-white rounded-xl border border-cream-300 p-6 mb-8"
+        className="bg-white rounded-xl border border-slate-200 p-6 mb-8"
         variants={itemVariants}
         initial="hidden"
         animate="visible"
@@ -151,7 +151,7 @@ export default function MemberPage() {
             transition={{ duration: 0.5 }}
           >
             <motion.div
-              className="w-16 h-16 bg-forest-100 rounded-full flex items-center justify-center"
+              className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center"
               whileHover={{ scale: 1.1, rotate: 10 }}
               transition={{ duration: 0.3 }}
             >
@@ -170,7 +170,7 @@ export default function MemberPage() {
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <p className="text-sm text-stone">距离 {nextTier.name}</p>
-              <p className="text-sm text-forest-600">
+              <p className="text-sm text-blue-600">
                 还需 {nextTier.min_points - points} 积分
               </p>
             </motion.div>
@@ -179,9 +179,9 @@ export default function MemberPage() {
 
         {/* 进度条 */}
         {nextTier && (
-          <div className="w-full bg-cream-200 rounded-full h-3 overflow-hidden">
+          <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
             <motion.div
-              className="bg-gradient-to-r from-forest-500 to-forest-600 h-full rounded-full"
+              className="bg-gradient-to-r from-blue-500 to-blue-600 h-full rounded-full"
               variants={progressVariants}
               initial="initial"
               animate="animate"
@@ -193,7 +193,7 @@ export default function MemberPage() {
 
       {/* 会员等级 */}
       <motion.div
-        className="bg-white rounded-xl border border-cream-300 p-6 mb-8"
+        className="bg-white rounded-xl border border-slate-200 p-6 mb-8"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.5 }}
@@ -210,8 +210,8 @@ export default function MemberPage() {
               whileHover={{ y: -5, scale: 1.02 }}
               className={`p-4 rounded-xl border-2 transition-all cursor-default ${
                 currentLevel >= tier.level
-                  ? 'border-forest-500 bg-forest-50'
-                  : 'border-cream-300'
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-slate-200'
               }`}
             >
               <div className="text-center">
@@ -240,7 +240,7 @@ export default function MemberPage() {
 
       {/* 会员权益 */}
       <motion.div
-        className="bg-white rounded-xl border border-cream-300 p-6"
+        className="bg-white rounded-xl border border-slate-200 p-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6, duration: 0.5 }}
@@ -258,14 +258,14 @@ export default function MemberPage() {
               variants={itemVariants}
               whileHover={{ scale: 1.05, y: -3 }}
               transition={{ duration: 0.3 }}
-              className="flex items-center gap-3 p-4 bg-cream-50 rounded-lg"
+              className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg"
             >
               <motion.div
-                className="w-10 h-10 bg-forest-100 rounded-full flex items-center justify-center"
+                className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center"
                 whileHover={{ rotate: 360 }}
                 transition={{ duration: 0.5 }}
               >
-                <span className="text-forest-600">✓</span>
+                <span className="text-blue-600">✓</span>
               </motion.div>
               <span className="text-charcoal">{benefit}</span>
             </motion.div>

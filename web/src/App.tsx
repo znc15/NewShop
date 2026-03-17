@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'motion/react'
 import { PageLoader } from '@/components/ui/PageLoader'
 import { PageSkeleton } from '@/components/ui/Skeleton'
+import { useAuthStore } from '@/stores'
 
 // 懒加载页面组件
 const HomePage = lazy(() => import('./pages/home/HomePage'))
@@ -59,6 +60,7 @@ const navLinkVariants = {
 
 function App() {
   const location = useLocation()
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -66,13 +68,13 @@ function App() {
       <PageLoader />
 
       {/* 顶部导航 */}
-      <header className="sticky top-0 z-50 bg-cream-100/95 backdrop-blur-sm border-b border-cream-300">
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-200">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-8">
               <Link
                 to="/"
-                className="font-display text-2xl font-semibold text-forest-700 hover:text-forest-600 transition-colors"
+                className="font-display text-2xl font-semibold text-blue-700 hover:text-blue-600 transition-colors"
               >
                 NewShop
               </Link>
@@ -86,7 +88,7 @@ function App() {
                   <motion.div key={link.to} variants={navLinkVariants} whileHover="hover" whileTap="tap">
                     <Link
                       to={link.to}
-                      className="text-sm text-charcoal hover:text-forest-600 transition-colors"
+                      className="text-sm text-charcoal hover:text-blue-600 transition-colors"
                     >
                       {link.label}
                     </Link>
@@ -96,7 +98,7 @@ function App() {
             </div>
             <div className="flex items-center gap-4">
               <motion.button
-                className="p-2 text-charcoal hover:text-forest-600 transition-colors"
+                className="p-2 text-charcoal hover:text-blue-600 transition-colors"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >
@@ -118,7 +120,7 @@ function App() {
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                 <Link
                   to="/cart"
-                  className="p-2 text-charcoal hover:text-forest-600 transition-colors relative inline-block"
+                  className="p-2 text-charcoal hover:text-blue-600 transition-colors relative inline-block"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -135,15 +137,15 @@ function App() {
                     <circle cx="19" cy="21" r="1" />
                     <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
                   </svg>
-                  <span className="absolute -top-1 -right-1 bg-copper-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">
                     0
                   </span>
                 </Link>
               </motion.div>
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                 <Link
-                  to="/login"
-                  className="p-2 text-charcoal hover:text-forest-600 transition-colors inline-block"
+                  to={isAuthenticated ? '/user/profile' : '/login'}
+                  className="p-2 text-charcoal hover:text-blue-600 transition-colors inline-block"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -212,7 +214,7 @@ function App() {
       </main>
 
       {/* 底部页脚 */}
-      <footer className="bg-forest-700 text-cream-100">
+      <footer className="bg-slate-800 text-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <motion.div
@@ -221,7 +223,7 @@ function App() {
               viewport={{ once: true }}
             >
               <h3 className="font-display text-xl font-semibold mb-4">NewShop</h3>
-              <p className="text-sm text-cream-200 opacity-80">精选好物，品质生活</p>
+              <p className="text-sm text-slate-300 opacity-80">精选好物，品质生活</p>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -230,7 +232,7 @@ function App() {
               transition={{ delay: 0.1 }}
             >
               <h4 className="font-semibold mb-4">购物指南</h4>
-              <ul className="space-y-2 text-sm text-cream-200 opacity-80">
+               <ul className="space-y-2 text-sm text-slate-300 opacity-80">
                 <li>
                   <Link to="#" className="hover:opacity-100 transition-opacity">
                     购物流程
@@ -255,7 +257,7 @@ function App() {
               transition={{ delay: 0.2 }}
             >
               <h4 className="font-semibold mb-4">关于我们</h4>
-              <ul className="space-y-2 text-sm text-cream-200 opacity-80">
+               <ul className="space-y-2 text-sm text-slate-300 opacity-80">
                 <li>
                   <Link to="#" className="hover:opacity-100 transition-opacity">
                     品牌故事
@@ -280,7 +282,7 @@ function App() {
               transition={{ delay: 0.3 }}
             >
               <h4 className="font-semibold mb-4">客户服务</h4>
-              <ul className="space-y-2 text-sm text-cream-200 opacity-80">
+               <ul className="space-y-2 text-sm text-slate-300 opacity-80">
                 <li>
                   <Link to="#" className="hover:opacity-100 transition-opacity">
                     在线客服
@@ -300,7 +302,7 @@ function App() {
             </motion.div>
           </div>
           <motion.div
-            className="mt-12 pt-8 border-t border-forest-600 text-center text-sm text-cream-200 opacity-60"
+            className="mt-12 pt-8 border-t border-slate-700 text-center text-sm text-slate-300 opacity-60"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 0.6 }}
             viewport={{ once: true }}

@@ -151,8 +151,8 @@ function AddressForm({
             onChange={(e) => setFormData(prev => ({ ...prev, province: e.target.value }))}
             className={cn(
               'flex h-10 w-full rounded-lg border bg-white px-3 py-2 text-sm text-charcoal transition-colors duration-200',
-              'focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-transparent',
-              errors.province ? 'border-red-500' : 'border-cream-300'
+              'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+              errors.province ? 'border-red-500' : 'border-slate-300'
             )}
           >
             <option value="">请选择省份</option>
@@ -197,8 +197,8 @@ function AddressForm({
           rows={3}
           className={cn(
             'flex w-full rounded-lg border bg-white px-3 py-2 text-sm text-charcoal transition-colors duration-200 resize-none',
-            'focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-transparent',
-            errors.address ? 'border-red-500' : 'border-cream-300'
+            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+            errors.address ? 'border-red-500' : 'border-slate-300'
           )}
         />
         {errors.address && <p className="text-xs text-red-500">{errors.address}</p>}
@@ -210,7 +210,7 @@ function AddressForm({
           id="is_default"
           checked={formData.is_default}
           onChange={(e) => setFormData(prev => ({ ...prev, is_default: e.target.checked }))}
-          className="w-4 h-4 rounded border-cream-300 text-forest-600 focus:ring-forest-500"
+          className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
         />
         <label htmlFor="is_default" className="text-sm text-charcoal">
           设为默认地址
@@ -246,8 +246,8 @@ function AddressCard({
       className={cn(
         'relative p-4 rounded-xl border-2 transition-colors',
         address.is_default
-          ? 'border-forest-500 bg-forest-50'
-          : 'border-cream-200 hover:border-cream-300 bg-white'
+          ? 'border-blue-500 bg-blue-50'
+          : 'border-slate-200 hover:border-slate-300 bg-white'
       )}
       variants={itemVariants}
       initial="hidden"
@@ -262,7 +262,7 @@ function AddressCard({
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-forest-500 text-white text-xs rounded-full">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full">
             <Check className="w-3 h-3" />
             默认
           </span>
@@ -294,7 +294,7 @@ function AddressCard({
         <div className="flex items-center gap-2 ml-4">
           <motion.button
             onClick={onEdit}
-            className="p-2 text-stone hover:text-forest-600 hover:bg-forest-50 rounded-lg transition-colors"
+            className="p-2 text-stone hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
             title="编辑"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
@@ -305,7 +305,7 @@ function AddressCard({
             <>
               <motion.button
                 onClick={onSetDefault}
-                className="p-2 text-stone hover:text-forest-600 hover:bg-forest-50 rounded-lg transition-colors"
+                className="p-2 text-stone hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                 title="设为默认"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
@@ -414,17 +414,17 @@ export default function UserAddressesPage() {
       >
         <motion.div className="space-y-4" variants={itemVariants}>
           <motion.div
-            className="h-16 bg-cream-200 rounded-xl"
+            className="h-16 bg-slate-100 rounded-xl"
             animate={{ opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 1.5, repeat: Infinity }}
           />
           <motion.div
-            className="h-32 bg-cream-200 rounded-xl"
+            className="h-32 bg-slate-100 rounded-xl"
             animate={{ opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 1.5, repeat: Infinity, delay: 0.1 }}
           />
           <motion.div
-            className="h-32 bg-cream-200 rounded-xl"
+            className="h-32 bg-slate-100 rounded-xl"
             animate={{ opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
           />
@@ -526,7 +526,7 @@ export default function UserAddressesPage() {
           <Card>
             <CardContent className="py-16 text-center">
               <motion.div
-                className="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-cream-100 rounded-full"
+                className="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-blue-50 rounded-full"
                 animate={{ y: [0, -5, 0] }}
                 transition={{ duration: 2, repeat: Infinity }}
               >

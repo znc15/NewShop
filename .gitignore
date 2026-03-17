@@ -11,3 +11,4 @@ docs/
 services/api/bin/server
 AGENTS.md
 .env
+.ace-tool/

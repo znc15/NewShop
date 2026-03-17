@@ -134,7 +134,7 @@ export default function SearchPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               placeholder="搜索商品、品牌、分类"
-              className="w-full h-12 pl-10 pr-4 border border-cream-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-transparent"
+              className="w-full h-12 pl-10 pr-4 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               whileFocus={{ scale: 1.01 }}
               transition={{ duration: 0.2 }}
             />
@@ -154,7 +154,7 @@ export default function SearchPage() {
           </div>
           <motion.button
             onClick={() => handleSearch()}
-            className="h-12 px-6 bg-forest-700 text-white rounded-xl hover:bg-forest-600 transition-colors"
+            className="h-12 px-6 bg-blue-700 text-white rounded-xl hover:bg-blue-600 transition-colors"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
@@ -202,7 +202,7 @@ export default function SearchPage() {
             <p className="text-sm text-stone/60 mb-6">换个关键词试试吧</p>
             <Link
               to="/products"
-              className="text-forest-600 hover:text-forest-700 text-sm"
+              className="text-blue-600 hover:text-blue-700 text-sm"
             >
               浏览全部商品
             </Link>
@@ -242,7 +242,7 @@ export default function SearchPage() {
                 {searchHistory.map((item) => (
                   <motion.div
                     key={item}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-cream-100 rounded-full text-sm"
+                    className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 rounded-full text-sm"
                     variants={itemVariants}
                     whileHover={{ scale: 1.05, backgroundColor: '#e8e4de' }}
                   >
@@ -268,7 +268,7 @@ export default function SearchPage() {
             transition={{ delay: 0.4 }}
           >
             <div className="flex items-center gap-2 mb-4">
-              <TrendingUp className="w-5 h-5 text-copper-500" />
+              <TrendingUp className="w-5 h-5 text-blue-500" />
               <h3 className="font-medium text-charcoal">热门搜索</h3>
             </div>
             <motion.div
@@ -281,7 +281,7 @@ export default function SearchPage() {
                 <motion.button
                   key={keyword}
                   onClick={() => handleSearch(keyword)}
-                  className="px-3 py-1.5 bg-cream-100 hover:bg-cream-200 rounded-full text-sm text-charcoal transition-colors"
+                  className="px-3 py-1.5 bg-blue-50 hover:bg-slate-100 rounded-full text-sm text-charcoal transition-colors"
                   variants={itemVariants}
                   whileHover={{ scale: 1.05, backgroundColor: '#e8e4de' }}
                   whileTap={{ scale: 0.95 }}

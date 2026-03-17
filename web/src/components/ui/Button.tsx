@@ -4,24 +4,24 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/utils'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
         default:
-          'bg-forest-700 text-cream-100 shadow-sm hover:bg-forest-600 active:bg-forest-800',
+          'bg-blue-600 text-white shadow-sm hover:bg-blue-500 active:bg-blue-700',
         destructive:
           'bg-red-600 text-white shadow-sm hover:bg-red-500 active:bg-red-700',
         outline:
-          'border-2 border-forest-700 bg-transparent text-forest-700 hover:bg-forest-50 active:bg-forest-100',
+          'border-2 border-blue-600 bg-transparent text-blue-600 hover:bg-blue-50 active:bg-blue-100',
         secondary:
           'bg-cream-200 text-charcoal shadow-sm hover:bg-cream-300 active:bg-cream-400',
         ghost:
           'text-charcoal hover:bg-cream-200 active:bg-cream-300',
         link:
-          'text-forest-600 underline-offset-4 hover:underline',
-        copper:
-          'bg-copper-500 text-white shadow-sm hover:bg-copper-400 active:bg-copper-600',
+          'text-blue-600 underline-offset-4 hover:underline',
+        primary:
+          'bg-primary text-white shadow-sm hover:bg-blue-500 active:bg-blue-700',
       },
       size: {
         default: 'h-10 px-4 py-2',

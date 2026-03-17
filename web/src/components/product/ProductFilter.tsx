@@ -80,8 +80,8 @@ export function ProductFilter({
               'px-4 py-2 rounded-lg text-sm transition-colors',
               (sortBy === option.value.split('_')[0] && sortOrder === option.value.split('_')[1]) ||
                 (option.value === 'default' && sortBy === 'default')
-                ? 'bg-forest-700 text-white'
-                : 'bg-cream-100 text-charcoal hover:bg-cream-200'
+                ? 'bg-blue-700 text-white'
+                : 'bg-blue-50 text-slate-700 hover:bg-slate-100'
             )}
           >
             {option.label}
@@ -90,12 +90,12 @@ export function ProductFilter({
       </div>
 
       {/* 分类筛选 */}
-      <div className="border-t border-cream-200 pt-4">
+      <div className="border-t border-slate-200 pt-4">
         <button
           onClick={() => toggleSection('category')}
           className="flex items-center justify-between w-full text-left"
         >
-          <span className="font-medium text-charcoal">分类</span>
+          <span className="font-medium text-slate-700">分类</span>
           <ChevronDown
             className={cn(
               'w-5 h-5 text-stone transition-transform',
@@ -110,8 +110,8 @@ export function ProductFilter({
               className={cn(
                 'px-3 py-1.5 rounded-lg text-sm transition-colors',
                 !selectedCategory
-                  ? 'bg-forest-700 text-white'
-                  : 'bg-cream-100 text-charcoal hover:bg-cream-200'
+                  ? 'bg-blue-700 text-white'
+                  : 'bg-blue-50 text-slate-700 hover:bg-slate-100'
               )}
             >
               全部
@@ -123,8 +123,8 @@ export function ProductFilter({
                 className={cn(
                   'px-3 py-1.5 rounded-lg text-sm transition-colors',
                   selectedCategory === category.id
-                    ? 'bg-forest-700 text-white'
-                    : 'bg-cream-100 text-charcoal hover:bg-cream-200'
+                    ? 'bg-blue-700 text-white'
+                    : 'bg-blue-50 text-slate-700 hover:bg-slate-100'
                 )}
               >
                 {category.name}
@@ -136,12 +136,12 @@ export function ProductFilter({
 
       {/* 品牌筛选 */}
       {brands.length > 0 && (
-        <div className="border-t border-cream-200 pt-4">
+        <div className="border-t border-slate-200 pt-4">
           <button
             onClick={() => toggleSection('brand')}
             className="flex items-center justify-between w-full text-left"
           >
-            <span className="font-medium text-charcoal">品牌</span>
+            <span className="font-medium text-slate-700">品牌</span>
             <ChevronDown
               className={cn(
                 'w-5 h-5 text-stone transition-transform',
@@ -156,8 +156,8 @@ export function ProductFilter({
                 className={cn(
                   'px-3 py-1.5 rounded-lg text-sm transition-colors',
                   !selectedBrand
-                    ? 'bg-forest-700 text-white'
-                    : 'bg-cream-100 text-charcoal hover:bg-cream-200'
+                    ? 'bg-blue-700 text-white'
+                    : 'bg-blue-50 text-slate-700 hover:bg-slate-100'
                 )}
               >
                 全部
@@ -169,8 +169,8 @@ export function ProductFilter({
                   className={cn(
                     'px-3 py-1.5 rounded-lg text-sm transition-colors',
                     selectedBrand === brand.id
-                      ? 'bg-forest-700 text-white'
-                      : 'bg-cream-100 text-charcoal hover:bg-cream-200'
+                      ? 'bg-blue-700 text-white'
+                      : 'bg-blue-50 text-slate-700 hover:bg-slate-100'
                   )}
                 >
                   {brand.name}
@@ -182,12 +182,12 @@ export function ProductFilter({
       )}
 
       {/* 价格区间 */}
-      <div className="border-t border-cream-200 pt-4">
+      <div className="border-t border-slate-200 pt-4">
         <button
           onClick={() => toggleSection('price')}
           className="flex items-center justify-between w-full text-left"
         >
-          <span className="font-medium text-charcoal">价格区间</span>
+          <span className="font-medium text-slate-700">价格区间</span>
           <ChevronDown
             className={cn(
               'w-5 h-5 text-stone transition-transform',
@@ -211,8 +211,8 @@ export function ProductFilter({
                     (selectedPriceRange &&
                       selectedPriceRange.min === range.min &&
                       selectedPriceRange.max === range.max)
-                    ? 'bg-forest-700 text-white'
-                    : 'bg-cream-100 text-charcoal hover:bg-cream-200'
+                    ? 'bg-blue-700 text-white'
+                    : 'bg-blue-50 text-slate-700 hover:bg-slate-100'
                 )}
               >
                 {range.label}
@@ -226,7 +226,7 @@ export function ProductFilter({
       {hasActiveFilters && (
         <button
           onClick={onReset}
-          className="flex items-center gap-1 text-sm text-copper-500 hover:text-copper-600"
+          className="flex items-center gap-1 text-sm text-blue-500 hover:text-blue-600"
         >
           <X className="w-4 h-4" />
           清除筛选

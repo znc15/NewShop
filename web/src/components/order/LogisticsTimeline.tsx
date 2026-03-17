@@ -3,10 +3,10 @@ import type { OrderLogistics, LogisticsTrace } from '@/types/logistics'
 
 // 物流状态颜色映射
 const statusColors: Record<string, { bg: string; text: string; dot: string }> = {
-  pending: { bg: 'bg-cream-200', text: 'text-charcoal', dot: 'bg-copper-500' },
-  shipped: { bg: 'bg-forest-100', text: 'text-forest-700', dot: 'bg-forest-500' },
-  transit: { bg: 'bg-forest-100', text: 'text-forest-700', dot: 'bg-forest-500' },
-  delivered: { bg: 'bg-forest-200', text: 'text-forest-800', dot: 'bg-forest-600' },
+  pending: { bg: 'bg-blue-100', text: 'text-charcoal', dot: 'bg-blue-500' },
+  shipped: { bg: 'bg-blue-100', text: 'text-blue-700', dot: 'bg-blue-500' },
+  transit: { bg: 'bg-blue-100', text: 'text-blue-700', dot: 'bg-blue-500' },
+  delivered: { bg: 'bg-blue-200', text: 'text-blue-800', dot: 'bg-blue-600' },
   exception: { bg: 'bg-red-100', text: 'text-red-700', dot: 'bg-red-500' },
 }
 
@@ -78,12 +78,12 @@ function TraceItem({
           animate={{ scale: 1 }}
           transition={{ delay: index * 0.1 + 0.1, type: 'spring', stiffness: 300 }}
           className={`relative z-10 w-3 h-3 rounded-full ${colors.dot} ${
-            isFirst ? 'ring-4 ring-copper/20' : ''
+            isFirst ? 'ring-4 ring-blue-500/20' : ''
           }`}
         >
           {/* 最新状态脉冲动画 */}
           {isFirst && (
-            <span className="absolute inset-0 rounded-full animate-ping bg-copper/40" />
+            <span className="absolute inset-0 rounded-full animate-ping bg-blue-500/40" />
           )}
         </motion.div>
 
@@ -93,7 +93,7 @@ function TraceItem({
             initial={{ height: 0 }}
             animate={{ height: '100%' }}
             transition={{ delay: index * 0.1 + 0.2, duration: 0.3 }}
-            className="w-0.5 flex-1 bg-forest-200 mt-1"
+            className="w-0.5 flex-1 bg-blue-200 mt-1"
           />
         )}
       </div>
@@ -141,10 +141,10 @@ export function LogisticsTimeline({ logistics, className = '' }: LogisticsTimeli
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className={`bg-cream-50 rounded-lg p-4 ${className}`}
+      className={`bg-blue-50 rounded-lg p-4 ${className}`}
     >
       {/* 物流头部信息 */}
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-forest-100">
+      <div className="flex items-center justify-between mb-4 pb-4 border-b border-blue-100">
         <div className="flex items-center gap-3">
           {/* 物流图标 */}
           <div className={`w-10 h-10 rounded-lg ${currentStatus.bg} flex items-center justify-center`}>
@@ -211,7 +211,7 @@ export function LogisticsTimeline({ logistics, className = '' }: LogisticsTimeli
           target="_blank"
           rel="noopener noreferrer"
           whileHover={{ x: 4 }}
-          className="mt-4 pt-4 border-t border-forest-100 flex items-center justify-between text-sm text-copper hover:text-copper-600 transition-colors"
+          className="mt-4 pt-4 border-t border-blue-100 flex items-center justify-between text-sm text-blue-500 hover:text-blue-600 transition-colors"
         >
           <span>前往官网查看详细物流</span>
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

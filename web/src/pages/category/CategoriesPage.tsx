@@ -76,7 +76,7 @@ export default function CategoriesPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <Link to="/" className="text-stone hover:text-forest-600">
+        <Link to="/" className="text-stone hover:text-blue-600">
           首页
         </Link>
         <span className="text-stone">/</span>
@@ -117,9 +117,9 @@ export default function CategoriesPage() {
             >
               <Link
                 to={`/products?category=${category.id}`}
-                className="group block bg-white rounded-xl border border-cream-300 overflow-hidden hover:shadow-lg hover:border-forest-400 transition-all"
+                className="group block bg-white rounded-xl border border-slate-300 overflow-hidden hover:shadow-lg hover:border-blue-400 transition-all"
               >
-                <div className="aspect-square bg-cream-100 flex items-center justify-center overflow-hidden">
+                <div className="aspect-square bg-blue-50 flex items-center justify-center overflow-hidden">
                   {category.icon ? (
                     <motion.img
                       src={category.icon}
@@ -130,18 +130,18 @@ export default function CategoriesPage() {
                     />
                   ) : (
                     <motion.div
-                      className="w-24 h-24 bg-forest-100 rounded-full flex items-center justify-center"
+                      className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center"
                       whileHover={{ scale: 1.1 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <span className="text-3xl font-semibold text-forest-600">
+                      <span className="text-3xl font-semibold text-blue-600">
                         {category.name.charAt(0)}
                       </span>
                     </motion.div>
                   )}
                 </div>
                 <div className="p-4 text-center">
-                  <h3 className="font-medium text-charcoal group-hover:text-forest-600 transition-colors">
+                  <h3 className="font-medium text-charcoal group-hover:text-blue-600 transition-colors">
                     {category.name}
                   </h3>
                 </div>

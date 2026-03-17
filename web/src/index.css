@@ -2,32 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 自定义设计系统 - 现代极简主义电商风格 */
+/* 自定义设计系统 - 清新蓝白风格 */
 :root {
-  /* 主色调 - 温暖米白 + 深邃墨绿 */
-  --color-cream: #faf8f5;
-  --color-cream-dark: #f5f2ed;
-  --color-forest: #1a3a2f;
-  --color-forest-light: #2d5a47;
-  --color-forest-muted: #3d7a5f;
+  /* 主色调 - 纯净白色 + 清新蓝色 */
+  --color-white: #ffffff;
+  --color-cream: #f8fafc;
+  --color-cream-dark: #f1f5f9;
+  --color-blue: #3b82f6;
+  --color-blue-light: #60a5fa;
+  --color-blue-muted: #93c5fd;
+  --color-blue-dark: #2563eb;
 
   /* 中性色 */
-  --color-charcoal: #2c2c2c;
-  --color-stone: #8a8a8a;
-  --color-silver: #e5e5e5;
-  --color-white: #ffffff;
+  --color-charcoal: #334155;
+  --color-stone: #64748b;
+  --color-silver: #e2e8f0;
+  --color-border: #cbd5e1;
 
   /* 强调色 */
-  --color-copper: #b87333;
-  --color-copper-light: #d4956a;
-  --color-rose: #c4a4a4;
-  --color-sage: #9caf88;
+  --color-primary: #3b82f6;
+  --color-primary-light: #60a5fa;
+  --color-primary-dark: #2563eb;
+  --color-accent: #0ea5e9;
 
   /* 语义色 */
-  --color-success: #4a7c59;
-  --color-warning: #d4a574;
-  --color-error: #c45c5c;
-  --color-info: #5c8dc4;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
 
   /* 字体 */
   --font-display: "Cormorant Garamond", "Songti SC", serif;
@@ -108,7 +110,7 @@ body {
   font-size: var(--text-base);
   line-height: 1.6;
   color: var(--color-charcoal);
-  background-color: var(--color-cream);
+  background-color: var(--color-white);
   min-height: 100vh;
 }
 
@@ -126,7 +128,7 @@ a {
 }
 
 a:hover {
-  color: var(--color-forest-light);
+  color: var(--color-blue-dark);
 }
 
 /* 按钮重置 */
@@ -177,18 +179,18 @@ ol {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-forest-muted);
+  background: var(--color-blue);
 }
 
 /* 选中文本样式 */
 ::selection {
-  background-color: #b8d4c7;
-  color: #163027;
+  background-color: #bfdbfe;
+  color: #1e3a8a;
 }
 
 /* 焦点样式 */
 :focus-visible {
-  outline: 2px solid var(--color-forest-muted);
+  outline: 2px solid var(--color-blue);
   outline-offset: 2px;
 }
 

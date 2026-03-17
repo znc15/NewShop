@@ -227,7 +227,7 @@ export default function ProductListPage() {
                   <motion.button
                     onClick={loadMore}
                     disabled={loading}
-                    className="px-8 py-3 border-2 border-forest-700 text-forest-700 rounded-lg hover:bg-forest-700 hover:text-white transition-colors disabled:opacity-50"
+                    className="px-8 py-3 border-2 border-blue-700 text-blue-700 rounded-lg hover:bg-blue-700 hover:text-white transition-colors disabled:opacity-50"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >

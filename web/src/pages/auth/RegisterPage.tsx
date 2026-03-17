@@ -155,7 +155,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-[calc(100vh-64px)] flex">
       {/* 左侧品牌展示区 - 仅在大屏幕显示 */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-forest-600 via-forest-500 to-forest-400">
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-500 to-blue-400">
         {/* 装饰性背景图案 */}
         <div className="absolute inset-0 opacity-10">
           <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -170,7 +170,7 @@ export default function RegisterPage() {
 
         {/* 浮动装饰元素 */}
         <motion.div
-          className="absolute top-32 right-20 w-72 h-72 bg-copper-400/20 rounded-full blur-3xl"
+          className="absolute top-32 right-20 w-72 h-72 bg-blue-400/20 rounded-full blur-3xl"
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.2, 0.3, 0.2],
@@ -178,7 +178,7 @@ export default function RegisterPage() {
           transition={{ duration: 8, repeat: Infinity }}
         />
         <motion.div
-          className="absolute bottom-16 left-16 w-64 h-64 bg-cream-100/15 rounded-full blur-3xl"
+          className="absolute bottom-16 left-16 w-64 h-64 bg-blue-100/15 rounded-full blur-3xl"
           animate={{
             scale: [1, 1.3, 1],
             opacity: [0.15, 0.2, 0.15],
@@ -188,7 +188,7 @@ export default function RegisterPage() {
 
         {/* 品牌内容 */}
         <motion.div
-          className="relative z-10 flex flex-col justify-center px-16 text-cream-100"
+          className="relative z-10 flex flex-col justify-center px-16 text-white"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -197,7 +197,7 @@ export default function RegisterPage() {
             <h1 className="font-display text-5xl font-semibold mb-6">
               加入我们
             </h1>
-            <p className="text-xl text-cream-200 mb-8 leading-relaxed">
+            <p className="text-xl text-blue-100 mb-8 leading-relaxed">
               创建账户，享受专属会员权益，<br />
               开启您的品质购物之旅。
             </p>
@@ -213,7 +213,7 @@ export default function RegisterPage() {
             ].map((item, index) => (
               <motion.div
                 key={index}
-                className="flex items-center gap-3 text-cream-200"
+                className="flex items-center gap-3 text-blue-100"
                 variants={itemVariants}
                 whileHover={{ x: 5 }}
               >
@@ -226,7 +226,7 @@ export default function RegisterPage() {
       </div>
 
       {/* 右侧表单区 */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-cream-50">
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-slate-50">
         <motion.div
           className="w-full max-w-md"
           initial={{ opacity: 0, scale: 0.95 }}
@@ -241,7 +241,7 @@ export default function RegisterPage() {
             transition={{ duration: 0.4 }}
           >
             <Link to="/" className="inline-block">
-              <span className="font-display text-3xl font-semibold text-forest-700">
+              <span className="font-display text-3xl font-semibold text-blue-700">
                 NewShop
               </span>
             </Link>
@@ -267,7 +267,7 @@ export default function RegisterPage() {
                 已有账户？{' '}
                 <Link
                   to="/login"
-                  className="text-copper-500 hover:text-copper-600 font-medium transition-colors"
+                  className="text-blue-500 hover:text-blue-600 font-medium transition-colors"
                 >
                   立即登录
                 </Link>
@@ -471,9 +471,9 @@ export default function RegisterPage() {
               transition={{ delay: 0.8 }}
             >
               注册即表示您已阅读并同意
-              <a href="#" className="text-copper-500 hover:text-copper-600 mx-1">《用户协议》</a>
+              <a href="#" className="text-blue-500 hover:text-blue-600 mx-1">《用户协议》</a>
               和
-              <a href="#" className="text-copper-500 hover:text-copper-600 mx-1">《隐私政策》</a>
+              <a href="#" className="text-blue-500 hover:text-blue-600 mx-1">《隐私政策》</a>
             </motion.p>
           </motion.div>
         </motion.div>

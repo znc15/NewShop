@@ -23,7 +23,7 @@ export function ImageGallery({
 
   if (!images || images.length === 0) {
     return (
-      <div className="aspect-square bg-cream-200 rounded-xl flex items-center justify-center">
+      <div className="aspect-square bg-slate-100 rounded-xl flex items-center justify-center">
         <span className="text-stone">暂无图片</span>
       </div>
     )
@@ -55,8 +55,8 @@ export function ImageGallery({
             className={cn(
               'relative w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors',
               currentIndex === index
-                ? 'border-forest-500'
-                : 'border-cream-300 hover:border-cream-400'
+                ? 'border-blue-500'
+                : 'border-slate-300 hover:border-slate-400'
             )}
           >
             <img
@@ -76,7 +76,7 @@ export function ImageGallery({
       {/* 主图区域 */}
       <div className="flex-1 relative">
         <div
-          className="relative aspect-square bg-cream-100 rounded-xl overflow-hidden cursor-zoom-in"
+          className="relative aspect-square bg-blue-50 rounded-xl overflow-hidden cursor-zoom-in"
           onClick={() => setShowZoom(true)}
         >
           <img
@@ -128,8 +128,8 @@ export function ImageGallery({
                   className={cn(
                     'w-2 h-2 rounded-full transition-colors',
                     currentIndex === index
-                      ? 'bg-forest-500'
-                      : 'bg-cream-300'
+                      ? 'bg-blue-500'
+                      : 'bg-slate-200'
                   )}
                 />
               ))}
@@ -146,7 +146,7 @@ export function ImageGallery({
         >
           <button
             onClick={() => setShowZoom(false)}
-            className="absolute top-4 right-4 p-2 text-white hover:text-cream-200"
+            className="absolute top-4 right-4 p-2 text-white hover:text-slate-100"
           >
             <X className="w-6 h-6" />
           </button>

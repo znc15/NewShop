@@ -59,7 +59,7 @@ export default function SalePage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        <Link to="/" className="text-stone hover:text-forest-600">
+        <Link to="/" className="text-stone hover:text-blue-600">
           首页
         </Link>
         <span className="text-stone">/</span>
@@ -67,7 +67,7 @@ export default function SalePage() {
       </motion.div>
 
       <motion.div
-        className="bg-gradient-to-r from-copper-500 to-copper-600 rounded-xl p-8 mb-8 text-white overflow-hidden relative"
+        className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-8 mb-8 text-white overflow-hidden relative"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.2, duration: 0.5 }}
@@ -86,7 +86,7 @@ export default function SalePage() {
         />
         <div className="relative z-10">
           <h1 className="text-3xl font-semibold mb-2">特惠专区</h1>
-          <p className="text-cream-100">精选好物，超值优惠，限时抢购</p>
+          <p className="text-blue-50">精选好物，超值优惠，限时抢购</p>
         </div>
       </motion.div>
 

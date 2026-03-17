@@ -210,10 +210,10 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-6 py-12 bg-gradient-to-br from-cream-50 via-cream-100 to-forest-50 relative overflow-hidden">
+    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-6 py-12 bg-gradient-to-br from-slate-50 via-blue-50 to-blue-50 relative overflow-hidden">
       {/* 装饰背景 */}
       <motion.div
-        className="absolute top-20 left-20 w-72 h-72 bg-forest-200/30 rounded-full blur-3xl"
+        className="absolute top-20 left-20 w-72 h-72 bg-blue-200/30 rounded-full blur-3xl"
         animate={{
           scale: [1, 1.2, 1],
           opacity: [0.3, 0.4, 0.3],
@@ -221,7 +221,7 @@ export default function ForgotPasswordPage() {
         transition={{ duration: 8, repeat: Infinity }}
       />
       <motion.div
-        className="absolute bottom-20 right-20 w-80 h-80 bg-copper-300/20 rounded-full blur-3xl"
+        className="absolute bottom-20 right-20 w-80 h-80 bg-blue-300/20 rounded-full blur-3xl"
         animate={{
           scale: [1, 1.3, 1],
           opacity: [0.2, 0.3, 0.2],
@@ -274,10 +274,10 @@ export default function ForgotPasswordPage() {
                       className={cn(
                         'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors',
                         index < currentStepIndex
-                          ? 'bg-forest-500 text-white'
+                          ? 'bg-blue-500 text-white'
                           : index === currentStepIndex
-                          ? 'bg-copper-500 text-white'
-                          : 'bg-cream-200 text-stone'
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-slate-200 text-stone'
                       )}
                       animate={{
                         scale: index === currentStepIndex ? [1, 1.1, 1] : 1,
@@ -294,7 +294,7 @@ export default function ForgotPasswordPage() {
                       <div
                         className={cn(
                           'w-12 h-0.5 mx-1 transition-colors duration-300',
-                          index < currentStepIndex ? 'bg-forest-500' : 'bg-cream-200'
+                          index < currentStepIndex ? 'bg-blue-500' : 'bg-slate-200'
                         )}
                       />
                     )}
@@ -431,7 +431,7 @@ export default function ForgotPasswordPage() {
                       onClick={handleResendCode}
                       disabled={countdown > 0}
                       className={cn(
-                        'text-copper-500 hover:text-copper-600 transition-colors',
+                        'text-blue-500 hover:text-blue-600 transition-colors',
                         countdown > 0 && 'text-stone cursor-not-allowed'
                       )}
                     >
@@ -622,7 +622,7 @@ export default function ForgotPasswordPage() {
                 想起密码了？{' '}
                 <Link
                   to="/login"
-                  className="text-copper-500 hover:text-copper-600 font-medium transition-colors"
+                  className="text-blue-500 hover:text-blue-600 font-medium transition-colors"
                 >
                   返回登录
                 </Link>

@@ -73,7 +73,7 @@ export default function HomePage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <motion.div
-          className="w-12 h-12 border-4 border-forest-500 border-t-transparent rounded-full"
+          className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full"
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
         />
@@ -90,7 +90,7 @@ export default function HomePage() {
       {/* Hero 区域 */}
       <motion.section
         variants={heroVariants}
-        className="relative h-80 md:h-96 bg-gradient-to-br from-forest-700 to-forest-900 flex items-center justify-center overflow-hidden"
+        className="relative h-80 md:h-96 bg-gradient-to-br from-blue-700 to-blue-900 flex items-center justify-center overflow-hidden"
       >
         <motion.div
           className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(184,115,51,0.2),transparent_50%)]"
@@ -103,7 +103,7 @@ export default function HomePage() {
             ease: 'easeInOut',
           }}
         />
-        <div className="text-center text-cream-100 relative z-10">
+        <div className="text-center text-blue-50 relative z-10">
           <motion.h1
             className="font-display text-5xl font-semibold mb-4"
             initial={{ opacity: 0, y: 30 }}
@@ -113,7 +113,7 @@ export default function HomePage() {
             发现美好生活
           </motion.h1>
           <motion.p
-            className="text-lg text-cream-200 mb-8"
+            className="text-lg text-slate-100 mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.6 }}
@@ -129,7 +129,7 @@ export default function HomePage() {
           >
             <Link
               to="/products"
-              className="inline-flex items-center px-6 py-3 bg-copper-500 text-white rounded-lg hover:bg-copper-600 transition-colors shadow-lg shadow-copper-500/25"
+              className="inline-flex items-center px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/25"
             >
               立即探索
               <ArrowRight className="w-4 h-4 ml-2" />
@@ -151,9 +151,9 @@ export default function HomePage() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="font-display text-2xl font-semibold text-forest-700">热门分类</h2>
+          <h2 className="font-display text-2xl font-semibold text-blue-700">热门分类</h2>
             <motion.div whileHover={{ x: 5 }} transition={{ duration: 0.2 }}>
-              <Link to="/categories" className="text-sm text-copper-500 hover:text-copper-600">
+              <Link to="/categories" className="text-sm text-blue-500 hover:text-blue-600">
                 查看全部
               </Link>
             </motion.div>
@@ -177,11 +177,11 @@ export default function HomePage() {
                   className="flex flex-col items-center p-4 bg-white rounded-xl hover:shadow-lg transition-shadow"
                 >
                   <motion.div
-                    className="w-12 h-12 bg-forest-100 rounded-full flex items-center justify-center mb-2"
+                    className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-2"
                     whileHover={{ rotate: 10 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <span className="text-forest-700 text-lg font-bold">
+                    <span className="text-blue-700 text-lg font-bold">
                       {category.name.charAt(0)}
                     </span>
                   </motion.div>
@@ -205,9 +205,9 @@ export default function HomePage() {
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="font-display text-2xl font-semibold text-forest-700">热销商品</h2>
+          <h2 className="font-display text-2xl font-semibold text-blue-700">热销商品</h2>
           <motion.div whileHover={{ x: 5 }} transition={{ duration: 0.2 }}>
-            <Link to="/products?sort=sales" className="text-sm text-copper-500 hover:text-copper-600">
+            <Link to="/products?sort=sales" className="text-sm text-blue-500 hover:text-blue-600">
               查看更多
             </Link>
           </motion.div>
@@ -235,7 +235,7 @@ export default function HomePage() {
       {/* 新品推荐 */}
       <motion.section
         variants={itemVariants}
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-cream-200 -mx-4 px-4"
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-slate-100 -mx-4 px-4"
       >
         <motion.div
           className="flex items-center justify-between mb-6"
@@ -244,9 +244,9 @@ export default function HomePage() {
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
         >
-          <h2 className="font-display text-2xl font-semibold text-forest-700">新品推荐</h2>
+          <h2 className="font-display text-2xl font-semibold text-blue-700">新品推荐</h2>
           <motion.div whileHover={{ x: 5 }} transition={{ duration: 0.2 }}>
-            <Link to="/products?sort=new" className="text-sm text-copper-500 hover:text-copper-600">
+            <Link to="/products?sort=new" className="text-sm text-blue-500 hover:text-blue-600">
               查看更多
             </Link>
           </motion.div>

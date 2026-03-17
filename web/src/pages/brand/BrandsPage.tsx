@@ -89,7 +89,7 @@ export default function BrandsPage() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <Link to="/" className="text-stone hover:text-forest-600">
+        <Link to="/" className="text-stone hover:text-blue-600">
           首页
         </Link>
         <span className="text-stone">/</span>
@@ -98,7 +98,7 @@ export default function BrandsPage() {
 
       {/* 头部横幅 */}
       <motion.div
-        className="bg-gradient-to-r from-forest-600 to-forest-700 rounded-xl p-8 mb-8 text-white overflow-hidden relative"
+        className="bg-gradient-to-r from-blue-600 to-slate-800 rounded-xl p-8 mb-8 text-white overflow-hidden relative"
         variants={headerVariants}
         initial="hidden"
         animate="visible"
@@ -124,7 +124,7 @@ export default function BrandsPage() {
             品牌专区
           </motion.h1>
           <motion.p
-            className="text-cream-100"
+            className="text-white"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3, duration: 0.5 }}
@@ -159,9 +159,9 @@ export default function BrandsPage() {
             >
               <Link
                 to={`/products?brand=${brand.id}`}
-                className="group block bg-white rounded-xl border border-cream-300 overflow-hidden hover:shadow-lg hover:border-forest-400 transition-shadow"
+                className="group block bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg hover:border-blue-400 transition-shadow"
               >
-                <div className="aspect-square bg-cream-50 flex items-center justify-center p-8 overflow-hidden">
+                <div className="aspect-square bg-slate-50 flex items-center justify-center p-8 overflow-hidden">
                   {brand.logo ? (
                     <motion.img
                       src={brand.logo}
@@ -172,18 +172,18 @@ export default function BrandsPage() {
                     />
                   ) : (
                     <motion.div
-                      className="w-full h-full bg-forest-100 rounded-full flex items-center justify-center"
+                      className="w-full h-full bg-blue-100 rounded-full flex items-center justify-center"
                       whileHover={{ scale: 1.1 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <span className="text-4xl font-semibold text-forest-600">
+                      <span className="text-4xl font-semibold text-blue-600">
                         {brand.name.charAt(0)}
                       </span>
                     </motion.div>
                   )}
                 </div>
                 <div className="p-4 text-center">
-                  <h3 className="font-semibold text-charcoal group-hover:text-forest-600 transition-colors">
+                  <h3 className="font-semibold text-charcoal group-hover:text-blue-600 transition-colors">
                     {brand.name}
                   </h3>
                   {brand.description && (

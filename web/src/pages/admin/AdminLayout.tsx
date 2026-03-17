@@ -88,16 +88,16 @@ export function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-cream-50 flex">
+    <div className="min-h-screen bg-slate-50 flex">
       {/* 侧边栏 */}
       <aside
         className={cn(
-          'fixed left-0 top-0 z-40 h-screen bg-forest-800 text-cream-100 transition-all duration-300',
+          'fixed left-0 top-0 z-40 h-screen bg-slate-800 text-slate-100 transition-all duration-300',
           sidebarCollapsed ? 'w-16' : 'w-64'
         )}
       >
         {/* Logo */}
-        <div className="flex items-center justify-between h-16 px-4 border-b border-forest-700">
+        <div className="flex items-center justify-between h-16 px-4 border-b border-slate-700">
           {!sidebarCollapsed && (
             <Link to="/admin" className="font-display text-xl font-semibold">
               管理后台
@@ -105,7 +105,7 @@ export function AdminLayout() {
           )}
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="p-1.5 rounded hover:bg-forest-700 transition-colors"
+            className="p-1.5 rounded hover:bg-slate-700 transition-colors"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -133,8 +133,8 @@ export function AdminLayout() {
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors',
                 isActive(item.href)
-                  ? 'bg-forest-600 text-white'
-                  : 'text-cream-200 hover:bg-forest-700 hover:text-white'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-300 hover:bg-slate-700 hover:text-white'
               )}
               title={sidebarCollapsed ? item.title : undefined}
             >
@@ -148,7 +148,7 @@ export function AdminLayout() {
         <div className="absolute bottom-4 left-0 right-0 px-2">
           <Link
             to="/"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-cream-200 hover:bg-forest-700 hover:text-white transition-colors"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
             title={sidebarCollapsed ? '返回前台' : undefined}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -168,13 +168,13 @@ export function AdminLayout() {
         )}
       >
         {/* 顶部栏 */}
-        <header className="sticky top-0 z-30 h-16 bg-white border-b border-cream-200 px-6 flex items-center justify-between">
+        <header className="sticky top-0 z-30 h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between">
           <h1 className="text-lg font-semibold text-charcoal">
             {navItems.find((item) => isActive(item.href))?.title || '管理后台'}
           </h1>
           <div className="flex items-center gap-4">
             <span className="text-sm text-stone">管理员</span>
-            <div className="w-8 h-8 rounded-full bg-forest-600 flex items-center justify-center text-white text-sm font-medium">
+            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-medium">
               A
             </div>
           </div>

@@ -248,7 +248,7 @@ export default function ProductDetailPage() {
 
           {/* SKU 选择器 */}
           {specs.length > 0 && (
-            <motion.div className="border-t border-cream-200 pt-6" variants={itemVariants}>
+            <motion.div className="border-t border-slate-200 pt-6" variants={itemVariants}>
               <SkuSelector
                 specs={specs}
                 skus={product.skus}
@@ -303,7 +303,7 @@ export default function ProductDetailPage() {
           <motion.div className="flex gap-4 pt-4" variants={itemVariants}>
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1">
               <Button
-                variant="copper"
+                variant="default"
                 size="lg"
                 onClick={handleAddToCart}
                 disabled={!selectedSku || addingToCart}
