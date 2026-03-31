@@ -9,27 +9,27 @@ export const fadeIn: Variants = {
 }
 
 export const fadeInUp: Variants = {
-  initial: { opacity: 0, y: 20 },
+  initial: { opacity: 0, y: 14 },
   animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -20 },
+  exit: { opacity: 0, y: -14 },
 }
 
 export const fadeInDown: Variants = {
-  initial: { opacity: 0, y: -20 },
+  initial: { opacity: 0, y: -14 },
   animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: 20 },
+  exit: { opacity: 0, y: 14 },
 }
 
 export const fadeInLeft: Variants = {
-  initial: { opacity: 0, x: -20 },
+  initial: { opacity: 0, x: -14 },
   animate: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: 20 },
+  exit: { opacity: 0, x: 14 },
 }
 
 export const fadeInRight: Variants = {
-  initial: { opacity: 0, x: 20 },
+  initial: { opacity: 0, x: 14 },
   animate: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: -20 },
+  exit: { opacity: 0, x: -14 },
 }
 
 export const scaleIn: Variants = {
@@ -39,9 +39,9 @@ export const scaleIn: Variants = {
 }
 
 export const slideInFromBottom: Variants = {
-  initial: { opacity: 0, y: 100 },
+  initial: { opacity: 0, y: 72 },
   animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: 100 },
+  exit: { opacity: 0, y: 72 },
 }
 
 // 交错动画变体
@@ -55,16 +55,16 @@ export const staggerContainer: Variants = {
 }
 
 export const staggerItem: Variants = {
-  initial: { opacity: 0, y: 20 },
+  initial: { opacity: 0, y: 14 },
   animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: 20 },
+  exit: { opacity: 0, y: 14 },
 }
 
 // 弹性动画变体
 export const springTransition: Transition = {
   type: 'spring',
-  stiffness: 300,
-  damping: 30,
+  stiffness: 220,
+  damping: 26,
 }
 
 // 缓动函数
@@ -169,7 +169,7 @@ interface HoverScaleProps extends HTMLMotionProps<'div'> {
 }
 
 export function HoverScale({
-  scale = 1.02,
+  scale = 1.01,
   className,
   children,
   ...props
@@ -196,8 +196,8 @@ export function HoverLift({
   return (
     <motion.div
       whileHover={{
-        y: -4,
-        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
+        y: -2,
+        boxShadow: '0 8px 24px rgba(15, 23, 42, 0.08)',
       }}
       whileTap={{ y: 0 }}
       transition={springTransition}
@@ -221,8 +221,8 @@ export function AnimatedCard({
   ...props
 }: AnimatedCardProps) {
   const hoverVariants = {
-    scale: { scale: 1.02 },
-    lift: { y: -4, boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)' },
+    scale: { scale: 1.01 },
+    lift: { y: -2, boxShadow: '0 8px 24px rgba(15, 23, 42, 0.08)' },
     glow: { boxShadow: '0 0 30px rgba(184, 115, 51, 0.3)' },
     none: {},
   }
@@ -250,7 +250,7 @@ export function AnimatedButton({
 }: HTMLMotionProps<'button'>) {
   return (
     <motion.button
-      whileHover={{ scale: 1.02 }}
+      whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.98 }}
       transition={springTransition}
       className={className}
@@ -269,7 +269,7 @@ export function AnimatedLink({
 }: HTMLMotionProps<'a'>) {
   return (
     <motion.a
-      whileHover={{ scale: 1.02 }}
+      whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.98 }}
       transition={springTransition}
       className={className}
@@ -288,10 +288,10 @@ export function PageTransition({
 }: HTMLMotionProps<'div'>) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.3, ease: easeOut }}
+      exit={{ opacity: 0, y: -6 }}
+      transition={{ duration: 0.24, ease: easeOut }}
       className={className}
       {...props}
     >

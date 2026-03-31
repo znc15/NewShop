@@ -58,58 +58,6 @@ export function AdminCouponsPage() {
       setTotal(res.total)
     } catch (error) {
       console.error('获取优惠券列表失败:', error)
-      // 模拟数据
-      setCoupons([
-        {
-          id: 1,
-          code: 'NEWYEAR2024',
-          name: '新年满减券',
-          type: 'fixed',
-          value: 50,
-          min_amount: 299,
-          max_discount: null,
-          total_count: 1000,
-          used_count: 356,
-          start_time: '2024-01-01 00:00:00',
-          end_time: '2024-02-28 23:59:59',
-          status: 'active',
-          created_at: '2023-12-25 10:00:00',
-          updated_at: '2024-01-15 15:30:00',
-        },
-        {
-          id: 2,
-          code: 'VIP10',
-          name: 'VIP专享折扣',
-          type: 'percent',
-          value: 10,
-          min_amount: 0,
-          max_discount: 100,
-          total_count: 500,
-          used_count: 89,
-          start_time: '2024-01-01 00:00:00',
-          end_time: '2024-12-31 23:59:59',
-          status: 'active',
-          created_at: '2023-12-20 14:00:00',
-          updated_at: '2024-01-10 09:15:00',
-        },
-        {
-          id: 3,
-          code: 'SUMMER2023',
-          name: '夏季促销券',
-          type: 'fixed',
-          value: 30,
-          min_amount: 199,
-          max_discount: null,
-          total_count: 2000,
-          used_count: 2000,
-          start_time: '2023-06-01 00:00:00',
-          end_time: '2023-08-31 23:59:59',
-          status: 'expired',
-          created_at: '2023-05-25 10:00:00',
-          updated_at: '2023-09-01 00:00:00',
-        },
-      ])
-      setTotal(3)
     } finally {
       setLoading(false)
     }

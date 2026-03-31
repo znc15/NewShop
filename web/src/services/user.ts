@@ -8,6 +8,25 @@ import type {
   ChangePasswordRequest,
 } from '@/types/user'
 
+type AddressPayload = Omit<UserAddress, 'full_address'> & {
+  full_address?: string
+}
+
+type AddressListPayload = {
+  addresses?: AddressPayload[]
+}
+
+function buildFullAddress(address: Pick<UserAddress, 'province' | 'city' | 'district' | 'address'>): string {
+  return [address.province, address.city, address.district, address.address].filter(Boolean).join(' ')
+}
+
+function normalizeAddress(address: AddressPayload): UserAddress {
+  return {
+    ...address,
+    full_address: address.full_address || buildFullAddress(address),
+  }
+}
+
 export const userService = {
   // 获取用户资料
   getProfile(): Promise<UserProfile> {
@@ -25,23 +44,28 @@ export const userService = {
   },
 
   // 获取地址列表
-  getAddresses(): Promise<UserAddress[]> {
-    return http.get('/user/addresses')
+  async getAddresses(): Promise<UserAddress[]> {
+    const response = await http.get<AddressListPayload | AddressPayload[]>('/user/addresses')
+    const addresses = Array.isArray(response) ? response : response.addresses || []
+    return addresses.map(normalizeAddress)
   },
 
   // 获取单个地址
-  getAddress(id: number): Promise<UserAddress> {
-    return http.get(`/user/addresses/${id}`)
+  async getAddress(id: number): Promise<UserAddress> {
+    const response = await http.get<AddressPayload>(`/user/addresses/${id}`)
+    return normalizeAddress(response)
   },
 
   // 创建地址
-  createAddress(data: CreateAddressRequest): Promise<UserAddress> {
-    return http.post('/user/addresses', data)
+  async createAddress(data: CreateAddressRequest): Promise<UserAddress> {
+    const response = await http.post<AddressPayload>('/user/addresses', data)
+    return normalizeAddress(response)
   },
 
   // 更新地址
-  updateAddress(id: number, data: UpdateAddressRequest): Promise<UserAddress> {
-    return http.put(`/user/addresses/${id}`, data)
+  async updateAddress(id: number, data: UpdateAddressRequest): Promise<UserAddress> {
+    const response = await http.put<AddressPayload>(`/user/addresses/${id}`, data)
+    return normalizeAddress(response)
   },
 
   // 删除地址

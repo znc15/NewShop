@@ -54,6 +54,8 @@ type Product struct {
 	OriginalPrice int64          `gorm:"default:0" json:"original_price"`
 	Stock         int            `gorm:"default:0" json:"stock"`
 	Sales         int            `gorm:"default:0" json:"sales"`
+	IsHot         bool           `gorm:"default:false" json:"is_hot"`
+	IsSale        bool           `gorm:"default:false" json:"is_sale"`
 	Description   string         `gorm:"type:text" json:"description"`
 	Detail        string         `gorm:"type:text" json:"detail"`
 	Status        string         `gorm:"size:50;default:draft;index" json:"status"`

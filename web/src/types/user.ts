@@ -10,7 +10,7 @@ export interface UserAddress {
   city: string
   district: string
   address: string
-  full_address: string  // 完整地址（后端生成）
+  full_address: string
   is_default: boolean
   created_at: string
   updated_at: string
@@ -68,7 +68,7 @@ export interface UpdateProfileRequest {
 export interface ChangePasswordRequest {
   old_password: string
   new_password: string
-  confirm_password: string
+  code: string
 }
 
 // 会员等级信息

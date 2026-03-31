@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, useLocation, Outlet } from 'react-router-dom'
+import { useState, type ReactNode } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { cn } from '@/utils'
 
 // 侧边栏导航项
@@ -73,9 +73,22 @@ const navItems = [
       </svg>
     ),
   },
+  {
+    title: 'SEO 设置',
+    href: '/admin/seo',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.3-4.3" />
+        <path d="M8 11h6" />
+        <path d="M8 8h3" />
+        <path d="M8 14h4" />
+      </svg>
+    ),
+  },
 ]
 
-export function AdminLayout() {
+export function AdminLayout({ children }: { children?: ReactNode }) {
   const location = useLocation()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
@@ -182,7 +195,7 @@ export function AdminLayout() {
 
         {/* 页面内容 */}
         <main className="p-6">
-          <Outlet />
+          {children}
         </main>
       </div>
     </div>

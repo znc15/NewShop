@@ -49,6 +49,8 @@ export interface Product {
   status: ProductStatus
   stock: number
   sales: number
+  is_hot: boolean
+  is_sale: boolean
   sort: number
   created_at: string
   updated_at: string
@@ -154,6 +156,17 @@ export interface ApiError {
   code: number
   message: string
   details?: Record<string, string[]>
+  response?: {
+    data?: Partial<ApiResponse>
+  }
+}
+
+export interface SeoConfig {
+  siteTitle: string
+  siteDescription: string
+  siteKeywords: string
+  ogImage: string
+  googleVerify: string
 }
 
 // 重新导出购物车和订单类型

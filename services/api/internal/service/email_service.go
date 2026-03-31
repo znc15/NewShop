@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"math/big"
 	"time"
@@ -34,12 +35,33 @@ func (s *EmailService) SendVerifyCode(ctx context.Context, emailAddr, codeType s
 		return fmt.Errorf("存储验证码失败: %w", err)
 	}
 
-	var template model.EmailTemplate
-	if err := s.db.Where("code = ?", "verify_code").First(&template).Error; err != nil {
-		return fmt.Errorf("获取邮件模板失败: %w", err)
+	return s.sendCodeEmail(ctx, emailAddr, "verify_code", "NewShop 验证码", verifyCodeEmailTemplate, code)
+}
+
+func (s *EmailService) SendLoginCode(ctx context.Context, emailAddr, code string) error {
+	return s.sendCodeEmail(ctx, emailAddr, "login_code", "NewShop 登录验证码", loginCodeEmailTemplate, code)
+}
+
+func (s *EmailService) sendCodeEmail(ctx context.Context, emailAddr, templateCode, defaultSubject, defaultBodyHTML, code string) error {
+	subject := defaultSubject
+	bodyHTML := defaultBodyHTML
+
+	if s.db != nil {
+		var template model.EmailTemplate
+		err := s.db.WithContext(ctx).Where("code = ?", templateCode).First(&template).Error
+		if err == nil {
+			subject = template.Subject
+			bodyHTML = template.BodyHTML
+		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("获取邮件模板失败: %w", err)
+		}
 	}
 
-	if err := s.email.SendWithTemplate(emailAddr, template.Subject, template.BodyHTML, map[string]string{"Code": code}); err != nil {
+	if s.email == nil {
+		return fmt.Errorf("邮件客户端未初始化")
+	}
+
+	if err := s.email.SendWithTemplate(emailAddr, subject, bodyHTML, map[string]string{"Code": code}); err != nil {
 		return fmt.Errorf("发送邮件失败: %w", err)
 	}
 
@@ -123,3 +145,21 @@ func generateCode(length int) string {
 	}
 	return code
 }
+
+const verifyCodeEmailTemplate = `
+<div style="font-family:Arial,sans-serif;line-height:1.6;color:#1f2937;">
+	<h2 style="margin-bottom:16px;">邮箱验证码</h2>
+	<p>您好，您的验证码是：</p>
+	<p style="font-size:28px;font-weight:bold;letter-spacing:6px;margin:24px 0;color:#111827;">{{.Code}}</p>
+	<p>验证码 5 分钟内有效，请勿泄露给他人。</p>
+</div>
+`
+
+const loginCodeEmailTemplate = `
+<div style="font-family:Arial,sans-serif;line-height:1.6;color:#1f2937;">
+	<h2 style="margin-bottom:16px;">快捷登录验证码</h2>
+	<p>您好，您正在使用邮箱验证码快捷登录 NewShop。</p>
+	<p style="font-size:28px;font-weight:bold;letter-spacing:6px;margin:24px 0;color:#111827;">{{.Code}}</p>
+	<p>验证码 5 分钟内有效，60 秒内不可重复发送。如非本人操作，请忽略此邮件。</p>
+</div>
+`

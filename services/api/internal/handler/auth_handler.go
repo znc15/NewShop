@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 	"net/http"
+	"net/url"
 
 	"newshop/api/internal/model"
 	"newshop/api/internal/pkg/jwt"
@@ -15,20 +16,26 @@ import (
 )
 
 type AuthHandler struct {
-	userService  *service.UserService
-	emailService *service.EmailService
-	jwtManager   *jwt.JWTManager
-	logger       *zap.Logger
+	userService        *service.UserService
+	emailService       *service.EmailService
+	githubOAuthService *service.GitHubOAuthService
+	frontendLoginURL   string
+	jwtManager         *jwt.JWTManager
+	logger             *zap.Logger
 }
 
-func NewAuthHandler(userService *service.UserService, emailService *service.EmailService, jwtManager *jwt.JWTManager, logger *zap.Logger) *AuthHandler {
+func NewAuthHandler(userService *service.UserService, emailService *service.EmailService, githubOAuthService *service.GitHubOAuthService, frontendLoginURL string, jwtManager *jwt.JWTManager, logger *zap.Logger) *AuthHandler {
 	return &AuthHandler{
-		userService:  userService,
-		emailService: emailService,
-		jwtManager:   jwtManager,
-		logger:       logger,
+		userService:        userService,
+		emailService:       emailService,
+		githubOAuthService: githubOAuthService,
+		frontendLoginURL:   frontendLoginURL,
+		jwtManager:         jwtManager,
+		logger:             logger,
 	}
 }
+
+const githubOAuthStateCookieName = "github_oauth_state"
 
 type RegisterRequest struct {
 	Email        string `json:"email" binding:"required,email"`
@@ -54,8 +61,8 @@ type RefreshRequest struct {
 type SendCodeRequest struct {
 	Email        string `json:"email" binding:"required,email"`
 	Type         string `json:"type" binding:"required,oneof=register login reset"`
-	CaptchaID    string `json:"captcha_id" binding:"required"`
-	CaptchaToken string `json:"captcha_token" binding:"required"`
+	CaptchaID    string `json:"captcha_id"`
+	CaptchaToken string `json:"captcha_token"`
 }
 
 // Register 用户注册
@@ -202,6 +209,102 @@ func (h *AuthHandler) Login(c *gin.Context) {
 			},
 		},
 	})
+}
+
+// GitHubLogin 发起 GitHub OAuth 登录
+// @Summary 发起 GitHub OAuth 登录
+// @Tags 认证
+// @Success 302 {string} string "跳转到 GitHub 授权页"
+// @Router /api/v1/auth/github [get]
+func (h *AuthHandler) GitHubLogin(c *gin.Context) {
+	if h.githubOAuthService == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"code": 50000, "message": "GitHub OAuth 未启用"})
+		return
+	}
+
+	state, err := h.githubOAuthService.GenerateState()
+	if err != nil {
+		h.logger.Error("生成 GitHub OAuth state 失败", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "发起 GitHub 登录失败"})
+		return
+	}
+
+	authURL, err := h.githubOAuthService.GetAuthorizationURL(c.Request.Context(), state)
+	if err != nil {
+		h.logger.Error("生成 GitHub OAuth 授权地址失败", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "GitHub OAuth 配置无效"})
+		return
+	}
+
+	c.SetCookie(githubOAuthStateCookieName, state, 600, "/", "", false, true)
+	c.Redirect(http.StatusTemporaryRedirect, authURL)
+}
+
+// GitHubCallback 处理 GitHub OAuth 回调
+// @Summary 处理 GitHub OAuth 回调
+// @Tags 认证
+// @Success 302 {string} string "回跳前端登录页"
+// @Router /api/v1/auth/github/callback [get]
+func (h *AuthHandler) GitHubCallback(c *gin.Context) {
+	if h.githubOAuthService == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"code": 50000, "message": "GitHub OAuth 未启用"})
+		return
+	}
+
+	state := c.Query("state")
+	code := c.Query("code")
+	cookieState, err := c.Cookie(githubOAuthStateCookieName)
+	c.SetCookie(githubOAuthStateCookieName, "", -1, "/", "", false, true)
+
+	if err != nil || cookieState == "" || state == "" || cookieState != state {
+		h.logger.Warn("GitHub OAuth state 校验失败", zap.Error(err))
+		h.redirectToFrontendLogin(c, "GitHub 登录状态校验失败")
+		return
+	}
+
+	result, err := h.githubOAuthService.HandleCallback(c.Request.Context(), code)
+	if err != nil {
+		h.logger.Error("GitHub OAuth 回调处理失败", zap.Error(err))
+		h.redirectToFrontendLogin(c, "GitHub 登录失败，请稍后重试")
+		return
+	}
+
+	redirectURL := h.frontendLoginURL
+	if redirectURL == "" {
+		redirectURL = "/login"
+	}
+
+	parsedURL, err := url.Parse(redirectURL)
+	if err != nil {
+		h.logger.Error("解析前端登录地址失败", zap.Error(err), zap.String("url", redirectURL))
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "登录回跳失败"})
+		return
+	}
+
+	query := parsedURL.Query()
+	query.Set("access_token", result.AccessToken)
+	query.Set("refresh_token", result.RefreshToken)
+	parsedURL.RawQuery = query.Encode()
+
+	c.Redirect(http.StatusTemporaryRedirect, parsedURL.String())
+}
+
+func (h *AuthHandler) redirectToFrontendLogin(c *gin.Context, errMessage string) {
+	redirectURL := h.frontendLoginURL
+	if redirectURL == "" {
+		redirectURL = "/login"
+	}
+
+	parsedURL, parseErr := url.Parse(redirectURL)
+	if parseErr != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": errMessage})
+		return
+	}
+
+	query := parsedURL.Query()
+	query.Set("oauth_error", errMessage)
+	parsedURL.RawQuery = query.Encode()
+	c.Redirect(http.StatusTemporaryRedirect, parsedURL.String())
 }
 
 // Refresh 刷新令牌

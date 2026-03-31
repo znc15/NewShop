@@ -16,7 +16,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
     <Link
       to={`/products/${product.id}`}
       className={cn(
-        'group block bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden',
+        'group block overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:border-slate-300 hover:shadow-md',
         className
       )}
     >
@@ -25,7 +25,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
         <img
           src={product.main_image || (Array.isArray(product.images) ? product.images?.[0] : '/placeholder.png') || '/placeholder.png'}
           alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
         />
         {/* 标签 */}
         {product.sales > 100 && (
@@ -47,13 +47,23 @@ export function ProductCard({ product, className }: ProductCardProps) {
         </h3>
 
         {/* 价格 - 后端价格单位为分，需要除以100 */}
-        <div className="flex items-baseline gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-lg font-bold text-red-500">
             ¥{(price / 100).toFixed(2)}
           </span>
           {originalPrice && originalPrice > price && (
             <span className="text-sm text-gray-400 line-through">
               ¥{(originalPrice / 100).toFixed(2)}
+            </span>
+          )}
+          {product.is_hot && (
+            <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-500">
+              热卖
+            </span>
+          )}
+          {product.is_sale && (
+            <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-600">
+              特惠
             </span>
           )}
         </div>

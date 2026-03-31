@@ -45,58 +45,6 @@ export function AdminUsersPage() {
       setTotal(res.total)
     } catch (error) {
       console.error('获取用户列表失败:', error)
-      // 模拟数据
-      setUsers([
-        {
-          id: 1,
-          username: 'zhangsan',
-          email: 'zhangsan@example.com',
-          phone: '13800138000',
-          avatar: 'https://picsum.photos/seed/user1/100/100',
-          nickname: '张三',
-          status: 'active',
-          member_level: 3,
-          level: 3,
-          points: 5680,
-          total_spent: 12580,
-          order_count: 15,
-          created_at: '2023-06-15 10:30:00',
-          updated_at: '2024-01-10 15:20:00',
-        },
-        {
-          id: 2,
-          username: 'lisi',
-          email: 'lisi@example.com',
-          phone: '13900139000',
-          avatar: 'https://picsum.photos/seed/user2/100/100',
-          nickname: '李四',
-          status: 'active',
-          member_level: 2,
-          level: 2,
-          points: 2350,
-          total_spent: 4890,
-          order_count: 8,
-          created_at: '2023-08-20 14:15:00',
-          updated_at: '2024-01-12 09:45:00',
-        },
-        {
-          id: 3,
-          username: 'wangwu',
-          email: 'wangwu@example.com',
-          phone: '13700137000',
-          avatar: null,
-          nickname: '王五',
-          status: 'disabled',
-          member_level: 1,
-          level: 1,
-          points: 120,
-          total_spent: 580,
-          order_count: 2,
-          created_at: '2023-12-01 09:00:00',
-          updated_at: '2024-01-05 11:30:00',
-        },
-      ])
-      setTotal(3)
     } finally {
       setLoading(false)
     }

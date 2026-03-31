@@ -74,8 +74,8 @@ export default function NewProductsPage() {
         <motion.div
           className="absolute right-10 top-1/2 -translate-y-1/2 w-40 h-40 bg-white/10 rounded-full"
           animate={{
-            scale: [1, 1.2, 1],
-            rotate: [0, 180, 360],
+            scale: [1, 1.08, 1],
+            rotate: [0, 90, 180],
           }}
           transition={{
             duration: 20,

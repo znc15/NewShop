@@ -113,7 +113,7 @@ export default function RegisterPage() {
     }
 
     try {
-      await authService.sendVerifyCode(formData.email)
+      await authService.sendVerifyCode(formData.email, 'register')
       setCodeSent(true)
       setCountdown(60)
     } catch (error: unknown) {
@@ -249,7 +249,7 @@ export default function RegisterPage() {
 
           {/* 表单卡片 */}
           <motion.div
-            className="bg-white rounded-2xl shadow-lg p-8"
+            className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}

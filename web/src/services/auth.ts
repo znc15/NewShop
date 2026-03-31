@@ -23,8 +23,8 @@ export const authService = {
   },
 
   // 发送验证码
-  sendVerifyCode(email: string): Promise<void> {
-    return http.post('/auth/send-code', { email })
+  sendVerifyCode(email: string, type: 'register' | 'login' | 'reset' = 'register'): Promise<void> {
+    return http.post('/auth/send-code', { email, type })
   },
 
   // 重置密码

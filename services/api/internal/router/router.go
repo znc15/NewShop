@@ -2,6 +2,7 @@
 package router
 
 import (
+	"strings"
 	"time"
 
 	_ "newshop/api/docs" // swagger docs，需要先运行 swag init 生成
@@ -46,10 +47,12 @@ type Router struct {
 	memberExpRepo   *repository.MemberExperienceRepo
 	expLogRepo      *repository.ExperienceLogRepo
 	configRepo      *repository.ConfigRepo
+	pageRepo        *repository.PageRepository
 
 	// Services
 	userService     *service.UserService
 	emailService    *service.EmailService
+	authCodeService *service.AuthCodeService
 	productService  *service.ProductService
 	cartService     *service.CartService
 	orderService    *service.OrderService
@@ -64,9 +67,11 @@ type Router struct {
 	pointsService   *service.PointsService
 	membershipSvc   *service.MembershipService
 	configService   *service.ConfigService
+	pageService     *service.PageService
 
 	// Handlers
 	authHandler       *handler.AuthHandler
+	authCodeHandler   *handler.AuthCodeHandler
 	productHandler    *handler.ProductHandler
 	cartHandler       *handler.CartHandler
 	orderHandler      *handler.OrderHandler
@@ -77,6 +82,8 @@ type Router struct {
 	couponHandler     *handler.CouponHandler
 	pointsHandler     *handler.PointsHandler
 	membershipHandler *handler.MembershipHandler
+	configHandler     *handler.ConfigHandler
+	pageHandler       *handler.PageHandler
 	// Admin handlers
 	productAdminHandler    *adminhandler.ProductAdminHandler
 	orderAdminHandler      *adminhandler.OrderAdminHandler
@@ -85,6 +92,7 @@ type Router struct {
 	statisticsAdminHandler *adminhandler.StatisticsAdminHandler
 	userAdminHandler       *adminhandler.UserAdminHandler
 	configAdminHandler     *adminhandler.ConfigAdminHandler
+	pageAdminHandler       *adminhandler.PageAdminHandler
 }
 
 // NewRouter 创建路由管理器
@@ -108,6 +116,7 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 	memberExpRepo := repository.NewMemberExperienceRepo(db)
 	expLogRepo := repository.NewExperienceLogRepo(db)
 	configRepo := repository.NewConfigRepo(db)
+	pageRepo := repository.NewPageRepository(db)
 
 	// 初始化 Services
 	userService := service.NewUserService(db)
@@ -124,11 +133,19 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 	pointsService := service.NewPointsService(db, pointsRepo, userRepo)
 	membershipSvc := service.NewMembershipService(db, memberLevelRepo, memberExpRepo, expLogRepo)
 	configService := service.NewConfigService(db, configRepo, logger)
+	pageService := service.NewPageService(pageRepo, db)
+	githubOAuthService := service.NewGitHubOAuthService(userService, configService, jwtManager, logger)
+	frontendLoginURL := "/login"
+	if len(cfg.CORS.AllowedOrigins) > 0 {
+		frontendLoginURL = strings.TrimRight(cfg.CORS.AllowedOrigins[0], "/") + "/login"
+	}
 
 	// 初始化 Handlers
 	authHandler := handler.NewAuthHandler(
 		userService,
 		nil, // emailService 需要邮件客户端，后续初始化
+		githubOAuthService,
+		frontendLoginURL,
 		jwtManager,
 		logger,
 	)
@@ -141,6 +158,8 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 	couponHandler := handler.NewCouponHandler(couponService, logger)
 	pointsHandler := handler.NewPointsHandler(pointsService, logger)
 	membershipHandler := handler.NewMembershipHandler(membershipSvc, logger)
+	configHandler := handler.NewConfigHandler(configService, logger)
+	pageHandler := handler.NewPageHandler(pageService, logger)
 	// Admin handlers
 	productAdminHandler := adminhandler.NewProductAdminHandler(productAdminSvc, productRepo, logger)
 	orderAdminHandler := adminhandler.NewOrderAdminHandler(orderAdminSvc, logger)
@@ -150,6 +169,7 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 	userAdminSvc := adminservice.NewUserAdminService(db, userRepo, logger)
 	userAdminHandler := adminhandler.NewUserAdminHandler(userAdminSvc, logger)
 	configAdminHandler := adminhandler.NewConfigAdminHandler(configService, logger)
+	pageAdminHandler := adminhandler.NewPageAdminHandler(pageService, logger)
 
 	return &Router{
 		db:         db,
@@ -173,6 +193,7 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 		memberExpRepo:   memberExpRepo,
 		expLogRepo:      expLogRepo,
 		configRepo:      configRepo,
+		pageRepo:        pageRepo,
 		// Services
 		userService:     userService,
 		productService:  productService,
@@ -188,6 +209,7 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 		pointsService:   pointsService,
 		membershipSvc:   membershipSvc,
 		configService:   configService,
+		pageService:     pageService,
 		// Handlers
 		authHandler:       authHandler,
 		productHandler:    productHandler,
@@ -199,6 +221,8 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 		couponHandler:     couponHandler,
 		pointsHandler:     pointsHandler,
 		membershipHandler: membershipHandler,
+		configHandler:     configHandler,
+		pageHandler:       pageHandler,
 		// Admin handlers
 		productAdminHandler:    productAdminHandler,
 		orderAdminHandler:      orderAdminHandler,
@@ -207,19 +231,34 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 		statisticsAdminHandler: statisticsAdminHandler,
 		userAdminHandler:       userAdminHandler,
 		configAdminHandler:     configAdminHandler,
+		pageAdminHandler:       pageAdminHandler,
 	}
 }
 
 // SetEmailService 设置邮件服务
 func (r *Router) SetEmailService(emailService *service.EmailService) {
 	r.emailService = emailService
+	r.authCodeService = service.NewAuthCodeService(
+		r.userService,
+		emailService,
+		r.jwtManager,
+		r.rdb,
+	)
 	// 重新创建 AuthHandler 以包含邮件服务
 	r.authHandler = handler.NewAuthHandler(
 		r.userService,
 		emailService,
+		service.NewGitHubOAuthService(r.userService, r.configService, r.jwtManager, r.logger),
+		func() string {
+			if len(r.cfg.CORS.AllowedOrigins) > 0 {
+				return strings.TrimRight(r.cfg.CORS.AllowedOrigins[0], "/") + "/login"
+			}
+			return "/login"
+		}(),
 		r.jwtManager,
 		r.logger,
 	)
+	r.authCodeHandler = handler.NewAuthCodeHandler(r.authCodeService, r.logger)
 }
 
 // SetPaymentService 设置支付服务
@@ -254,6 +293,7 @@ func (r *Router) Setup(engine *gin.Engine) {
 	{
 		// 注册各模块路由
 		r.setupAuthRoutes(v1)
+		r.setupConfigRoutes(v1)
 		r.setupUserRoutes(v1)
 		r.setupProductRoutes(v1)
 		r.setupCartRoutes(v1)
@@ -263,12 +303,20 @@ func (r *Router) Setup(engine *gin.Engine) {
 		r.setupCouponRoutes(v1)
 		r.setupPointsRoutes(v1)
 		r.setupMembershipRoutes(v1)
+		r.setupPageRoutes(v1)
 	}
 
 	// 管理后台路由组
 	admin := engine.Group("/api/admin")
 	{
 		r.setupAdminRoutes(admin)
+	}
+}
+
+func (r *Router) setupConfigRoutes(rg *gin.RouterGroup) {
+	configs := rg.Group("/configs")
+	{
+		configs.GET("/public", r.configHandler.GetPublicConfigs)
 	}
 }
 
@@ -279,6 +327,12 @@ func (r *Router) setupAuthRoutes(rg *gin.RouterGroup) {
 		// 公开路由
 		auth.POST("/register", r.authHandler.Register)
 		auth.POST("/login", r.authHandler.Login)
+		if r.authCodeHandler != nil {
+			auth.POST("/login/code/send", r.authCodeHandler.SendLoginCode)
+			auth.POST("/login/code/verify", r.authCodeHandler.VerifyLoginCode)
+		}
+		auth.GET("/github", r.authHandler.GitHubLogin)
+		auth.GET("/github/callback", r.authHandler.GitHubCallback)
 		auth.POST("/refresh", r.authHandler.Refresh)
 		auth.POST("/send-code", r.authHandler.SendCode)
 		auth.POST("/reset-password", r.authHandler.ResetPassword) // 重置密码
@@ -496,6 +550,15 @@ func (r *Router) setupAdminRoutes(rg *gin.RouterGroup) {
 		configs.DELETE("/:key", r.configAdminHandler.Delete)
 		configs.GET("/:key/histories", r.configAdminHandler.GetHistories)
 	}
+
+	pages := rg.Group("/pages")
+	{
+		pages.GET("", r.pageAdminHandler.List)
+		pages.POST("", r.pageAdminHandler.Create)
+		pages.GET("/:id", r.pageAdminHandler.Get)
+		pages.PUT("/:id", r.pageAdminHandler.Update)
+		pages.DELETE("/:id", r.pageAdminHandler.Delete)
+	}
 }
 
 // setupPresaleRoutes 预售路由
@@ -554,5 +617,12 @@ func (r *Router) setupMembershipRoutes(rg *gin.RouterGroup) {
 		memberProtected.GET("/rights/:level_id", r.membershipHandler.GetLevelRights)
 		memberProtected.GET("/experience/logs", r.membershipHandler.GetExperienceLogs)
 		memberProtected.POST("/checkin", r.membershipHandler.CheckIn)
+	}
+}
+
+func (r *Router) setupPageRoutes(rg *gin.RouterGroup) {
+	pages := rg.Group("/pages")
+	{
+		pages.GET("/:slug", r.pageHandler.GetPageBySlug)
 	}
 }

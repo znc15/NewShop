@@ -136,7 +136,6 @@ button {
   font-family: inherit;
   font-size: inherit;
   cursor: pointer;
-  border: none;
   background: none;
 }
 
@@ -146,8 +145,6 @@ textarea,
 select {
   font-family: inherit;
   font-size: inherit;
-  border: none;
-  outline: none;
 }
 
 /* 图片重置 */
@@ -264,4 +261,26 @@ ol {
 
 .animate-scale-in {
   animation: scaleIn var(--transition-base) ease-out;
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl;
+  }
+
+  .btn {
+    @apply rounded-lg;
+  }
+
+  .input {
+    @apply rounded-lg;
+  }
+
+  .badge {
+    @apply rounded-full;
+  }
+
+  .modal {
+    @apply rounded-2xl;
+  }
 }

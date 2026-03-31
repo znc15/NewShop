@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { motion, type Variants } from 'motion/react'
+import { motion, type Variants, AnimatePresence } from 'motion/react'
+import { Filter, X } from 'lucide-react'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ProductFilter } from '@/components/product/ProductFilter'
 import { productService } from '@/services'
@@ -43,11 +44,13 @@ export default function ProductListPage() {
   const sortOrder = searchParams.get('order') as 'asc' | 'desc' || 'desc'
 
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [brands] = useState<Brand[]>([])
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [showMobileFilter, setShowMobileFilter] = useState(false)
 
   // 获取分类列表
   useEffect(() => {
@@ -66,6 +69,9 @@ export default function ProductListPage() {
   // 获取商品列表
   const fetchProducts = useCallback(async (pageNum: number) => {
     setLoading(true)
+    if (pageNum === 1) {
+      setError(null)
+    }
     try {
       const params: Record<string, unknown> = {
         page: pageNum,
@@ -85,8 +91,12 @@ export default function ProductListPage() {
         setProducts((prev) => [...prev, ...response.data])
       }
       setTotalPages(response.total_pages)
-    } catch (error) {
-      console.error('获取商品列表失败:', error)
+    } catch (err) {
+      console.error('获取商品列表失败:', err)
+      if (pageNum === 1) {
+        setProducts([])
+        setError('获取商品列表失败，请稍后重试')
+      }
     } finally {
       setLoading(false)
     }
@@ -142,10 +152,83 @@ export default function ProductListPage() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <div className="flex gap-8">
-        {/* 左侧筛选 */}
+      {/* 移动端筛选按钮 */}
+      <motion.button
+        onClick={() => setShowMobileFilter(true)}
+        className="md:hidden flex items-center gap-2 mb-4 px-4 py-2 bg-white border border-slate-200 rounded-lg text-charcoal hover:bg-slate-50 transition-colors"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+      >
+        <Filter className="w-4 h-4" />
+        <span>筛选</span>
+        {categoryId && (
+          <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+            已选
+          </span>
+        )}
+      </motion.button>
+
+      {/* 移动端筛选弹窗 */}
+      <AnimatePresence>
+        {showMobileFilter && (
+          <>
+            <motion.div
+              className="fixed inset-0 bg-black/50 z-40 md:hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowMobileFilter(false)}
+            />
+            <motion.div
+              className="fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-white z-50 md:hidden overflow-y-auto"
+              initial={{ x: -320 }}
+              animate={{ x: 0 }}
+              exit={{ x: -320 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            >
+              <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+                <h3 className="font-semibold text-charcoal">筛选条件</h3>
+                <button
+                  onClick={() => setShowMobileFilter(false)}
+                  className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-4">
+                <ProductFilter
+                  categories={categories}
+                  brands={brands}
+                  priceRanges={priceRanges}
+                  selectedCategory={categoryId}
+                  sortBy={sortBy}
+                  sortOrder={sortOrder}
+                  onCategoryChange={(catId) => {
+                    handleCategoryChange(catId)
+                    setShowMobileFilter(false)
+                  }}
+                  onBrandChange={() => {}}
+                  onPriceRangeChange={() => {}}
+                  onSortChange={(field, order) => {
+                    handleSortChange(field, order)
+                    setShowMobileFilter(false)
+                  }}
+                  onReset={() => {
+                    handleReset()
+                    setShowMobileFilter(false)
+                  }}
+                />
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <div className="flex flex-col md:flex-row gap-4 md:gap-8">
+        {/* 左侧筛选 - 桌面端 */}
         <motion.div
-          className="w-64 flex-shrink-0"
+          className="hidden md:block w-64 flex-shrink-0"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2, duration: 0.4 }}
@@ -188,10 +271,27 @@ export default function ProductListPage() {
             </span>
           </motion.div>
 
-          {loading && products.length === 0 ? (
+          {loading && products.length === 0 && !error ? (
             <div className="flex items-center justify-center py-20">
               <Spinner size="lg" />
             </div>
+          ) : error ? (
+            <motion.div
+              className="flex flex-col items-center justify-center py-20"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4 }}
+            >
+              <p className="text-red-600 text-lg mb-4">{error}</p>
+              <motion.button
+                onClick={() => fetchProducts(1)}
+                className="px-6 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                重试
+              </motion.button>
+            </motion.div>
           ) : products.length === 0 ? (
             <motion.div
               className="flex flex-col items-center justify-center py-20"

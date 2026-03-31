@@ -116,7 +116,7 @@ export default function ForgotPasswordPage() {
     setIsLoading(true)
     setServerError('')
     try {
-      await authService.sendVerifyCode(formData.email)
+      await authService.sendVerifyCode(formData.email, 'reset')
       setDirection(1)
       setCurrentStep('verify')
       setCountdown(60)
@@ -131,7 +131,7 @@ export default function ForgotPasswordPage() {
     setIsLoading(true)
     setServerError('')
     try {
-      await authService.sendVerifyCode(formData.email)
+      await authService.sendVerifyCode(formData.email, 'reset')
       setCountdown(60)
     } catch (error: unknown) {
       setServerError(getApiErrorMessage(error, '验证码发送失败，请稍后重试'))

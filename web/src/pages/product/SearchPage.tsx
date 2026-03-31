@@ -46,6 +46,7 @@ export default function SearchPage() {
   const [results, setResults] = useState<Product[]>([])
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // 加载搜索历史
   useEffect(() => {
@@ -80,18 +81,23 @@ export default function SearchPage() {
   // 执行搜索
   const handleSearch = async (term?: string) => {
     const searchValue = term || searchTerm
-    if (!searchValue.trim()) return
+    if (!searchValue.trim()) {
+      setError('请输入搜索关键词')
+      return
+    }
 
     setLoading(true)
     setSearched(true)
+    setError(null)
     setSearchParams({ q: searchValue })
     saveToHistory(searchValue)
 
     try {
       const data = await productService.search(searchValue)
       setResults(data.products || [])
-    } catch (error) {
-      console.error('搜索失败:', error)
+    } catch (err) {
+      console.error('搜索失败:', err)
+      setError('搜索失败，请稍后重试')
       setResults([])
     } finally {
       setLoading(false)
@@ -125,13 +131,16 @@ export default function SearchPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.4 }}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-stretch gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone" />
             <motion.input
               type="text"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value)
+                if (error) setError(null)
+              }}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               placeholder="搜索商品、品牌、分类"
               className="w-full h-12 pl-10 pr-4 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -140,12 +149,15 @@ export default function SearchPage() {
             />
             {searchTerm && (
               <motion.button
-                onClick={() => setSearchTerm('')}
+                onClick={() => {
+                  setSearchTerm('')
+                  if (error) setError(null)
+                }}
                 className="absolute right-3 top-1/2 -translate-y-1/2"
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
-                whileHover={{ scale: 1.1 }}
+                whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.9 }}
               >
                 <X className="w-5 h-5 text-stone hover:text-charcoal" />
@@ -154,7 +166,7 @@ export default function SearchPage() {
           </div>
           <motion.button
             onClick={() => handleSearch()}
-            className="h-12 px-6 bg-blue-700 text-white rounded-xl hover:bg-blue-600 transition-colors"
+            className="h-12 px-6 bg-blue-700 text-white rounded-xl hover:bg-blue-600 transition-colors flex-shrink-0 flex items-center justify-center"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
@@ -162,6 +174,17 @@ export default function SearchPage() {
           </motion.button>
         </div>
       </motion.div>
+
+      {error && (
+        <motion.div
+          className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm"
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          {error}
+        </motion.div>
+      )}
 
       {/* 搜索结果 */}
       {searched ? (
@@ -250,8 +273,8 @@ export default function SearchPage() {
                     <motion.button
                       onClick={() => removeHistoryItem(item)}
                       className="hover:text-red-500"
-                      whileHover={{ scale: 1.2 }}
-                      whileTap={{ scale: 0.9 }}
+                     whileHover={{ scale: 1.06 }}
+                     whileTap={{ scale: 0.9 }}
                     >
                       <X className="w-3 h-3" />
                     </motion.button>

@@ -45,6 +45,8 @@ export function AdminProductsPage() {
     price: 0,
     category_id: 0,
     status: 'draft',
+    is_hot: false,
+    is_sale: false,
     images: [],
     skus: [],
   })
@@ -59,56 +61,6 @@ export function AdminProductsPage() {
       setTotal(res.total)
     } catch (error) {
       console.error('获取商品列表失败:', error)
-      // 模拟数据
-      setProducts([
-        {
-          id: 1,
-          name: '经典森林绿T恤',
-          description: '舒适透气的纯棉T恤',
-          detail: '这是一款非常舒适的纯棉T恤，适合日常穿着。',
-          price: 199,
-          original_price: 299,
-          main_image: 'https://picsum.photos/seed/product1/200/200',
-          images: '[]',
-          category_id: 1,
-          category_name: '服装',
-          brand_id: 1,
-          brand_name: 'NewShop',
-          status: 'active',
-          stock: 100,
-          sales: 256,
-          sales_count: 256,
-          sort: 0,
-          skus: [],
-          attrs: [],
-          created_at: '2024-01-15',
-          updated_at: '2024-01-20',
-        },
-        {
-          id: 2,
-          name: '复古铜色背包',
-          description: '高品质帆布背包',
-          detail: null,
-          price: 399,
-          original_price: 0,
-          main_image: 'https://picsum.photos/seed/product2/200/200',
-          images: null,
-          category_id: 2,
-          category_name: '箱包',
-          brand_id: null,
-          brand_name: null,
-          status: 'active',
-          stock: 50,
-          sales: 128,
-          sales_count: 128,
-          sort: 0,
-          skus: [],
-          attrs: [],
-          created_at: '2024-01-10',
-          updated_at: '2024-01-18',
-        },
-      ])
-      setTotal(2)
     } finally {
       setLoading(false)
     }
@@ -121,12 +73,6 @@ export function AdminProductsPage() {
       setCategories(res)
     } catch (error) {
       console.error('获取分类失败:', error)
-      // 模拟数据
-      setCategories([
-        { id: 1, name: '服装', parent_id: null, level: 1, icon: null, sort: 1, status: 'active', children: [], created_at: '2024-01-01', updated_at: '2024-01-01' },
-        { id: 2, name: '箱包', parent_id: null, level: 1, icon: null, sort: 2, status: 'active', children: [], created_at: '2024-01-01', updated_at: '2024-01-01' },
-        { id: 3, name: '配饰', parent_id: null, level: 1, icon: null, sort: 3, status: 'active', children: [], created_at: '2024-01-01', updated_at: '2024-01-01' },
-      ])
     }
   }, [])
 
@@ -156,6 +102,8 @@ export function AdminProductsPage() {
         original_price: product.original_price || undefined,
         category_id: product.category_id,
         status: product.status,
+        is_hot: product.is_hot,
+        is_sale: product.is_sale,
         images: [],
         skus: [],
       })
@@ -167,6 +115,8 @@ export function AdminProductsPage() {
         price: 0,
         category_id: 0,
         status: 'draft',
+        is_hot: false,
+        is_sale: false,
         images: [],
         skus: [],
       })
@@ -466,6 +416,28 @@ export function AdminProductsPage() {
                 placeholder="请输入原价（可选）"
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <label className="flex items-center gap-2 rounded-lg border border-cream-300 px-3 py-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.is_hot}
+                onChange={(e) => setFormData((prev) => ({ ...prev, is_hot: e.target.checked }))}
+                className="w-4 h-4 rounded border-slate-300 text-red-500 focus:ring-red-500"
+              />
+              <span className="text-sm text-charcoal">热卖</span>
+            </label>
+
+            <label className="flex items-center gap-2 rounded-lg border border-cream-300 px-3 py-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.is_sale}
+                onChange={(e) => setFormData((prev) => ({ ...prev, is_sale: e.target.checked }))}
+                className="w-4 h-4 rounded border-slate-300 text-amber-500 focus:ring-amber-500"
+              />
+              <span className="text-sm text-charcoal">特惠</span>
+            </label>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">

@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react'
-import { ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ZoomIn, X } from 'lucide-react'
+import { Swiper, SwiperSlide } from 'swiper/react'
+import { Pagination } from 'swiper/modules'
+// @ts-ignore - Swiper CSS imports
+import 'swiper/css'
+// @ts-ignore
+import 'swiper/css/pagination'
 import { cn } from '@/utils'
 
 interface ImageGalleryProps {
@@ -42,9 +48,41 @@ export function ImageGallery({
   }
 
   return (
-    <div className="flex gap-4">
-      {/* 缩略图列表 */}
-      <div className="flex flex-col gap-2">
+    <div className="flex flex-col md:flex-row gap-4">
+      {/* 移动端 Swiper 轮播图 */}
+      <div className="block md:hidden w-full relative">
+        <Swiper
+          modules={[Pagination]}
+          pagination={images.length > 1 ? { clickable: true } : false}
+          className="w-full aspect-square rounded-xl overflow-hidden bg-blue-50"
+          onSlideChange={(swiper) => {
+            setCurrentIndex(swiper.activeIndex)
+            onSelect?.(swiper.activeIndex)
+          }}
+          initialSlide={currentIndex}
+        >
+          {images.map((image, index) => (
+            <SwiperSlide key={index}>
+              <div 
+                className="w-full h-full cursor-zoom-in"
+                onClick={() => setShowZoom(true)}
+              >
+                <img
+                  src={image}
+                  alt={`商品图片 ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+        <div className="absolute top-2 right-2 p-2 bg-white/80 rounded-lg z-10 pointer-events-none">
+          <ZoomIn className="w-4 h-4 text-stone" />
+        </div>
+      </div>
+
+      {/* 桌面端缩略图列表 */}
+      <div className="hidden md:flex flex-col gap-2">
         {images.slice(0, 5).map((image, index) => (
           <button
             key={index}
@@ -73,8 +111,8 @@ export function ImageGallery({
         ))}
       </div>
 
-      {/* 主图区域 */}
-      <div className="flex-1 relative">
+      {/* 桌面端主图区域 */}
+      <div className="hidden md:block flex-1 relative">
         <div
           className="relative aspect-square bg-blue-50 rounded-xl overflow-hidden cursor-zoom-in"
           onClick={() => setShowZoom(true)}
@@ -176,8 +214,5 @@ export function ImageGallery({
     </div>
   )
 }
-
-// 导入缺失的图标
-import { X } from 'lucide-react'
 
 export default ImageGallery

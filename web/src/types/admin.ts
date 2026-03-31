@@ -1,5 +1,23 @@
 // 管理后台相关类型定义（与后端模型一致）
 
+// 管理员认证类型
+export interface AdminInfo {
+  id: number
+  username: string
+  nickname: string
+  role: 'admin' | 'super_admin' | 'operator'
+}
+
+export interface AdminLoginRequest {
+  username: string
+  password: string
+}
+
+export interface AdminLoginResponse {
+  access_token: string
+  admin: AdminInfo
+}
+
 // 订单状态类型
 export type OrderStatusType = 'pending' | 'paid' | 'shipped' | 'delivered' | 'completed' | 'cancelled' | 'refunded'
 
@@ -21,6 +39,8 @@ export interface AdminProduct {
   stock: number
   sales: number
   sales_count: number  // 别名
+  is_hot: boolean
+  is_sale: boolean
   sort: number
   skus?: AdminProductSku[]
   attrs?: AdminProductAttr[]
@@ -68,6 +88,8 @@ export interface AdminProductFormData {
   brand_id?: number
   status?: 'draft' | 'active' | 'inactive'
   stock?: number
+  is_hot: boolean
+  is_sale: boolean
   sort?: number
   images: string[]
   skus: {
@@ -263,13 +285,34 @@ export interface AdminPaginatedResponse<T> {
 export interface DashboardStats {
   today_orders: number
   today_sales: number
-  new_users: number
+  today_users: number
   pending_orders: number
-  product_count: number
-  user_count: number
-  recent_orders: AdminOrder[]
-  sales_chart: {
+  total_products: number
+  total_users: number
+  recent_orders?: AdminOrder[]
+  sales_chart?: {
     date: string
     amount: number
   }[]
+}
+
+export interface AdminConfigItem {
+  id: number
+  key: string
+  value: string
+  type: 'string' | 'number' | 'boolean' | 'json' | 'array'
+  category: string
+  description: string
+  is_public: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminConfigPayload {
+  key: string
+  value: string
+  type: AdminConfigItem['type']
+  category: string
+  description: string
+  is_public: boolean
 }

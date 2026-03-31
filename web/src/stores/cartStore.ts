@@ -22,6 +22,17 @@ interface CartState {
   toggleSelect: (itemId: number, selected: boolean) => Promise<void>;
   selectAll: (selected: boolean) => Promise<void>;
   getSelectedItems: () => CartItem[];
+  resetCart: () => void;
+}
+
+const emptyCartState = {
+  items: [],
+  totalCount: 0,
+  selectedCount: 0,
+  totalPrice: 0,
+  selectedPrice: 0,
+  loading: false,
+  error: null,
 }
 
 // 辅助函数：更新状态
@@ -35,21 +46,19 @@ function updateStateFromCart(set: (partial: Partial<CartState>) => void, cart: C
   });
 }
 
+async function syncCart(set: (partial: Partial<CartState>) => void) {
+  const cart = await cartService.getCart()
+  updateStateFromCart(set, cart)
+}
+
 export const useCartStore = create<CartState>((set, get) => ({
-  items: [],
-  totalCount: 0,
-  selectedCount: 0,
-  totalPrice: 0,
-  selectedPrice: 0,
-  loading: false,
-  error: null,
+  ...emptyCartState,
 
   fetchCart: async () => {
     set({ loading: true, error: null });
     try {
-      const cart = await cartService.getCart();
+      await syncCart(set);
       set({ loading: false });
-      updateStateFromCart(set, cart);
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : '获取购物车失败',
@@ -66,9 +75,8 @@ export const useCartStore = create<CartState>((set, get) => ({
         sku_id: skuId ?? undefined,
         quantity,
       });
-      const cart = await cartService.getCart();
+      await syncCart(set);
       set({ loading: false });
-      updateStateFromCart(set, cart);
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : '添加购物车失败',
@@ -79,59 +87,36 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   updateQuantity: async (itemId, quantity) => {
-    const prevItems = get().items;
-    set((state) => ({
-      items: state.items.map((item) =>
-        item.id === itemId ? { ...item, quantity } : item
-      ),
-    }));
-
     try {
       await cartService.updateCartItem(itemId, { quantity });
-      const cart = await cartService.getCart();
-      updateStateFromCart(set, cart);
+      await syncCart(set);
       set({ error: null });
     } catch (error) {
       set({
-        items: prevItems,
         error: error instanceof Error ? error.message : '更新失败',
       });
     }
   },
 
   removeItem: async (itemId) => {
-    const prevItems = get().items;
-    set((state) => ({
-      items: state.items.filter((item) => item.id !== itemId),
-    }));
-
     try {
       await cartService.removeFromCart(itemId);
-      const cart = await cartService.getCart();
-      updateStateFromCart(set, cart);
+      await syncCart(set);
       set({ error: null });
     } catch (error) {
       set({
-        items: prevItems,
         error: error instanceof Error ? error.message : '删除失败',
       });
     }
   },
 
   removeItems: async (itemIds) => {
-    const prevItems = get().items;
-    set((state) => ({
-      items: state.items.filter((item) => !itemIds.includes(item.id)),
-    }));
-
     try {
       await cartService.batchRemove(itemIds);
-      const cart = await cartService.getCart();
-      updateStateFromCart(set, cart);
+      await syncCart(set);
       set({ error: null });
     } catch (error) {
       set({
-        items: prevItems,
         error: error instanceof Error ? error.message : '删除失败',
       });
     }
@@ -141,14 +126,7 @@ export const useCartStore = create<CartState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       await cartService.clearCart();
-      set({
-        items: [],
-        totalCount: 0,
-        selectedCount: 0,
-        totalPrice: 0,
-        selectedPrice: 0,
-        loading: false,
-      });
+      set(emptyCartState);
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : '清空购物车失败',
@@ -158,46 +136,24 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   toggleSelect: async (itemId, selected) => {
-    const prevItems = get().items;
-    set((state) => ({
-      items: state.items.map((item) =>
-        item.id === itemId ? { ...item, selected } : item
-      ),
-    }));
-
     try {
       await cartService.selectCartItem(itemId, selected);
-      const cart = await cartService.getCart();
-      set({
-        selectedCount: cart.selected_count,
-        selectedPrice: cart.selected_price,
-        error: null,
-      });
+      await syncCart(set);
+      set({ error: null });
     } catch (error) {
       set({
-        items: prevItems,
         error: error instanceof Error ? error.message : '操作失败',
       });
     }
   },
 
   selectAll: async (selected) => {
-    const prevItems = get().items;
-    set((state) => ({
-      items: state.items.map((item) => ({ ...item, selected })),
-    }));
-
     try {
       await cartService.selectAllCart(selected);
-      const cart = await cartService.getCart();
-      set({
-        selectedCount: cart.selected_count,
-        selectedPrice: cart.selected_price,
-        error: null,
-      });
+      await syncCart(set);
+      set({ error: null });
     } catch (error) {
       set({
-        items: prevItems,
         error: error instanceof Error ? error.message : '操作失败',
       });
     }
@@ -205,5 +161,9 @@ export const useCartStore = create<CartState>((set, get) => ({
 
   getSelectedItems: () => {
     return get().items.filter((item) => item.selected);
+  },
+
+  resetCart: () => {
+    set(emptyCartState)
   },
 }));

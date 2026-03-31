@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useLocation, useNavigate, Link } from 'react-router-dom'
 import { Heart, Share2, ShoppingCart, ChevronLeft } from 'lucide-react'
 import { motion, type Variants } from 'motion/react'
 import { productService } from '@/services'
@@ -82,8 +82,9 @@ function generateSpecsFromSkus(skus: ProductSku[]): ProductSpec[] {
 }
 
 export default function ProductDetailPage() {
-  const { id } = useParams<{ id: string }>()
+  const location = useLocation()
   const navigate = useNavigate()
+  const id = location.pathname.split('/').pop()
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -96,7 +97,11 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     const fetchProduct = async () => {
-      if (!id) return
+      if (!id) {
+        setError('商品ID无效')
+        setLoading(false)
+        return
+      }
       setLoading(true)
       setError(null)
       try {
@@ -265,7 +270,7 @@ export default function ProductDetailPage() {
           <motion.div className="flex gap-4 pt-6" variants={itemVariants}>
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1">
               <Button
-                variant="outline"
+                variant="outline-thick"
                 onClick={toggleFavorite}
                 className="w-full flex items-center justify-center gap-2"
               >
@@ -280,7 +285,7 @@ export default function ProductDetailPage() {
             </motion.div>
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1">
               <Button
-                variant="outline"
+                variant="outline-thick"
                 className="w-full flex items-center justify-center gap-2"
               >
                 <Share2 className="w-5 h-5" />
@@ -289,7 +294,7 @@ export default function ProductDetailPage() {
             </motion.div>
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex-1">
               <Button
-                variant="outline"
+                variant="outline-thick"
                 onClick={() => {}}
                 className="w-full flex items-center justify-center gap-2"
               >

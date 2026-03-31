@@ -1,9 +1,22 @@
-import { Suspense, lazy } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Suspense, lazy, useEffect } from 'react'
+import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'motion/react'
 import { PageLoader } from '@/components/ui/PageLoader'
 import { PageSkeleton } from '@/components/ui/Skeleton'
-import { useAuthStore } from '@/stores'
+import {
+  AdminCategoriesPage,
+  AdminCouponsPage,
+  AdminDashboard,
+  AdminLayout,
+  AdminOrdersPage,
+  AdminProductsPage,
+  AdminSeoPage,
+  AdminUsersPage,
+} from '@/pages/admin'
+import AdminProtectedRoute from '@/components/admin/AdminProtectedRoute'
+import { useAuthStore, useCartStore } from '@/stores'
+
+const AdminLoginPage = lazy(() => import('./pages/admin/AdminLoginPage'))
 
 // 懒加载页面组件
 const HomePage = lazy(() => import('./pages/home/HomePage'))
@@ -27,26 +40,27 @@ const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'))
 const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'))
 const UserProfilePage = lazy(() => import('./pages/user/UserProfilePage'))
 const UserAddressesPage = lazy(() => import('./pages/user/UserAddressesPage'))
+const ContentPage = lazy(() => import('./pages/content/ContentPage'))
 
 // 页面切换动画配置
 const pageVariants = {
   initial: {
     opacity: 0,
-    y: 8,
+    y: 4,
   },
   enter: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.3,
+      duration: 0.24,
       ease: [0.25, 0.1, 0.25, 1] as const,
     },
   },
   exit: {
     opacity: 0,
-    y: -8,
+    y: -4,
     transition: {
-      duration: 0.2,
+      duration: 0.16,
       ease: [0.25, 0.1, 0.25, 1] as const,
     },
   },
@@ -54,13 +68,47 @@ const pageVariants = {
 
 // 导航链接动画
 const navLinkVariants = {
-  hover: { scale: 1.02, y: -1 },
+  hover: { scale: 1.01, y: -1 },
   tap: { scale: 0.98 },
 }
 
 function App() {
   const location = useLocation()
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const cartTotalCount = useCartStore((state) => state.totalCount)
+  const fetchCart = useCartStore((state) => state.fetchCart)
+  const path = location.pathname
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      return
+    }
+
+    void fetchCart()
+  }, [fetchCart, isAuthenticated])
+
+  const renderAdminPage = () => {
+    if (path === '/admin') return <AdminDashboard />
+    if (path === '/admin/products') return <AdminProductsPage />
+    if (path === '/admin/orders') return <AdminOrdersPage />
+    if (path === '/admin/users') return <AdminUsersPage />
+    if (path === '/admin/categories') return <AdminCategoriesPage />
+    if (path === '/admin/coupons') return <AdminCouponsPage />
+    if (path === '/admin/seo') return <AdminSeoPage />
+    return <AdminDashboard />
+  }
+
+  if (path === '/admin/login') {
+    return <AdminLoginPage />
+  }
+
+  if (path === '/admin' || (path.startsWith('/admin/') && path !== '/admin/login')) {
+    return (
+      <AdminProtectedRoute>
+        <AdminLayout>{renderAdminPage()}</AdminLayout>
+      </AdminProtectedRoute>
+    )
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -97,30 +145,31 @@ function App() {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <motion.button
-                className="p-2 text-charcoal hover:text-blue-600 transition-colors"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+              <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
+                <Link
+                  to="/search"
+                  className="inline-flex items-center justify-center p-2 text-charcoal hover:text-blue-600 transition-colors"
                 >
-                  <circle cx="11" cy="11" r="8" />
-                  <path d="m21 21-4.3-4.3" />
-                </svg>
-              </motion.button>
-              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                  </svg>
+                </Link>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
                 <Link
                   to="/cart"
-                  className="p-2 text-charcoal hover:text-blue-600 transition-colors relative inline-block"
+                  className="inline-flex items-center justify-center p-2 text-charcoal hover:text-blue-600 transition-colors relative"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -137,15 +186,17 @@ function App() {
                     <circle cx="19" cy="21" r="1" />
                     <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
                   </svg>
-                  <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">
-                    0
-                  </span>
+                  {cartTotalCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-500 px-1 text-xs text-white">
+                      {cartTotalCount > 99 ? '99+' : cartTotalCount}
+                    </span>
+                  )}
                 </Link>
               </motion.div>
-              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+              <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
                 <Link
                   to={isAuthenticated ? '/user/profile' : '/login'}
-                  className="p-2 text-charcoal hover:text-blue-600 transition-colors inline-block"
+                  className="inline-flex items-center justify-center p-2 text-charcoal hover:text-blue-600 transition-colors"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -181,32 +232,34 @@ function App() {
           >
             <Suspense fallback={<PageSkeleton />}>
               {(() => {
-                // 路由匹配
-                const path = location.pathname
-
-                if (path === '/') return <HomePage />
-                if (path === '/products') return <ProductListPage />
-                if (path.startsWith('/products/')) return <ProductDetailPage />
-                if (path === '/categories') return <CategoriesPage />
-                if (path === '/new') return <NewProductsPage />
-                if (path === '/sale') return <SalePage />
-                if (path === '/search') return <SearchPage />
-                if (path === '/brands') return <BrandsPage />
-                if (path === '/preorder') return <PreorderPage />
-                if (path === '/coupons') return <CouponsPage />
-                if (path === '/points') return <PointsPage />
-                if (path === '/member') return <MemberPage />
-                if (path === '/cart') return <CartPage />
-                if (path === '/checkout') return <CheckoutPage />
-                if (path === '/orders') return <OrderListPage />
-                if (path.startsWith('/orders/')) return <OrderDetailPage />
-                if (path === '/login') return <LoginPage />
-                if (path === '/register') return <RegisterPage />
-                if (path === '/forgot-password') return <ForgotPasswordPage />
-                if (path === '/user/profile') return <UserProfilePage />
-                if (path === '/user/addresses') return <UserAddressesPage />
-
-                return <HomePage />
+                return (
+                  <Routes location={location}>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/products" element={<ProductListPage />} />
+                    <Route path="/products/:id" element={<ProductDetailPage />} />
+                    <Route path="/categories" element={<CategoriesPage />} />
+                    <Route path="/new" element={<NewProductsPage />} />
+                    <Route path="/sale" element={<SalePage />} />
+                    <Route path="/search" element={<SearchPage />} />
+                    <Route path="/brands" element={<BrandsPage />} />
+                    <Route path="/preorder" element={<PreorderPage />} />
+                    <Route path="/coupons" element={<CouponsPage />} />
+                    <Route path="/points" element={<PointsPage />} />
+                    <Route path="/member" element={<MemberPage />} />
+                    <Route path="/cart" element={<CartPage />} />
+                    <Route path="/checkout" element={<CheckoutPage />} />
+                    <Route path="/orders" element={<OrderListPage />} />
+                    <Route path="/orders/:id" element={<OrderDetailPage />} />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/register" element={<RegisterPage />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/user/profile" element={<UserProfilePage />} />
+                    <Route path="/user/addresses" element={<UserAddressesPage />} />
+                    <Route path="/address/select" element={<UserAddressesPage />} />
+                    <Route path="/page/:slug" element={<ContentPage />} />
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                )
               })()}
             </Suspense>
           </motion.div>
@@ -234,17 +287,17 @@ function App() {
               <h4 className="font-semibold mb-4">购物指南</h4>
                <ul className="space-y-2 text-sm text-slate-300 opacity-80">
                 <li>
-                  <Link to="#" className="hover:opacity-100 transition-opacity">
+                  <Link to="/page/guide" className="hover:opacity-100 transition-opacity">
                     购物流程
                   </Link>
                 </li>
                 <li>
-                  <Link to="#" className="hover:opacity-100 transition-opacity">
+                  <Link to="/page/shipping" className="hover:opacity-100 transition-opacity">
                     配送说明
                   </Link>
                 </li>
                 <li>
-                  <Link to="#" className="hover:opacity-100 transition-opacity">
+                  <Link to="/page/returns" className="hover:opacity-100 transition-opacity">
                     退换货政策
                   </Link>
                 </li>
@@ -259,17 +312,17 @@ function App() {
               <h4 className="font-semibold mb-4">关于我们</h4>
                <ul className="space-y-2 text-sm text-slate-300 opacity-80">
                 <li>
-                  <Link to="#" className="hover:opacity-100 transition-opacity">
+                  <Link to="/page/story" className="hover:opacity-100 transition-opacity">
                     品牌故事
                   </Link>
                 </li>
                 <li>
-                  <Link to="#" className="hover:opacity-100 transition-opacity">
+                  <Link to="/page/contact" className="hover:opacity-100 transition-opacity">
                     联系我们
                   </Link>
                 </li>
                 <li>
-                  <Link to="#" className="hover:opacity-100 transition-opacity">
+                  <Link to="/page/join" className="hover:opacity-100 transition-opacity">
                     加入我们
                   </Link>
                 </li>
@@ -284,17 +337,17 @@ function App() {
               <h4 className="font-semibold mb-4">客户服务</h4>
                <ul className="space-y-2 text-sm text-slate-300 opacity-80">
                 <li>
-                  <Link to="#" className="hover:opacity-100 transition-opacity">
+                  <Link to="/page/service" className="hover:opacity-100 transition-opacity">
                     在线客服
                   </Link>
                 </li>
                 <li>
-                  <Link to="#" className="hover:opacity-100 transition-opacity">
+                  <Link to="/page/help" className="hover:opacity-100 transition-opacity">
                     帮助中心
                   </Link>
                 </li>
                 <li>
-                  <Link to="#" className="hover:opacity-100 transition-opacity">
+                  <Link to="/page/feedback" className="hover:opacity-100 transition-opacity">
                     意见反馈
                   </Link>
                 </li>

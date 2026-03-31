@@ -112,7 +112,7 @@ export default function CategoriesPage() {
             <motion.div
               key={category.id}
               variants={itemVariants}
-              whileHover={{ y: -5, scale: 1.02 }}
+              whileHover={{ y: -2, scale: 1.01 }}
               transition={{ duration: 0.3 }}
             >
               <Link
@@ -125,14 +125,14 @@ export default function CategoriesPage() {
                       src={category.icon}
                       alt={category.name}
                       className="w-24 h-24 object-contain"
-                      whileHover={{ scale: 1.1 }}
-                      transition={{ duration: 0.3 }}
+                       whileHover={{ scale: 1.04 }}
+                       transition={{ duration: 0.3 }}
                     />
                   ) : (
                     <motion.div
                       className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center"
-                      whileHover={{ scale: 1.1 }}
-                      transition={{ duration: 0.3 }}
+                       whileHover={{ scale: 1.04 }}
+                       transition={{ duration: 0.3 }}
                     >
                       <span className="text-3xl font-semibold text-blue-600">
                         {category.name.charAt(0)}

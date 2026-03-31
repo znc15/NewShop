@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence, type Variants } from 'motion/react';
@@ -49,7 +49,7 @@ function CartItemRow({
 }: {
   item: CartItem;
   onQuantityChange: (quantity: number) => void;
-  onRemove: () => void;
+  onRemove: () => void | Promise<void>;
   onSelect: (selected: boolean) => void;
 }) {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -59,7 +59,7 @@ function CartItemRow({
     if (isDeleting) return;
     setIsDeleting(true);
     try {
-      await onRemove();
+      await Promise.resolve(onRemove());
     } finally {
       setIsDeleting(false);
     }
@@ -72,7 +72,7 @@ function CartItemRow({
       className="flex items-center gap-4 p-4 bg-white rounded-lg border border-gray-100 hover:border-gray-200 transition-colors"
       variants={itemVariants}
       layout
-      whileHover={{ scale: 1.01 }}
+      whileHover={{ scale: 1.005 }}
       transition={{ duration: 0.2 }}
     >
       {/* 选择框 */}
@@ -91,7 +91,7 @@ function CartItemRow({
           src={item.sku?.image || item.product.main_image}
           alt={item.product.name}
           className="w-20 h-20 object-cover rounded-lg"
-          whileHover={{ scale: 1.05 }}
+          whileHover={{ scale: 1.02 }}
           transition={{ duration: 0.2 }}
         />
       </Link>
@@ -128,7 +128,7 @@ function CartItemRow({
           onClick={() => onQuantityChange(Math.max(1, item.quantity - 1))}
           disabled={item.quantity <= 1}
           className="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          whileHover={{ scale: 1.1 }}
+          whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.9 }}
         >
           <Minus className="w-4 h-4" />
@@ -148,7 +148,7 @@ function CartItemRow({
           onClick={() => onQuantityChange(item.quantity + 1)}
           disabled={item.quantity >= (item.sku?.stock ?? item.product.stock)}
           className="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          whileHover={{ scale: 1.1 }}
+          whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.9 }}
         >
           <Plus className="w-4 h-4" />
@@ -168,7 +168,7 @@ function CartItemRow({
         disabled={isDeleting}
         className="p-2 text-gray-400 hover:text-red-500 transition-colors"
         title="删除"
-        whileHover={{ scale: 1.1 }}
+        whileHover={{ scale: 1.04 }}
         whileTap={{ scale: 0.9 }}
       >
         <Trash2 className="w-5 h-5" />
@@ -187,14 +187,14 @@ function EmptyCart() {
       transition={{ duration: 0.5 }}
     >
       <motion.div
-        animate={{ y: [0, -10, 0] }}
+        animate={{ y: [0, -4, 0] }}
         transition={{ duration: 2, repeat: Infinity }}
       >
         <ShoppingBag className="w-24 h-24 text-gray-200 mb-6" />
       </motion.div>
       <h2 className="text-xl font-medium text-gray-900 mb-2">购物车是空的</h2>
       <p className="text-gray-500 mb-6">去挑选心仪的商品吧</p>
-      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
         <Link
           to="/"
           className="px-8 py-3 bg-primary text-white rounded-full hover:bg-primary/90 transition-colors"
@@ -252,15 +252,14 @@ export default function CartPage() {
     getSelectedItems,
   } = useCartStore();
 
-  const [isAllSelected, setIsAllSelected] = useState(false);
-
   useEffect(() => {
-    fetchCart();
+    void fetchCart();
   }, [fetchCart]);
 
-  useEffect(() => {
-    setIsAllSelected(items.length > 0 && items.every((item) => item.selected));
-  }, [items]);
+  const isAllSelected = useMemo(
+    () => items.length > 0 && items.every((item) => item.selected),
+    [items]
+  );
 
   const handleSelectAll = (selected: boolean) => {
     selectAll(selected);
@@ -396,7 +395,7 @@ export default function CartPage() {
                   onClick={handleDeleteSelected}
                   disabled={selectedCount === 0}
                   className="text-gray-500 hover:text-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   删除选中 ({selectedCount})
@@ -416,7 +415,7 @@ export default function CartPage() {
                   onClick={handleCheckout}
                   disabled={selectedCount === 0}
                   className="flex items-center gap-2 px-8 py-3 bg-primary text-white rounded-full hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   去结算

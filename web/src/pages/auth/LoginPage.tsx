@@ -1,5 +1,5 @@
-import { useState, type SyntheticEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState, type SyntheticEvent } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react'
 import { motion, type Variants } from 'motion/react'
 import { Button } from '@/components/ui/Button'
@@ -39,6 +39,7 @@ const slideVariants: Variants = {
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { setUser, setToken } = useAuthStore()
 
   const [formData, setFormData] = useState({
@@ -95,6 +96,57 @@ export default function LoginPage() {
     }
     if (serverError) setServerError('')
   }
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search)
+    const accessToken = searchParams.get('access_token')
+    const oauthError = searchParams.get('oauth_error')
+
+    if (oauthError) {
+      setServerError(oauthError)
+      navigate('/login', { replace: true })
+      return
+    }
+
+    if (!accessToken) {
+      return
+    }
+
+    let cancelled = false
+
+    const completeGitHubLogin = async () => {
+      setIsLoading(true)
+      setServerError('')
+
+      try {
+        setToken(accessToken)
+        const currentUser = await authService.getCurrentUser()
+        if (cancelled) {
+          return
+        }
+        setUser(currentUser)
+        navigate('/', { replace: true })
+      } catch {
+        if (cancelled) {
+          return
+        }
+        setToken(null)
+        setUser(null)
+        setServerError('GitHub 登录失败，请稍后重试')
+        navigate('/login', { replace: true })
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    void completeGitHubLogin()
+
+    return () => {
+      cancelled = true
+    }
+  }, [location.search, navigate, setToken, setUser])
 
   return (
     <div className="min-h-[calc(100vh-64px)] flex">
@@ -194,7 +246,7 @@ export default function LoginPage() {
 
           {/* 表单卡片 */}
           <motion.div
-            className="bg-white rounded-2xl shadow-lg p-8"
+            className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
@@ -331,28 +383,28 @@ export default function LoginPage() {
               </div>
             </motion.div>
 
-            {/* 社交登录按钮 */}
-            <motion.div
-              className="space-y-3"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 }}
-            >
-              <motion.button
-                type="button"
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-slate-200 rounded-lg text-charcoal hover:bg-slate-50 transition-colors"
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-              >
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path
-                    fill="currentColor"
-                    d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0012 2z"
-                  />
-                </svg>
-                <span>使用 GitHub 登录</span>
-              </motion.button>
-            </motion.div>
+{/* 社交登录按钮 */}
+             <motion.div
+               className="space-y-3"
+               initial={{ opacity: 0, y: 20 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ delay: 0.8 }}
+             >
+                <motion.a
+                  href="/api/v1/auth/github"
+                  className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-slate-300 rounded-lg text-charcoal hover:bg-slate-50 hover:border-slate-400 transition-colors"
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                >
+                 <svg className="w-5 h-5" viewBox="0 0 24 24">
+                   <path
+                     fill="currentColor"
+                     d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0012 2z"
+                   />
+                 </svg>
+                  <span>使用 GitHub 登录</span>
+                </motion.a>
+              </motion.div>
           </motion.div>
 
           {/* 底部链接 */}

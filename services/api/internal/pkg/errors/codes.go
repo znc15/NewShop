@@ -33,7 +33,11 @@ var (
 	ErrOrderAlreadyPaid   = ErrorCode{40003, "订单已支付"}
 
 	// 支付错误 5xxxx
-	ErrPaymentNotFound    = ErrorCode{50001, "支付记录不存在"}
-	ErrPaymentAlreadyPaid = ErrorCode{50002, "支付已完成"}
+	ErrPaymentNotFound     = ErrorCode{50001, "支付记录不存在"}
+	ErrPaymentAlreadyPaid  = ErrorCode{50002, "支付已完成"}
 	ErrPaymentRefundFailed = ErrorCode{50003, "退款失败"}
+
+	ErrPageNotFound      = ErrorCode{60001, "页面不存在"}
+	ErrPageSlugExists    = ErrorCode{60002, "页面标识已存在"}
+	ErrPageStatusInvalid = ErrorCode{60003, "页面状态无效"}
 )

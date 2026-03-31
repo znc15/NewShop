@@ -1,13 +1,30 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { User, Mail, Phone, Camera, Crown, Star, ShoppingBag, ChevronRight, Lock, Edit2 } from 'lucide-react'
-import { motion, type Variants } from 'motion/react'
+import {
+  User,
+  Mail,
+  Phone,
+  Crown,
+  Star,
+  ShoppingBag,
+  ChevronRight,
+  Lock,
+  Edit2,
+  LogOut,
+  ShieldCheck,
+  Send,
+  type LucideIcon,
+} from 'lucide-react'
+import { motion, AnimatePresence, type Variants } from 'motion/react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import { authService } from '@/services/auth'
 import { userService } from '@/services/user'
+import { useAuthStore } from '@/stores/auth'
+import { useCartStore } from '@/stores'
 import { MemberLevels, type UserProfile } from '@/types/user'
-import { cn } from '@/utils'
+import { cn, getApiErrorMessage } from '@/utils'
 
 type UserProfileResponse = Partial<UserProfile> & {
   member_level?: number
@@ -24,6 +41,8 @@ type UserProfileResponse = Partial<UserProfile> & {
   updated_at?: string
   status?: string
 }
+
+type FeedbackTone = 'success' | 'error' | 'info'
 
 function getDefaultUsername(data: UserProfileResponse): string {
   if (data.username?.trim()) return data.username.trim()
@@ -65,99 +84,148 @@ function formatRegisterDate(value: string): string {
   return Number.isNaN(date.getTime()) ? '-' : date.toLocaleDateString('zh-CN')
 }
 
-// 动画变体配置
+function getMemberProgress(level: number, points: number) {
+  const currentIndex = MemberLevels.findIndex((item) => item.level === level)
+  if (currentIndex === -1 || currentIndex === MemberLevels.length - 1) {
+    return null
+  }
+
+  const nextLevel = MemberLevels[currentIndex + 1]
+  return Math.max(nextLevel.min_points - points, 0)
+}
+
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1,
+      staggerChildren: 0.08,
     },
   },
 }
 
 const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 12 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.4 },
+    transition: { duration: 0.28 },
   },
 }
 
-// 会员等级徽章组件
-function MemberBadge({ level }: { level: number }) {
-  const memberInfo = MemberLevels.find(m => m.level === level) || MemberLevels[0]
+function MemberBadge({ level, points }: { level: number; points: number }) {
+  const memberInfo = MemberLevels.find((member) => member.level === level) || MemberLevels[0]
+  const remainingPoints = getMemberProgress(level, points)
 
-  const getLevelColor = (lvl: number) => {
-    switch (lvl) {
+  const getLevelColor = (memberLevel: number) => {
+    switch (memberLevel) {
       case 5: return 'from-purple-500 to-pink-500'
       case 4: return 'from-yellow-500 to-orange-500'
-      case 3: return 'from-gray-300 to-gray-400'
+      case 3: return 'from-slate-400 to-slate-500'
       case 2: return 'from-orange-400 to-orange-600'
-      default: return 'from-gray-400 to-gray-500'
+      default: return 'from-slate-500 to-slate-600'
     }
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-col gap-2">
       <div className={cn(
-        'flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r text-white text-sm font-medium',
+        'inline-flex w-fit items-center gap-1.5 rounded-full bg-gradient-to-r px-3 py-1 text-sm font-medium text-white',
         getLevelColor(level)
       )}>
-        <Crown className="w-4 h-4" />
+        <Crown className="h-4 w-4" />
         <span>{memberInfo.name}</span>
       </div>
-      {level < 5 && (
-        <span className="text-xs text-stone">
-          距下一等级还需 {MemberLevels[level].min_points - (level > 1 ? MemberLevels[level - 1].max_points : 0)} 积分
-        </span>
+      {remainingPoints !== null && (
+        <p className="text-xs text-slate-500">
+          再获得 {remainingPoints} 积分即可升级
+        </p>
       )}
     </div>
   )
 }
 
-// 统计卡片组件
 function StatCard({ icon: Icon, label, value, suffix }: {
-  icon: React.ElementType
+  icon: LucideIcon
   label: string
   value: number | string
   suffix?: string
 }) {
   return (
-    <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl">
-      <div className="w-10 h-10 flex items-center justify-center bg-blue-100 rounded-lg">
-        <Icon className="w-5 h-5 text-blue-600" />
+    <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+        <Icon className="h-5 w-5" />
       </div>
-      <div>
-        <p className="text-sm text-stone">{label}</p>
-        <p className="text-lg font-semibold text-charcoal">
-          {value}{suffix && <span className="text-sm font-normal text-stone ml-1">{suffix}</span>}
-        </p>
-      </div>
+      <p className="text-sm text-slate-500">{label}</p>
+      <p className="mt-1 text-lg font-semibold text-charcoal">
+        {value}
+        {suffix && <span className="ml-1 text-sm font-normal text-slate-500">{suffix}</span>}
+      </p>
+    </div>
+  )
+}
+
+function FeedbackBanner({ tone, text }: { tone: FeedbackTone; text: string }) {
+  const toneClassName = {
+    success: 'border-green-200 bg-green-50 text-green-700',
+    error: 'border-red-200 bg-red-50 text-red-700',
+    info: 'border-blue-200 bg-blue-50 text-blue-700',
+  }[tone]
+
+  return (
+    <div className={cn('rounded-xl border px-4 py-3 text-sm', toneClassName)}>
+      {text}
     </div>
   )
 }
 
 export default function UserProfilePage() {
   const navigate = useNavigate()
+  const clearAuth = useAuthStore((state) => state.logout)
+  const resetCart = useCartStore((state) => state.resetCart)
+
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [passwordExpanded, setPasswordExpanded] = useState(false)
+  const [passwordSubmitting, setPasswordSubmitting] = useState(false)
+  const [sendingCode, setSendingCode] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false)
+  const [passwordCountdown, setPasswordCountdown] = useState(0)
+  const [profileError, setProfileError] = useState('')
+  const [passwordFeedback, setPasswordFeedback] = useState<{ tone: FeedbackTone; text: string } | null>(null)
   const [formData, setFormData] = useState({
     username: '',
     nickname: '',
     phone: '',
   })
+  const [passwordForm, setPasswordForm] = useState({
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+    code: '',
+  })
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    fetchProfile()
+    void fetchProfile()
   }, [])
+
+  useEffect(() => {
+    if (passwordCountdown <= 0) return
+
+    const timer = window.setTimeout(() => {
+      setPasswordCountdown((current) => current - 1)
+    }, 1000)
+
+    return () => window.clearTimeout(timer)
+  }, [passwordCountdown])
 
   const fetchProfile = async () => {
     try {
+      setProfileError('')
       const data = normalizeUserProfile(await userService.getProfile() as UserProfileResponse)
       setProfile(data)
       setFormData({
@@ -167,26 +235,56 @@ export default function UserProfilePage() {
       })
     } catch (error) {
       console.error('获取用户资料失败:', error)
+      setProfileError(getApiErrorMessage(error, '获取用户资料失败，请稍后重试'))
     } finally {
       setLoading(false)
     }
   }
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {}
+    const nextErrors: Record<string, string> = {}
 
     if (!formData.username.trim()) {
-      newErrors.username = '请输入用户名'
+      nextErrors.username = '请输入用户名'
     } else if (formData.username.length < 2 || formData.username.length > 20) {
-      newErrors.username = '用户名需要 2-20 个字符'
+      nextErrors.username = '用户名需要 2-20 个字符'
     }
 
     if (formData.phone && !/^1[3-9]\d{9}$/.test(formData.phone)) {
-      newErrors.phone = '请输入有效的手机号'
+      nextErrors.phone = '请输入有效的手机号'
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    setErrors(nextErrors)
+    return Object.keys(nextErrors).length === 0
+  }
+
+  const validatePasswordForm = () => {
+    const nextErrors: Record<string, string> = {}
+
+    if (!passwordForm.oldPassword) {
+      nextErrors.oldPassword = '请输入当前密码'
+    }
+
+    if (!passwordForm.newPassword) {
+      nextErrors.newPassword = '请输入新密码'
+    } else if (passwordForm.newPassword.length < 6 || passwordForm.newPassword.length > 20) {
+      nextErrors.newPassword = '新密码长度需在 6-20 位之间'
+    }
+
+    if (!passwordForm.confirmPassword) {
+      nextErrors.confirmPassword = '请再次输入新密码'
+    } else if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      nextErrors.confirmPassword = '两次输入的新密码不一致'
+    }
+
+    if (!passwordForm.code.trim()) {
+      nextErrors.code = '请输入邮箱验证码'
+    } else if (passwordForm.code.trim().length !== 6) {
+      nextErrors.code = '验证码为 6 位数字'
+    }
+
+    setPasswordErrors(nextErrors)
+    return Object.keys(nextErrors).length === 0
   }
 
   const handleSave = async () => {
@@ -201,8 +299,10 @@ export default function UserProfilePage() {
       }) as UserProfileResponse)
       setProfile(updated)
       setEditing(false)
+      setProfileError('')
     } catch (error) {
       console.error('更新资料失败:', error)
+      setProfileError(getApiErrorMessage(error, '更新资料失败，请稍后重试'))
     } finally {
       setSaving(false)
     }
@@ -216,35 +316,111 @@ export default function UserProfilePage() {
         phone: profile.phone ?? '',
       })
     }
+
     setErrors({})
     setEditing(false)
+  }
+
+  const handlePasswordInputChange = (field: keyof typeof passwordForm, value: string) => {
+    setPasswordForm((current) => ({ ...current, [field]: value }))
+    if (passwordErrors[field]) {
+      setPasswordErrors((current) => ({ ...current, [field]: '' }))
+    }
+    if (passwordFeedback) {
+      setPasswordFeedback(null)
+    }
+  }
+
+  const handleSendPasswordCode = async () => {
+    if (!profile) return
+
+    setSendingCode(true)
+    setPasswordFeedback(null)
+
+    try {
+      await authService.sendVerifyCode(profile.email, 'reset')
+      setPasswordExpanded(true)
+      setPasswordCountdown(60)
+      setPasswordFeedback({
+        tone: 'info',
+        text: `验证码已发送至 ${profile.email}`,
+      })
+    } catch (error) {
+      setPasswordFeedback({
+        tone: 'error',
+        text: getApiErrorMessage(error, '验证码发送失败，请稍后重试'),
+      })
+    } finally {
+      setSendingCode(false)
+    }
+  }
+
+  const handleChangePassword = async () => {
+    if (!validatePasswordForm()) return
+
+    setPasswordSubmitting(true)
+    setPasswordFeedback(null)
+
+    try {
+      await userService.changePassword({
+        old_password: passwordForm.oldPassword,
+        new_password: passwordForm.newPassword,
+        code: passwordForm.code.trim(),
+      })
+
+      setPasswordForm({
+        oldPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+        code: '',
+      })
+      setPasswordErrors({})
+      setPasswordFeedback({
+        tone: 'success',
+        text: '密码修改成功，请使用新密码重新登录。',
+      })
+    } catch (error) {
+      setPasswordFeedback({
+        tone: 'error',
+        text: getApiErrorMessage(error, '密码修改失败，请稍后重试'),
+      })
+    } finally {
+      setPasswordSubmitting(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    setLoggingOut(true)
+    try {
+      await authService.logout()
+    } catch (error) {
+      console.error('退出登录失败:', error)
+    } finally {
+      resetCart()
+      clearAuth()
+      navigate('/', { replace: true })
+      setLoggingOut(false)
+    }
   }
 
   if (loading) {
     return (
       <motion.div
-        className="max-w-4xl mx-auto px-4 py-8"
+        className="mx-auto max-w-6xl px-4 py-8"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
       >
-        <motion.div className="space-y-6" variants={itemVariants}>
-          <motion.div
-            className="h-32 bg-slate-100 rounded-2xl"
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-          />
-          <motion.div
-            className="h-64 bg-slate-100 rounded-2xl"
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 1.5, repeat: Infinity, delay: 0.1 }}
-          />
-          <motion.div
-            className="h-48 bg-slate-100 rounded-2xl"
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
-          />
-        </motion.div>
+        <div className="grid gap-6 lg:grid-cols-[320px,minmax(0,1fr)]">
+          <motion.div className="space-y-6" variants={itemVariants}>
+            <div className="h-72 rounded-3xl bg-slate-100" />
+            <div className="h-48 rounded-3xl bg-slate-100" />
+          </motion.div>
+          <motion.div className="space-y-6" variants={itemVariants}>
+            <div className="h-72 rounded-3xl bg-slate-100" />
+            <div className="h-60 rounded-3xl bg-slate-100" />
+          </motion.div>
+        </div>
       </motion.div>
     )
   }
@@ -252,171 +428,186 @@ export default function UserProfilePage() {
   if (!profile) {
     return (
       <motion.div
-        className="max-w-4xl mx-auto px-4 py-8"
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4 }}
+        className="mx-auto max-w-4xl px-4 py-12"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.24 }}
       >
-        <div className="text-center py-16">
-          <p className="text-stone">无法获取用户信息</p>
-          <Button variant="outline" className="mt-4" onClick={() => navigate('/login')}>
-            重新登录
-          </Button>
-        </div>
+        <Card>
+          <CardContent className="py-14 text-center">
+            <p className="text-base text-charcoal">{profileError || '无法获取用户信息'}</p>
+            <div className="mt-6 flex justify-center gap-3">
+              <Button variant="outline" onClick={() => void fetchProfile()}>
+                重新加载
+              </Button>
+              <Button onClick={() => navigate('/login')}>重新登录</Button>
+            </div>
+          </CardContent>
+        </Card>
       </motion.div>
     )
   }
 
   return (
     <motion.div
-      className="max-w-4xl mx-auto px-4 py-8"
+      className="mx-auto max-w-6xl px-4 py-8"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
     >
-      {/* 页面标题 */}
-      <motion.h1
-        className="font-display text-2xl font-semibold text-charcoal mb-6"
-        variants={itemVariants}
-      >
-        个人中心
-      </motion.h1>
+      <motion.div className="mb-6 flex flex-col gap-2" variants={itemVariants}>
+        <h1 className="font-display text-3xl font-semibold text-charcoal">个人中心</h1>
+        <p className="text-sm text-slate-500">在一个页面里管理资料、地址、安全设置与会员权益。</p>
+      </motion.div>
 
-      <motion.div className="space-y-6" variants={containerVariants}>
-        {/* 用户头像和基本信息 */}
-        <motion.div variants={itemVariants}>
-          <Card className="overflow-hidden">
-            <motion.div
-              className="h-24 bg-gradient-to-r from-blue-600 to-blue-500"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            />
+      <div className="grid gap-6 lg:grid-cols-[320px,minmax(0,1fr)]">
+        <motion.aside className="space-y-6 lg:sticky lg:top-24 lg:self-start" variants={itemVariants}>
+          <Card className="overflow-hidden rounded-3xl border-slate-200">
+            <div className="h-24 bg-gradient-to-r from-blue-700 via-blue-600 to-sky-500" />
             <CardContent className="relative pt-0">
-              <motion.div
-                className="flex flex-col sm:flex-row items-start sm:items-end gap-4 -mt-12"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.4 }}
-              >
-                {/* 头像 */}
-                <motion.div
-                  className="relative"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="w-24 h-24 rounded-full border-4 border-white bg-slate-100 overflow-hidden shadow-lg">
-                    {profile.avatar ? (
-                      <img
-                        src={profile.avatar}
-                        alt={profile.username ?? 'User'}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-blue-100">
-                        <User className="w-10 h-10 text-blue-400" />
-                      </div>
-                    )}
-                  </div>
-                  <motion.button
-                    className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors shadow-md"
-                    title="更换头像"
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <Camera className="w-4 h-4" />
-                  </motion.button>
-                </motion.div>
-
-                {/* 用户名和会员等级 */}
-                <div className="flex-1 pb-2">
-                  <motion.div
-                    className="flex items-center gap-3"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 }}
-                  >
-                    <h2 className="text-xl font-semibold text-charcoal">{profile.username}</h2>
-                    <MemberBadge level={profile.level} />
-                  </motion.div>
-                  <motion.p
-                    className="text-sm text-stone mt-1"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.4 }}
-                  >
-                    注册于 {formatRegisterDate(profile.created_at)}
-                  </motion.p>
+              <div className="-mt-10 flex items-start gap-4">
+                <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-3xl border-4 border-white bg-blue-100 shadow-sm">
+                  {profile.avatar ? (
+                    <img
+                      src={profile.avatar}
+                      alt={profile.username ?? '用户头像'}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <User className="h-8 w-8 text-blue-500" />
+                  )}
                 </div>
+                <div className="flex-1 pt-10">
+                  <p className="text-xl font-semibold text-charcoal">{profile.username}</p>
+                  <p className="mt-1 text-sm text-slate-500">{profile.email}</p>
+                </div>
+              </div>
 
-                {/* 编辑按钮 */}
-                {!editing && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                  >
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setEditing(true)}
-                      className="mb-2"
-                    >
-                      <Edit2 className="w-4 h-4 mr-1" />
-                      编辑资料
-                    </Button>
-                  </motion.div>
-                )}
-              </motion.div>
+              <div className="mt-5 space-y-4">
+                <MemberBadge level={profile.level} points={profile.points} />
+
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 text-sm text-slate-600">
+                  <div className="flex items-center justify-between">
+                    <span>注册时间</span>
+                    <span className="font-medium text-charcoal">{formatRegisterDate(profile.created_at)}</span>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between">
+                    <span>账户状态</span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-1 text-xs font-medium text-green-700">
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                      {profile.status === 'active' ? '正常' : profile.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
-        </motion.div>
 
-        {/* 统计信息 */}
-        <motion.div
-          className="grid grid-cols-2 sm:grid-cols-4 gap-4"
-          variants={containerVariants}
-        >
-          {[
-            { icon: Star, label: '积分', value: profile.points, suffix: '分' },
-            { icon: ShoppingBag, label: '订单', value: profile.order_count, suffix: '笔' },
-            { icon: Crown, label: '会员等级', value: `Lv.${profile.level}` },
-            { icon: User, label: '累计消费', value: `¥${(profile.total_spent / 100).toFixed(0)}` },
-          ].map((stat, index) => (
-            <motion.div
-              key={stat.label}
-              variants={itemVariants}
-              custom={index}
-              whileHover={{ scale: 1.02, y: -2 }}
-              transition={{ duration: 0.2 }}
-            >
-              <StatCard {...stat} />
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* 个人信息 */}
-        <motion.div variants={itemVariants}>
-          <Card>
+          <Card className="rounded-3xl border-slate-200">
             <CardHeader>
-              <CardTitle>基本信息</CardTitle>
+              <CardTitle className="text-lg">账户速览</CardTitle>
+              <CardDescription>常用数据一眼可见</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="grid grid-cols-2 gap-3">
+              <StatCard icon={Star} label="积分" value={profile.points} suffix="分" />
+              <StatCard icon={ShoppingBag} label="订单" value={profile.order_count} suffix="笔" />
+              <StatCard icon={Crown} label="等级" value={`Lv.${profile.level}`} />
+              <StatCard icon={User} label="累计消费" value={`¥${(profile.total_spent / 100).toFixed(0)}`} />
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-3xl border-slate-200">
+            <CardHeader>
+              <CardTitle className="text-lg">账户管理</CardTitle>
+              <CardDescription>常用操作放在左侧，移动端自动串成单列</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <button
+                type="button"
+                onClick={() => navigate('/user/addresses')}
+                className="flex w-full items-center justify-between px-6 py-4 transition-colors hover:bg-slate-50"
+              >
+                <div className="flex items-center gap-3 text-left">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+                    <User className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-charcoal">管理收货地址</p>
+                    <p className="text-sm text-slate-500">维护默认地址与收货信息</p>
+                  </div>
+                </div>
+                <ChevronRight className="h-5 w-5 text-slate-400" />
+              </button>
+
+              <div className="border-t border-slate-200" />
+
+              <button
+                type="button"
+                onClick={() => setPasswordExpanded((current) => !current)}
+                className="flex w-full items-center justify-between px-6 py-4 transition-colors hover:bg-slate-50"
+              >
+                <div className="flex items-center gap-3 text-left">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+                    <Lock className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-charcoal">修改密码</p>
+                    <p className="text-sm text-slate-500">使用邮箱验证码完成密码更新</p>
+                  </div>
+                </div>
+                <ChevronRight className={cn('h-5 w-5 text-slate-400 transition-transform duration-200', passwordExpanded && 'rotate-90')} />
+              </button>
+
+              <div className="border-t border-slate-200" />
+
+              <button
+                type="button"
+                onClick={() => void handleLogout()}
+                className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-red-50"
+                disabled={loggingOut}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 text-red-500">
+                    <LogOut className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-charcoal">退出登录</p>
+                    <p className="text-sm text-slate-500">清理本地登录状态并返回首页</p>
+                  </div>
+                </div>
+                <span className="text-sm text-slate-400">{loggingOut ? '处理中...' : '立即退出'}</span>
+              </button>
+            </CardContent>
+          </Card>
+        </motion.aside>
+
+        <motion.section className="space-y-6" variants={itemVariants}>
+          <Card className="rounded-3xl border-slate-200">
+            <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+              <div>
+                <CardTitle>基本信息</CardTitle>
+                <CardDescription>昵称、手机号等资料会同步到订单与售后场景</CardDescription>
+              </div>
+              {!editing && (
+                <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+                  <Edit2 className="h-4 w-4" />
+                  编辑资料
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {profileError && <FeedbackBanner tone="error" text={profileError} />}
+
               {editing ? (
-                <motion.div
-                  className="space-y-4"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-5">
+                  <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-charcoal">
                         用户名 <span className="text-red-500">*</span>
                       </label>
                       <Input
                         value={formData.username}
-                        onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
+                        onChange={(event) => setFormData((current) => ({ ...current, username: event.target.value }))}
                         error={errors.username}
                         placeholder="请输入用户名"
                       />
@@ -425,170 +616,211 @@ export default function UserProfilePage() {
                       <label className="block text-sm font-medium text-charcoal">昵称</label>
                       <Input
                         value={formData.nickname}
-                        onChange={(e) => setFormData(prev => ({ ...prev, nickname: e.target.value }))}
+                        onChange={(event) => setFormData((current) => ({ ...current, nickname: event.target.value }))}
                         placeholder="请输入昵称"
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                  <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-charcoal">手机号</label>
                       <Input
                         value={formData.phone}
-                        onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                        onChange={(event) => setFormData((current) => ({ ...current, phone: event.target.value }))}
                         error={errors.phone}
                         placeholder="请输入手机号"
                       />
                     </div>
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-charcoal">邮箱</label>
-                      <Input
-                        value={profile.email}
-                        disabled
-                        className="bg-blue-50"
-                      />
+                      <Input value={profile.email} disabled className="bg-slate-50" />
                     </div>
                   </div>
-                  <motion.div
-                    className="flex justify-end gap-3 pt-4"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                  >
+
+                  <div className="flex justify-end gap-3 pt-2">
                     <Button variant="outline" onClick={handleCancel}>
                       取消
                     </Button>
-                    <Button onClick={handleSave} loading={saving}>
-                      保存
+                    <Button onClick={() => void handleSave()} loading={saving}>
+                      保存资料
                     </Button>
-                  </motion.div>
-                </motion.div>
+                  </div>
+                </div>
               ) : (
-                <motion.div
-                  className="space-y-4"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                >
+                <div className="grid gap-3">
                   {[
                     { icon: User, label: '用户名', value: profile.username },
                     { icon: User, label: '昵称', value: profile.nickname || '-' },
                     { icon: Mail, label: '邮箱', value: profile.email },
                     { icon: Phone, label: '手机号', value: profile.phone || '-' },
-                  ].map((item, index) => (
-                    <motion.div
+                  ].map((item) => (
+                    <div
                       key={item.label}
-                      className="flex items-center gap-3 py-3 border-b border-slate-200 last:border-b-0"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
+                      className="flex flex-col gap-2 rounded-2xl border border-slate-200 px-4 py-4 sm:flex-row sm:items-center"
                     >
-                      <item.icon className="w-5 h-5 text-stone" />
-                      <span className="text-sm text-stone w-20">{item.label}</span>
+                      <div className="flex items-center gap-3 sm:w-44">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+                          <item.icon className="h-5 w-5" />
+                        </div>
+                        <span className="text-sm text-slate-500">{item.label}</span>
+                      </div>
                       <span className="text-charcoal">{item.value}</span>
-                    </motion.div>
+                    </div>
                   ))}
-                </motion.div>
+                </div>
               )}
             </CardContent>
           </Card>
-        </motion.div>
 
-        {/* 快捷入口 */}
-        <motion.div variants={itemVariants}>
-          <Card>
-            <CardHeader>
-              <CardTitle>账户管理</CardTitle>
+          <Card className="rounded-3xl border-slate-200">
+            <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+              <div>
+                <CardTitle>密码与安全</CardTitle>
+                <CardDescription>修改密码前先发送邮箱验证码，保障账户操作安全。</CardDescription>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void handleSendPasswordCode()}
+                  loading={sendingCode}
+                  disabled={passwordCountdown > 0}
+                >
+                  <Send className="h-4 w-4" />
+                  {passwordCountdown > 0 ? `${passwordCountdown}s 后重发` : '发送验证码'}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setPasswordExpanded((current) => !current)}
+                >
+                  {passwordExpanded ? '收起表单' : '展开表单'}
+                </Button>
+              </div>
             </CardHeader>
-            <CardContent className="p-0">
-              <motion.button
-                onClick={() => navigate('/user/addresses')}
-                className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors"
-                whileHover={{ x: 5 }}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 flex items-center justify-center bg-blue-100 rounded-lg">
-                    <User className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-charcoal font-medium">收货地址</p>
-                    <p className="text-sm text-stone">管理您的收货地址</p>
-                  </div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-stone" />
-              </motion.button>
-              <div className="border-t border-slate-200" />
-              <motion.button
-                onClick={() => {/* TODO: 打开修改密码弹窗 */}}
-                className="w-full flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors"
-                whileHover={{ x: 5 }}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 flex items-center justify-center bg-blue-100 rounded-lg">
-                    <Lock className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-charcoal font-medium">修改密码</p>
-                    <p className="text-sm text-stone">定期修改密码更安全</p>
-                  </div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-stone" />
-              </motion.button>
-            </CardContent>
-          </Card>
-        </motion.div>
+            <CardContent className="space-y-5">
+              {passwordFeedback && (
+                <FeedbackBanner tone={passwordFeedback.tone} text={passwordFeedback.text} />
+              )}
 
-        {/* 会员权益 */}
-        <motion.div variants={itemVariants}>
-          <Card>
-            <CardHeader>
-              <CardTitle>会员权益</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <motion.div
-                className="space-y-3"
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                {MemberLevels.map((level, index) => (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4 text-sm text-slate-600">
+                验证码将发送到当前绑定邮箱 <span className="font-medium text-charcoal">{profile.email}</span>。
+              </div>
+
+              <AnimatePresence initial={false}>
+                {passwordExpanded && (
                   <motion.div
-                    key={level.level}
-                    className={cn(
-                      'flex items-center justify-between p-4 rounded-xl',
-                       level.level === profile.level ? 'bg-blue-50 border-2 border-blue-200' : 'bg-slate-50'
-                    )}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    whileHover={{ scale: 1.01 }}
+                    key="password-form"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
                   >
-                    <div>
-                      <p className="font-medium text-charcoal">{level.name}</p>
-                      <p className="text-sm text-stone">
-                        {level.min_points} - {level.max_points === Infinity ? '∞' : level.max_points} 积分
-                      </p>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-charcoal">
+                          当前密码 <span className="text-red-500">*</span>
+                        </label>
+                        <Input
+                          type="password"
+                          value={passwordForm.oldPassword}
+                          onChange={(event) => handlePasswordInputChange('oldPassword', event.target.value)}
+                          error={passwordErrors.oldPassword}
+                          placeholder="请输入当前密码"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-charcoal">
+                          邮箱验证码 <span className="text-red-500">*</span>
+                        </label>
+                        <Input
+                          value={passwordForm.code}
+                          onChange={(event) => handlePasswordInputChange('code', event.target.value)}
+                          error={passwordErrors.code}
+                          placeholder="请输入 6 位验证码"
+                        />
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {level.level === profile.level && (
-                        <motion.span
-                          className="text-sm text-blue-600 font-medium"
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ type: 'spring', stiffness: 300 }}
-                        >
-                          当前等级
-                        </motion.span>
-                      )}
-                      <span className="text-sm text-blue-500">{level.discount / 10}折</span>
+
+                    <div className="mt-4 grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-charcoal">
+                          新密码 <span className="text-red-500">*</span>
+                        </label>
+                        <Input
+                          type="password"
+                          value={passwordForm.newPassword}
+                          onChange={(event) => handlePasswordInputChange('newPassword', event.target.value)}
+                          error={passwordErrors.newPassword}
+                          placeholder="请输入 6-20 位新密码"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-charcoal">
+                          确认新密码 <span className="text-red-500">*</span>
+                        </label>
+                        <Input
+                          type="password"
+                          value={passwordForm.confirmPassword}
+                          onChange={(event) => handlePasswordInputChange('confirmPassword', event.target.value)}
+                          error={passwordErrors.confirmPassword}
+                          placeholder="请再次输入新密码"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-5 flex justify-end gap-3">
+                      <Button variant="outline" onClick={() => setPasswordExpanded(false)}>
+                        暂不修改
+                      </Button>
+                      <Button onClick={() => void handleChangePassword()} loading={passwordSubmitting}>
+                        提交新密码
+                      </Button>
                     </div>
                   </motion.div>
-                ))}
-              </motion.div>
+                )}
+              </AnimatePresence>
             </CardContent>
           </Card>
-        </motion.div>
-      </motion.div>
+
+          <Card className="rounded-3xl border-slate-200">
+            <CardHeader>
+              <CardTitle>会员权益</CardTitle>
+              <CardDescription>保留原有等级信息，但用更安静的层级和边框呈现。</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {MemberLevels.map((level) => (
+                <div
+                  key={level.level}
+                  className={cn(
+                    'flex flex-col gap-3 rounded-2xl border px-4 py-4 sm:flex-row sm:items-center sm:justify-between',
+                    level.level === profile.level
+                      ? 'border-blue-200 bg-blue-50/80'
+                      : 'border-slate-200 bg-slate-50/70'
+                  )}
+                >
+                  <div>
+                    <p className="font-medium text-charcoal">{level.name}</p>
+                    <p className="mt-1 text-sm text-slate-500">
+                      {level.min_points} - {level.max_points === Infinity ? '∞' : level.max_points} 积分
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {level.level === profile.level && (
+                      <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-blue-600">
+                        当前等级
+                      </span>
+                    )}
+                    <span className="text-sm font-medium text-blue-600">{level.discount / 10} 折</span>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </motion.section>
+      </div>
     </motion.div>
   )
 }

@@ -296,7 +296,7 @@ function AddressCard({
             onClick={onEdit}
             className="p-2 text-stone hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
             title="编辑"
-            whileHover={{ scale: 1.1 }}
+            whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.9 }}
           >
             <Edit2 className="w-4 h-4" />
@@ -307,7 +307,7 @@ function AddressCard({
                 onClick={onSetDefault}
                 className="p-2 text-stone hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                 title="设为默认"
-                whileHover={{ scale: 1.1 }}
+                whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.9 }}
               >
                 <Check className="w-4 h-4" />
@@ -316,7 +316,7 @@ function AddressCard({
                 onClick={onDelete}
                 className="p-2 text-stone hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                 title="删除"
-                whileHover={{ scale: 1.1 }}
+                whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.9 }}
               >
                 <Trash2 className="w-4 h-4" />
@@ -452,7 +452,7 @@ export default function UserAddressesPage() {
         </div>
         {!showForm && !editingAddress && (
           <motion.div
-            whileHover={{ scale: 1.02 }}
+            whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
           >
             <Button onClick={() => setShowForm(true)} disabled={addresses.length >= 20}>
@@ -527,14 +527,14 @@ export default function UserAddressesPage() {
             <CardContent className="py-16 text-center">
               <motion.div
                 className="w-16 h-16 mx-auto mb-4 flex items-center justify-center bg-blue-50 rounded-full"
-                animate={{ y: [0, -5, 0] }}
+                animate={{ y: [0, -2, 0] }}
                 transition={{ duration: 2, repeat: Infinity }}
               >
                 <MapPin className="w-8 h-8 text-stone" />
               </motion.div>
               <p className="text-charcoal font-medium mb-2">暂无收货地址</p>
               <p className="text-sm text-stone mb-4">添加收货地址，方便购物时快速选择</p>
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}>
                 <Button onClick={() => setShowForm(true)}>
                   <Plus className="w-4 h-4 mr-1" />
                   添加地址

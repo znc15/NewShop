@@ -79,11 +79,11 @@ func (r *ConfigRepo) UpdateValue(ctx context.Context, key, value string, adminID
 
 		// 创建变更历史
 		history := &model.ConfigHistory{
-			ConfigID:     config.ID,
-			OldValue:     config.Value,
-			NewValue:     value,
-			ChangedBy:    adminID,
-			CreatedAt:    time.Now(),
+			ConfigID:  config.ID,
+			OldValue:  config.Value,
+			NewValue:  value,
+			ChangedBy: adminID,
+			CreatedAt: time.Now(),
 		}
 		if err := tx.Create(history).Error; err != nil {
 			return err
@@ -195,6 +195,70 @@ func (r *ConfigRepo) InitializeDefaults(ctx context.Context) error {
 			Type:        model.ConfigTypeNumber,
 			Category:    model.ConfigCategoryOrder,
 			Description: "自动确认收货天数",
+			IsPublic:    false,
+		},
+		{
+			Key:         model.ConfigKeySEOSiteTitle,
+			Value:       "NewShop - 新零售电商平台",
+			Type:        model.ConfigTypeString,
+			Category:    model.ConfigCategorySEO,
+			Description: "网站标题",
+			IsPublic:    true,
+		},
+		{
+			Key:         model.ConfigKeySEOSiteDescription,
+			Value:       "NewShop 是一个基于 Go 与 React 构建的现代化电商平台，提供商品、订单、会员与营销等完整能力。",
+			Type:        model.ConfigTypeString,
+			Category:    model.ConfigCategorySEO,
+			Description: "网站描述",
+			IsPublic:    true,
+		},
+		{
+			Key:         model.ConfigKeySEOSiteKeywords,
+			Value:       "NewShop,电商,新零售,购物平台",
+			Type:        model.ConfigTypeString,
+			Category:    model.ConfigCategorySEO,
+			Description: "网站关键词",
+			IsPublic:    true,
+		},
+		{
+			Key:         model.ConfigKeySEOOGImage,
+			Value:       "",
+			Type:        model.ConfigTypeString,
+			Category:    model.ConfigCategorySEO,
+			Description: "Open Graph 图片",
+			IsPublic:    true,
+		},
+		{
+			Key:         model.ConfigKeySEOGoogleVerify,
+			Value:       "",
+			Type:        model.ConfigTypeString,
+			Category:    model.ConfigCategorySEO,
+			Description: "Google 站长验证码",
+			IsPublic:    true,
+		},
+		{
+			Key:         model.ConfigKeyGitHubClientID,
+			Value:       "",
+			Type:        model.ConfigTypeString,
+			Category:    model.ConfigCategorySystem,
+			Description: "GitHub OAuth Client ID",
+			IsPublic:    false,
+		},
+		{
+			Key:         model.ConfigKeyGitHubClientSecret,
+			Value:       "",
+			Type:        model.ConfigTypeString,
+			Category:    model.ConfigCategorySystem,
+			Description: "GitHub OAuth Client Secret",
+			IsPublic:    false,
+		},
+		{
+			Key:         model.ConfigKeyGitHubRedirectURI,
+			Value:       "",
+			Type:        model.ConfigTypeString,
+			Category:    model.ConfigCategorySystem,
+			Description: "GitHub OAuth 回调地址",
 			IsPublic:    false,
 		},
 	}

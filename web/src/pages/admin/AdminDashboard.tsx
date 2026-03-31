@@ -51,17 +51,6 @@ export function AdminDashboard() {
         setStats(data)
       } catch (error) {
         console.error('获取统计数据失败:', error)
-        // 使用模拟数据
-        setStats({
-          today_orders: 128,
-          today_sales: 32850,
-          new_users: 45,
-          pending_orders: 23,
-          product_count: 1256,
-          user_count: 8934,
-          recent_orders: [],
-          sales_chart: [],
-        })
       } finally {
         setLoading(false)
       }
@@ -113,7 +102,7 @@ export function AdminDashboard() {
         />
         <StatCard
           title="新增用户"
-          value={stats.new_users}
+          value={stats.today_users}
           trend={5.2}
           trendLabel="较昨日"
           icon={
@@ -154,7 +143,7 @@ export function AdminDashboard() {
                 <path d="M12 22V12" />
               </svg>
               <span className="text-sm text-charcoal">商品管理</span>
-              <span className="text-xs text-stone mt-1">{stats.product_count} 件商品</span>
+              <span className="text-xs text-stone mt-1">{stats.total_products} 件商品</span>
             </a>
             <a
               href="/admin/orders"
@@ -178,7 +167,7 @@ export function AdminDashboard() {
                 <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
               <span className="text-sm text-charcoal">用户管理</span>
-              <span className="text-xs text-stone mt-1">{stats.user_count} 位用户</span>
+              <span className="text-xs text-stone mt-1">{stats.total_users} 位用户</span>
             </a>
             <a
               href="/admin/coupons"
@@ -203,9 +192,9 @@ export function AdminDashboard() {
               查看全部
             </a>
           </div>
-          {stats.recent_orders.length > 0 ? (
+          {(stats.recent_orders?.length ?? 0) > 0 ? (
             <div className="space-y-3">
-              {stats.recent_orders.slice(0, 5).map((order) => (
+              {stats.recent_orders?.slice(0, 5).map((order) => (
                 <div
                   key={order.id}
                   className="flex items-center justify-between py-2 border-b border-cream-100 last:border-0"

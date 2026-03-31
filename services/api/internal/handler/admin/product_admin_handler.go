@@ -58,6 +58,8 @@ type ProductListItem struct {
 	OriginalPrice int64  `json:"original_price"`
 	Stock         int    `json:"stock"`
 	Sales         int    `json:"sales"`
+	IsHot         bool   `json:"is_hot"`
+	IsSale        bool   `json:"is_sale"`
 	Status        string `json:"status"`
 	CreatedAt     string `json:"created_at"`
 }
@@ -74,6 +76,8 @@ type CreateProductRequest struct {
 	Stock         int                    `json:"stock" binding:"gte=0"`
 	Description   string                 `json:"description"`
 	Detail        string                 `json:"detail"`
+	IsHot         bool                   `json:"is_hot"`
+	IsSale        bool                   `json:"is_sale"`
 	Status        string                 `json:"status" binding:"oneof=draft active inactive"`
 	Sort          int                    `json:"sort"`
 	Skus          []CreateProductSkuReq  `json:"skus"`
@@ -108,6 +112,8 @@ type UpdateProductRequest struct {
 	Stock         int                    `json:"stock" binding:"gte=0"`
 	Description   string                 `json:"description"`
 	Detail        string                 `json:"detail"`
+	IsHot         *bool                  `json:"is_hot"`
+	IsSale        *bool                  `json:"is_sale"`
 	Sort          int                    `json:"sort"`
 	Skus          []UpdateProductSkuReq  `json:"skus"`
 	Attrs         []UpdateProductAttrReq `json:"attrs"`
@@ -155,6 +161,8 @@ type ProductDetailResponse struct {
 	OriginalPrice int64         `json:"original_price"`
 	Stock         int           `json:"stock"`
 	Sales         int           `json:"sales"`
+	IsHot         bool          `json:"is_hot"`
+	IsSale        bool          `json:"is_sale"`
 	Description   string        `json:"description"`
 	Detail        string        `json:"detail"`
 	Status        string        `json:"status"`
@@ -255,6 +263,8 @@ func (h *ProductAdminHandler) List(c *gin.Context) {
 			OriginalPrice: p.OriginalPrice,
 			Stock:         p.Stock,
 			Sales:         p.Sales,
+			IsHot:         p.IsHot,
+			IsSale:        p.IsSale,
 			Status:        p.Status,
 			CreatedAt:     p.CreatedAt.Format("2006-01-02 15:04:05"),
 		}
@@ -339,6 +349,8 @@ func (h *ProductAdminHandler) Create(c *gin.Context) {
 		Price:         req.Price,
 		OriginalPrice: req.OriginalPrice,
 		Stock:         req.Stock,
+		IsHot:         req.IsHot,
+		IsSale:        req.IsSale,
 		Description:   req.Description,
 		Detail:        req.Detail,
 		Status:        req.Status,
@@ -439,6 +451,8 @@ func (h *ProductAdminHandler) Get(c *gin.Context) {
 		OriginalPrice: product.OriginalPrice,
 		Stock:         product.Stock,
 		Sales:         product.Sales,
+		IsHot:         product.IsHot,
+		IsSale:        product.IsSale,
 		Description:   product.Description,
 		Detail:        product.Detail,
 		Status:        product.Status,
@@ -552,6 +566,12 @@ func (h *ProductAdminHandler) Update(c *gin.Context) {
 	product.OriginalPrice = req.OriginalPrice
 	if req.Stock >= 0 {
 		product.Stock = req.Stock
+	}
+	if req.IsHot != nil {
+		product.IsHot = *req.IsHot
+	}
+	if req.IsSale != nil {
+		product.IsSale = *req.IsSale
 	}
 	product.Description = req.Description
 	product.Detail = req.Detail
