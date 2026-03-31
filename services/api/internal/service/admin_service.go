@@ -56,7 +56,12 @@ func (s *AdminService) Login(ctx context.Context, username, password, ip string,
 	}
 
 	// 生成 token
-	accessToken, err := generateToken(admin.ID, admin.Username, "admin")
+	role := admin.Role
+	if role == "" {
+		role = "admin"
+	}
+
+	accessToken, err := generateToken(admin.ID, admin.Username, role)
 	if err != nil {
 		return nil, err
 	}

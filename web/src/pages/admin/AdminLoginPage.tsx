@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/Input'
 import adminHttp from '@/services/adminHttp'
 import { useAdminAuthStore } from '@/stores/adminAuth'
 import type { AdminLoginRequest, AdminLoginResponse } from '@/types/admin'
+import { getApiErrorMessage } from '@/utils'
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -73,7 +74,7 @@ export default function AdminLoginPage() {
       setAdmin(data.admin)
       navigate('/admin')
     } catch (error) {
-      setServerError(error instanceof Error ? error.message : '登录失败，请稍后重试')
+      setServerError(getApiErrorMessage(error, '登录失败，请稍后重试'))
     } finally {
       setIsLoading(false)
     }

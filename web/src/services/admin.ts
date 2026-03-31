@@ -21,6 +21,206 @@ import type {
   AdminConfigPayload,
 } from '@/types/admin'
 
+type UnknownRecord = Record<string, unknown>
+
+function asRecord(value: unknown): UnknownRecord | null {
+  if (typeof value !== 'object' || value === null) {
+    return null
+  }
+  return value as UnknownRecord
+}
+
+function toNumber(value: unknown, fallback: number = 0): number {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value
+  }
+  if (typeof value === 'string') {
+    const parsed = Number(value)
+    if (Number.isFinite(parsed)) {
+      return parsed
+    }
+  }
+  return fallback
+}
+
+function toString(value: unknown, fallback: string = ''): string {
+  if (typeof value === 'string') {
+    return value
+  }
+  return fallback
+}
+
+function toNullableString(value: unknown): string | null {
+  if (typeof value === 'string' && value.trim() !== '') {
+    return value
+  }
+  return null
+}
+
+function toBool(value: unknown, fallback: boolean = false): boolean {
+  if (typeof value === 'boolean') {
+    return value
+  }
+  return fallback
+}
+
+function toArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : []
+}
+
+function normalizePaginated<T>(
+  raw: unknown,
+  mapper: (item: unknown) => T
+): AdminPaginatedResponse<T> {
+  const source = asRecord(raw) ?? {}
+  const items = toArray(source.items).map(mapper)
+  const total = toNumber(source.total, items.length)
+  const page = toNumber(source.page, 1)
+  const pageSize = toNumber(source.page_size, items.length > 0 ? items.length : 20)
+  const fallbackPages = pageSize > 0 ? Math.max(1, Math.ceil(total / pageSize)) : 1
+  const totalPages = toNumber(source.total_pages, fallbackPages)
+
+  return {
+    items,
+    total,
+    page,
+    page_size: pageSize,
+    total_pages: totalPages,
+  }
+}
+
+function mapProduct(item: unknown): AdminProduct {
+  const record = asRecord(item) ?? {}
+  const sales = toNumber(record.sales)
+  const statusValue = toString(record.status, 'draft')
+  const status: 'draft' | 'active' | 'inactive' =
+    statusValue === 'active' || statusValue === 'inactive' || statusValue === 'draft'
+      ? statusValue
+      : 'draft'
+
+  return {
+    id: toNumber(record.id),
+    name: toString(record.name),
+    description: toString(record.description),
+    detail: toNullableString(record.detail),
+    price: toNumber(record.price),
+    original_price: toNumber(record.original_price),
+    main_image: toString(record.main_image),
+    images: typeof record.images === 'string' ? record.images : null,
+    category_id: toNumber(record.category_id),
+    category_name: toString(record.category_name),
+    brand_id: record.brand_id === null ? null : toNumber(record.brand_id, 0),
+    brand_name: toNullableString(record.brand_name),
+    status,
+    stock: toNumber(record.stock),
+    sales,
+    sales_count: toNumber(record.sales_count, sales),
+    is_hot: toBool(record.is_hot),
+    is_sale: toBool(record.is_sale),
+    sort: toNumber(record.sort),
+    skus: toArray(record.skus) as AdminProduct['skus'],
+    attrs: toArray(record.attrs) as AdminProduct['attrs'],
+    created_at: toString(record.created_at),
+    updated_at: toString(record.updated_at),
+  }
+}
+
+function mapOrder(item: unknown): AdminOrder {
+  const record = asRecord(item) ?? {}
+  const statusValue = toString(record.status, 'pending')
+  const status: AdminOrder['status'] =
+    statusValue === 'pending' ||
+    statusValue === 'paid' ||
+    statusValue === 'shipped' ||
+    statusValue === 'delivered' ||
+    statusValue === 'completed' ||
+    statusValue === 'cancelled' ||
+    statusValue === 'refunded'
+      ? statusValue
+      : 'pending'
+
+  return {
+    id: toNumber(record.id),
+    order_no: toString(record.order_no),
+    user_id: toNumber(record.user_id),
+    user_name: toNullableString(record.user_name),
+    user_email: toNullableString(record.user_email),
+    status,
+    total_amount: toNumber(record.total_amount),
+    discount_amount: toNumber(record.discount_amount),
+    shipping_fee: toNumber(record.shipping_fee),
+    pay_amount: toNumber(record.pay_amount),
+    payment_method: toNullableString(record.payment_method),
+    receiver_name: toString(record.receiver_name),
+    receiver_phone: toString(record.receiver_phone),
+    receiver_address: toString(record.receiver_address),
+    items_count: toNumber(record.items_count),
+    remark: toString(record.remark),
+    cancel_reason: toNullableString(record.cancel_reason),
+    refund_reason: toNullableString(record.refund_reason),
+    tracking_company: toNullableString(record.tracking_company),
+    tracking_no: toNullableString(record.tracking_no),
+    paid_at: toNullableString(record.paid_at),
+    shipped_at: toNullableString(record.shipped_at),
+    delivered_at: toNullableString(record.delivered_at),
+    completed_at: toNullableString(record.completed_at),
+    cancelled_at: toNullableString(record.cancelled_at),
+    refunded_at: toNullableString(record.refunded_at),
+    created_at: toString(record.created_at),
+    updated_at: toString(record.updated_at),
+    items: toArray(record.items) as AdminOrder['items'],
+  }
+}
+
+function mapUser(item: unknown): AdminUser {
+  const record = asRecord(item) ?? {}
+  const memberLevel = toNumber(record.member_level, 1)
+  const fallbackUsername = toString(record.email).split('@')[0] || ''
+  const username = toNullableString(record.username) ?? (fallbackUsername || null)
+  const statusRaw = toString(record.status, 'active')
+  const status = statusRaw === 'disabled' ? 'inactive' : statusRaw
+
+  return {
+    id: toNumber(record.id),
+    email: toString(record.email),
+    phone: toNullableString(record.phone),
+    username,
+    nickname: toNullableString(record.nickname),
+    avatar: toNullableString(record.avatar),
+    member_level: memberLevel,
+    level: toNumber(record.level, memberLevel),
+    points: toNumber(record.points),
+    status,
+    order_count: toNumber(record.order_count),
+    total_spent: toNumber(record.total_spent),
+    created_at: toString(record.created_at),
+    updated_at: toString(record.updated_at),
+  }
+}
+
+function mapCategory(item: unknown): AdminCategory {
+  const record = asRecord(item) ?? {}
+  const rawParentID = record.parent_id
+  const parentID = rawParentID === null ? null : toNumber(rawParentID, 0)
+  const normalizedParentID = parentID === 0 ? null : parentID
+  const children = toArray(record.children).map(mapCategory)
+
+  return {
+    id: toNumber(record.id),
+    name: toString(record.name),
+    parent_id: normalizedParentID,
+    parent_name: toNullableString(record.parent_name),
+    level: toNumber(record.level, 1),
+    icon: toNullableString(record.icon),
+    sort: toNumber(record.sort),
+    status: toString(record.status, 'active'),
+    product_count: toNumber(record.product_count),
+    children,
+    created_at: toString(record.created_at),
+    updated_at: toString(record.updated_at),
+  }
+}
+
 export const adminService = {
   // ==================== 仪表盘 ====================
   getDashboardStats(): Promise<DashboardStats> {
@@ -28,12 +228,14 @@ export const adminService = {
   },
 
   // ==================== 商品管理 ====================
-  getProducts(params: AdminProductListParams): Promise<AdminPaginatedResponse<AdminProduct>> {
-    return adminHttp.get('/products', params as Record<string, unknown>)
+  async getProducts(params: AdminProductListParams): Promise<AdminPaginatedResponse<AdminProduct>> {
+    const data = await adminHttp.get<unknown>('/products', params as Record<string, unknown>)
+    return normalizePaginated(data, mapProduct)
   },
 
-  getProduct(id: number): Promise<AdminProduct> {
-    return adminHttp.get(`/products/${id}`)
+  async getProduct(id: number): Promise<AdminProduct> {
+    const data = await adminHttp.get<unknown>(`/products/${id}`)
+    return mapProduct(data)
   },
 
   createProduct(data: AdminProductFormData): Promise<AdminProduct> {
@@ -53,46 +255,64 @@ export const adminService = {
   },
 
   // ==================== 订单管理 ====================
-  getOrders(params: AdminOrderListParams): Promise<AdminPaginatedResponse<AdminOrder>> {
-    return adminHttp.get('/orders', params as Record<string, unknown>)
+  async getOrders(params: AdminOrderListParams): Promise<AdminPaginatedResponse<AdminOrder>> {
+    const data = await adminHttp.get<unknown>('/orders', params as Record<string, unknown>)
+    return normalizePaginated(data, mapOrder)
   },
 
-  getOrder(id: number): Promise<AdminOrder> {
-    return adminHttp.get(`/orders/${id}`)
+  async getOrder(id: number): Promise<AdminOrder> {
+    const data = await adminHttp.get<unknown>(`/orders/${id}`)
+    return mapOrder(data)
   },
 
   shipOrder(id: number, data: ShipOrderRequest): Promise<void> {
-    return adminHttp.put(`/orders/${id}/ship`, data)
+    return adminHttp.put(`/orders/${id}/ship`, {
+      tracking_company: data.tracking_company,
+      tracking_no: data.tracking_no,
+    })
   },
 
   refundOrder(id: number, data: RefundOrderRequest): Promise<void> {
-    return adminHttp.put(`/orders/${id}/refund`, data)
+    return adminHttp.put(`/orders/${id}/refund`, {
+      refund_amount: data.refund_amount,
+      refund_reason: data.refund_reason,
+    })
   },
 
   // ==================== 用户管理 ====================
-  getUsers(params: AdminUserListParams): Promise<AdminPaginatedResponse<AdminUser>> {
-    return adminHttp.get('/users', params as Record<string, unknown>)
+  async getUsers(params: AdminUserListParams): Promise<AdminPaginatedResponse<AdminUser>> {
+    const data = await adminHttp.get<unknown>('/users', params as Record<string, unknown>)
+    return normalizePaginated(data, mapUser)
   },
 
-  getUser(id: number): Promise<AdminUser> {
-    return adminHttp.get(`/users/${id}`)
+  async getUser(id: number): Promise<AdminUser> {
+    const data = await adminHttp.get<unknown>(`/users/${id}`)
+    return mapUser(data)
   },
 
   disableUser(id: number): Promise<void> {
-    return adminHttp.put(`/users/${id}/disable`)
+    return adminHttp.put(`/users/${id}`, { status: 'inactive' })
   },
 
   enableUser(id: number): Promise<void> {
-    return adminHttp.put(`/users/${id}/enable`)
+    return adminHttp.put(`/users/${id}`, { status: 'active' })
   },
 
   // ==================== 分类管理 ====================
-  getCategories(): Promise<AdminCategory[]> {
-    return adminHttp.get('/categories')
+  async getCategories(): Promise<AdminCategory[]> {
+    const data = await adminHttp.get<unknown>('/categories')
+    const record = asRecord(data)
+    if (!record) {
+      return []
+    }
+
+    const list = toArray(record.items)
+    return list.map(mapCategory)
   },
 
-  getCategory(id: number): Promise<AdminCategory> {
-    return adminHttp.get(`/categories/${id}`)
+  async getCategory(id: number): Promise<AdminCategory> {
+    const data = await adminHttp.get<unknown>(`/categories/${id}`)
+    return mapCategory(data)
   },
 
   createCategory(data: AdminCategoryFormData): Promise<AdminCategory> {

@@ -40,9 +40,12 @@ type ProductListRequest struct {
 
 // ProductListResponse 商品列表响应
 type ProductListResponse struct {
-	List  []ProductListItem `json:"list"`
-	Total int64             `json:"total"`
-	Page  int               `json:"page"`
+	Items      []ProductListItem `json:"items"`
+	List       []ProductListItem `json:"list,omitempty"`
+	Total      int64             `json:"total"`
+	Page       int               `json:"page"`
+	PageSize   int               `json:"page_size"`
+	TotalPages int               `json:"total_pages"`
 }
 
 // ProductListItem 商品列表项
@@ -58,6 +61,7 @@ type ProductListItem struct {
 	OriginalPrice int64  `json:"original_price"`
 	Stock         int    `json:"stock"`
 	Sales         int    `json:"sales"`
+	SalesCount    int    `json:"sales_count"`
 	IsHot         bool   `json:"is_hot"`
 	IsSale        bool   `json:"is_sale"`
 	Status        string `json:"status"`
@@ -263,6 +267,7 @@ func (h *ProductAdminHandler) List(c *gin.Context) {
 			OriginalPrice: p.OriginalPrice,
 			Stock:         p.Stock,
 			Sales:         p.Sales,
+			SalesCount:    p.Sales,
 			IsHot:         p.IsHot,
 			IsSale:        p.IsSale,
 			Status:        p.Status,
@@ -277,12 +282,20 @@ func (h *ProductAdminHandler) List(c *gin.Context) {
 		list = append(list, item)
 	}
 
+	totalPages := int((total + int64(req.PageSize) - 1) / int64(req.PageSize))
+	if totalPages == 0 {
+		totalPages = 1
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
 		"data": ProductListResponse{
-			List:  list,
-			Total: total,
-			Page:  req.Page,
+			Items:      list,
+			List:       list,
+			Total:      total,
+			Page:       req.Page,
+			PageSize:   req.PageSize,
+			TotalPages: totalPages,
 		},
 	})
 }

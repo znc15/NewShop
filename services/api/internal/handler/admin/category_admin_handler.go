@@ -27,7 +27,8 @@ func NewCategoryAdminHandler(categoryService *admin.ProductAdminService, logger 
 
 // CategoryListResponse 分类列表响应
 type CategoryListResponse struct {
-	List []CategoryTreeItem `json:"list"`
+	Items []CategoryTreeItem `json:"items"`
+	List  []CategoryTreeItem `json:"list,omitempty"`
 }
 
 // CategoryTreeItem 分类树形项
@@ -95,7 +96,10 @@ func (h *CategoryAdminHandler) List(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
-		"data": CategoryListResponse{List: list},
+		"data": CategoryListResponse{
+			Items: list,
+			List:  list,
+		},
 	})
 }
 

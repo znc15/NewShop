@@ -137,13 +137,6 @@ export interface AdminOrder {
   created_at: string
   updated_at: string
   items?: AdminOrderItem[]
-  // 后端字段别名
-  freight_amount?: number
-  express_company?: string | null
-  express_no?: string | null
-  payment_time?: string | null
-  ship_time?: string | null
-  receive_time?: string | null
 }
 
 export interface AdminOrderItem {
@@ -172,16 +165,13 @@ export interface AdminOrderListParams {
 }
 
 export interface ShipOrderRequest {
-  // 后端字段
-  express_company?: string
-  express_no?: string
-  // 前端使用的别名（与后端字段二选一）
-  tracking_company?: string
-  tracking_no?: string
+  tracking_company: string
+  tracking_no: string
 }
 
 export interface RefundOrderRequest {
-  reason: string
+  refund_amount: number
+  refund_reason: string
 }
 
 // 管理后台用户类型（与后端 User 模型一致，包含关联统计）

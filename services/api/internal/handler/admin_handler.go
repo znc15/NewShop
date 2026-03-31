@@ -43,6 +43,27 @@ type AdminInfo struct {
 	Role     string `json:"role"`
 }
 
+func (h *AdminHandler) currentRole(c *gin.Context) string {
+	roleValue, _ := c.Get("role")
+	role, ok := roleValue.(string)
+	if !ok {
+		return ""
+	}
+	return role
+}
+
+func (h *AdminHandler) requireSuperAdmin(c *gin.Context) bool {
+	if h.currentRole(c) == "super_admin" {
+		return true
+	}
+
+	c.JSON(http.StatusForbidden, gin.H{
+		"code":    40303,
+		"message": "需要超级管理员权限",
+	})
+	return false
+}
+
 // Login 管理员登录
 // POST /admin/auth/login
 func (h *AdminHandler) Login(c *gin.Context) {
@@ -148,6 +169,10 @@ type CreateAdminRequest struct {
 // CreateAdmin 创建管理员
 // POST /admin/admins
 func (h *AdminHandler) CreateAdmin(c *gin.Context) {
+	if !h.requireSuperAdmin(c) {
+		return
+	}
+
 	var req CreateAdminRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -221,6 +246,25 @@ func (h *AdminHandler) UpdateAdmin(c *gin.Context) {
 		return
 	}
 
+	currentAdminID := c.GetUint64("user_id")
+	isSuperAdmin := h.currentRole(c) == "super_admin"
+
+	if !isSuperAdmin && currentAdminID != id {
+		c.JSON(http.StatusForbidden, gin.H{
+			"code":    40304,
+			"message": "只能修改自己的账号",
+		})
+		return
+	}
+
+	if !isSuperAdmin && (req.Role != "" || req.Status != "") {
+		c.JSON(http.StatusForbidden, gin.H{
+			"code":    40305,
+			"message": "无权修改角色或账号状态",
+		})
+		return
+	}
+
 	input := service.UpdateAdminInput{
 		Nickname: &req.Nickname,
 		Role:     &req.Role,
@@ -275,6 +319,10 @@ func (h *AdminHandler) UpdateAdmin(c *gin.Context) {
 // DeleteAdmin 删除管理员
 // DELETE /admin/admins/:id
 func (h *AdminHandler) DeleteAdmin(c *gin.Context) {
+	if !h.requireSuperAdmin(c) {
+		return
+	}
+
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {

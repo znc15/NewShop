@@ -7,12 +7,12 @@ import { Button } from '@/components/ui/Button'
 // 用户状态配置
 const USER_STATUS_LABELS: Record<string, string> = {
   active: '正常',
-  disabled: '已禁用',
+  inactive: '已禁用',
 }
 
 const USER_STATUS_COLORS: Record<string, string> = {
   active: 'bg-green-100 text-green-800',
-  disabled: 'bg-red-100 text-red-800',
+  inactive: 'bg-red-100 text-red-800',
 }
 
 // 会员等级配置

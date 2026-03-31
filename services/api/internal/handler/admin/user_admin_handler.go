@@ -3,6 +3,7 @@ package admin
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"newshop/api/internal/service/admin"
 
@@ -31,20 +32,27 @@ type UserListItem struct {
 	ID          uint64 `json:"id"`
 	Email       string `json:"email"`
 	Phone       string `json:"phone"`
+	Username    string `json:"username"`
 	Nickname    string `json:"nickname"`
 	Avatar      string `json:"avatar"`
 	MemberLevel int    `json:"member_level"`
+	Level       int    `json:"level"`
 	Points      int    `json:"points"`
+	OrderCount  int    `json:"order_count"`
+	TotalSpent  int64  `json:"total_spent"`
 	Status      string `json:"status"`
 	CreatedAt   string `json:"created_at"`
+	UpdatedAt   string `json:"updated_at"`
 }
 
 // UserListResponse 用户列表响应
 type UserListResponse struct {
-	Users    []UserListItem `json:"users"`
-	Total    int64          `json:"total"`
-	Page     int            `json:"page"`
-	PageSize int            `json:"page_size"`
+	Items      []UserListItem `json:"items"`
+	Users      []UserListItem `json:"users,omitempty"`
+	Total      int64          `json:"total"`
+	Page       int            `json:"page"`
+	PageSize   int            `json:"page_size"`
+	TotalPages int            `json:"total_pages"`
 }
 
 // UserDetailResponse 用户详情响应
@@ -117,29 +125,41 @@ func (h *UserAdminHandler) List(c *gin.Context) {
 		return
 	}
 
-	// 清除敏感信息
-	userList := make([]gin.H, 0, len(result.Users))
+	userList := make([]UserListItem, 0, len(result.Users))
 	for _, u := range result.Users {
-		userList = append(userList, gin.H{
-			"id":           u.ID,
-			"email":        u.Email,
-			"phone":        u.Phone,
-			"nickname":     u.Nickname,
-			"avatar":       u.Avatar,
-			"member_level": u.MemberLevel,
-			"points":       u.Points,
-			"status":       u.Status,
-			"created_at":   u.CreatedAt.Format("2006-01-02 15:04:05"),
+		username := strings.SplitN(u.Email, "@", 2)[0]
+		userList = append(userList, UserListItem{
+			ID:          u.ID,
+			Email:       u.Email,
+			Phone:       u.Phone,
+			Username:    username,
+			Nickname:    u.Nickname,
+			Avatar:      u.Avatar,
+			MemberLevel: u.MemberLevel,
+			Level:       u.MemberLevel,
+			Points:      u.Points,
+			OrderCount:  0,
+			TotalSpent:  0,
+			Status:      u.Status,
+			CreatedAt:   u.CreatedAt.Format("2006-01-02 15:04:05"),
+			UpdatedAt:   u.UpdatedAt.Format("2006-01-02 15:04:05"),
 		})
+	}
+
+	totalPages := (result.Total + int64(result.PageSize) - 1) / int64(result.PageSize)
+	if totalPages == 0 {
+		totalPages = 1
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
-		"data": gin.H{
-			"users":     userList,
-			"total":     result.Total,
-			"page":      result.Page,
-			"page_size": result.PageSize,
+		"data": UserListResponse{
+			Items:      userList,
+			Users:      userList,
+			Total:      result.Total,
+			Page:       result.Page,
+			PageSize:   result.PageSize,
+			TotalPages: int(totalPages),
 		},
 	})
 }

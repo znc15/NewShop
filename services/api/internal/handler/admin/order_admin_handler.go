@@ -3,8 +3,10 @@ package admin
 import (
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
+	"newshop/api/internal/model"
 	"newshop/api/internal/repository"
 	"newshop/api/internal/service/admin"
 
@@ -221,12 +223,78 @@ func (h *OrderAdminHandler) ListOrders(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
-		"data": gin.H{
-			"orders": result.Orders,
-			"total":  result.Total,
-			"page":   result.Page,
-		},
+		"data": buildOrderListData(result.Orders, result.Total, result.Page, query.PageSize),
 	})
+}
+
+func maxInt(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func buildOrderListData(orders []model.Order, total int64, page, pageSize int) gin.H {
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+
+	items := make([]gin.H, 0, len(orders))
+	for _, order := range orders {
+		items = append(items, buildOrderPayload(order))
+	}
+
+	return gin.H{
+		"items":       items,
+		"orders":      items,
+		"total":       total,
+		"page":        page,
+		"page_size":   pageSize,
+		"total_pages": maxInt(1, int((total+int64(pageSize)-1)/int64(pageSize))),
+	}
+}
+
+func buildOrderPayload(order model.Order) gin.H {
+	return gin.H{
+		"id":               order.ID,
+		"order_no":         order.OrderNo,
+		"user_id":          order.UserID,
+		"status":           order.Status,
+		"total_amount":     order.TotalAmount,
+		"discount_amount":  order.DiscountAmount,
+		"shipping_fee":     order.FreightAmount,
+		"freight_amount":   order.FreightAmount,
+		"pay_amount":       order.PayAmount,
+		"payment_method":   order.PaymentMethod,
+		"receiver_name":    order.ReceiverName,
+		"receiver_phone":   order.ReceiverPhone,
+		"receiver_address": order.ReceiverAddress,
+		"items_count":      len(order.Items),
+		"remark":           order.Remark,
+		"refund_reason":    nullableString(order.RefundReason),
+		"tracking_company": nullableString(order.ExpressCompany),
+		"express_company":  nullableString(order.ExpressCompany),
+		"tracking_no":      nullableString(order.ExpressNo),
+		"express_no":       nullableString(order.ExpressNo),
+		"paid_at":          order.PaymentTime,
+		"payment_time":     order.PaymentTime,
+		"shipped_at":       order.ShipTime,
+		"ship_time":        order.ShipTime,
+		"delivered_at":     order.ReceiveTime,
+		"receive_time":     order.ReceiveTime,
+		"refunded_at":      order.RefundTime,
+		"refund_time":      order.RefundTime,
+		"created_at":       order.CreatedAt,
+		"updated_at":       order.UpdatedAt,
+		"items":            order.Items,
+	}
+}
+
+func nullableString(value string) *string {
+	if value == "" {
+		return nil
+	}
+	return &value
 }
 
 // GetOrderDetail 获取订单详情
@@ -269,20 +337,24 @@ func (h *OrderAdminHandler) GetOrderDetail(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"code": 0,
-		"data": order,
+		"data": buildOrderPayload(*order),
 	})
 }
 
 // ShipOrderRequest 发货请求
 type ShipOrderRequest struct {
-	ExpressCompany string `json:"express_company" binding:"required" example:"顺丰速运"`    // 物流公司
-	ExpressNo      string `json:"express_no" binding:"required" example:"SF1234567890"` // 物流单号
+	ExpressCompany  string `json:"express_company" example:"顺丰速运"`     // 物流公司（兼容字段）
+	ExpressNo       string `json:"express_no" example:"SF1234567890"`  // 物流单号（兼容字段）
+	TrackingCompany string `json:"tracking_company" example:"顺丰速运"`    // 物流公司（新字段）
+	TrackingNo      string `json:"tracking_no" example:"SF1234567890"` // 物流单号（新字段）
 }
 
 // RefundOrderRequest 退款请求
 type RefundOrderRequest struct {
-	RefundAmount float64 `json:"refund_amount" binding:"required,gt=0" example:"299.00"` // 退款金额
-	RefundReason string  `json:"refund_reason" binding:"required" example:"用户申请退款"`      // 退款原因
+	RefundAmount float64 `json:"refund_amount" example:"299.00"` // 退款金额（新字段）
+	RefundReason string  `json:"refund_reason" example:"用户申请退款"` // 退款原因（新字段）
+	Amount       float64 `json:"amount" example:"299.00"`        // 退款金额（旧字段）
+	Reason       string  `json:"reason" example:"用户申请退款"`        // 退款原因（旧字段）
 }
 
 // ShipOrder 发货
@@ -316,12 +388,30 @@ func (h *OrderAdminHandler) ShipOrder(c *gin.Context) {
 		return
 	}
 
+	expressCompany := strings.TrimSpace(req.ExpressCompany)
+	if expressCompany == "" {
+		expressCompany = strings.TrimSpace(req.TrackingCompany)
+	}
+
+	expressNo := strings.TrimSpace(req.ExpressNo)
+	if expressNo == "" {
+		expressNo = strings.TrimSpace(req.TrackingNo)
+	}
+
+	if expressCompany == "" || expressNo == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    40002,
+			"message": "物流公司和物流单号不能为空",
+		})
+		return
+	}
+
 	// 获取管理员ID
 	adminID := c.GetUint64("user_id")
 
 	input := admin.ShipOrderInput{
-		ExpressCompany: req.ExpressCompany,
-		ExpressNo:      req.ExpressNo,
+		ExpressCompany: expressCompany,
+		ExpressNo:      expressNo,
 	}
 
 	err = h.service.ShipOrder(c.Request.Context(), id, adminID, input)
@@ -384,12 +474,21 @@ func (h *OrderAdminHandler) RefundOrder(c *gin.Context) {
 		return
 	}
 
+	refundAmount, refundReason := resolveRefundInput(req)
+	if refundAmount <= 0 || refundReason == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    40002,
+			"message": "退款金额和退款原因不能为空",
+		})
+		return
+	}
+
 	// 获取管理员ID
 	adminID := c.GetUint64("user_id")
 
 	input := admin.RefundOrderInput{
-		RefundAmount: req.RefundAmount,
-		RefundReason: req.RefundReason,
+		RefundAmount: refundAmount,
+		RefundReason: refundReason,
 	}
 
 	err = h.service.RefundOrder(c.Request.Context(), id, adminID, input)
@@ -424,6 +523,20 @@ func (h *OrderAdminHandler) RefundOrder(c *gin.Context) {
 		"code":    0,
 		"message": "退款成功",
 	})
+}
+
+func resolveRefundInput(req RefundOrderRequest) (float64, string) {
+	refundAmount := req.RefundAmount
+	if refundAmount <= 0 {
+		refundAmount = req.Amount
+	}
+
+	refundReason := strings.TrimSpace(req.RefundReason)
+	if refundReason == "" {
+		refundReason = strings.TrimSpace(req.Reason)
+	}
+
+	return refundAmount, refundReason
 }
 
 // StatisticsQuery 统计查询参数

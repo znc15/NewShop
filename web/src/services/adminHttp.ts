@@ -12,6 +12,21 @@ function clearAdminAuthState() {
   localStorage.removeItem('admin-auth-storage')
 }
 
+function getAdminTokenFromStorage(): string | null {
+  const adminAuthStorage = localStorage.getItem('admin-auth-storage')
+  if (!adminAuthStorage) {
+    return null
+  }
+
+  try {
+    const parsed = JSON.parse(adminAuthStorage) as { state?: { token?: unknown } }
+    return typeof parsed.state?.token === 'string' ? parsed.state.token : null
+  } catch {
+    clearAdminAuthState()
+    return null
+  }
+}
+
 function shouldRedirectToAdminLogin(error: AxiosError<ApiResponse>): boolean {
   if (error.response?.status !== 401) {
     return false
@@ -32,8 +47,7 @@ const instance: AxiosInstance = axios.create({
 // 请求拦截器 - 从 adminAuth store 读取 token
 instance.interceptors.request.use(
   (config) => {
-    const adminAuthStorage = localStorage.getItem('admin-auth-storage')
-    const token = adminAuthStorage ? JSON.parse(adminAuthStorage)?.state?.token : null
+    const token = getAdminTokenFromStorage()
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }

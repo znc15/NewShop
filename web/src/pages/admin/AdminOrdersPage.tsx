@@ -129,7 +129,10 @@ export function AdminOrdersPage() {
 
     setSaving(true)
     try {
-      await adminService.refundOrder(selectedOrder.id, { reason: refundReason })
+      await adminService.refundOrder(selectedOrder.id, {
+        refund_amount: selectedOrder.pay_amount,
+        refund_reason: refundReason,
+      })
       setRefundModalOpen(false)
       fetchOrders()
     } catch (error) {
