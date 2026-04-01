@@ -7,6 +7,7 @@ import (
 
 	_ "newshop/api/docs" // swagger docs，需要先运行 swag init 生成
 	"newshop/api/internal/config"
+	"newshop/api/internal/model"
 	"newshop/api/internal/pkg/email"
 	"newshop/api/internal/pkg/jwt"
 	"newshop/api/internal/router"
@@ -75,6 +76,10 @@ func main() {
 		logger.Fatal("连接数据库失败", zap.Error(err))
 	}
 
+	if err := ensureCriticalTables(db); err != nil {
+		logger.Fatal("初始化关键数据表失败", zap.Error(err))
+	}
+
 	// 初始化 Redis
 	rdb := redis.NewClient(&redis.Options{
 		Addr: cfg.Redis.Host + ":" + cfg.Redis.Port,
@@ -132,4 +137,16 @@ func main() {
 	if err := engine.Run(":" + cfg.Server.Port); err != nil {
 		logger.Fatal("启动服务失败", zap.Error(err))
 	}
+}
+
+func ensureCriticalTables(db *gorm.DB) error {
+	return db.AutoMigrate(
+		&model.Presale{},
+		&model.PresaleOrder{},
+		&model.Config{},
+		&model.ConfigHistory{},
+		&model.Coupon{},
+		&model.UserCoupon{},
+		&scheduler.Task{},
+	)
 }

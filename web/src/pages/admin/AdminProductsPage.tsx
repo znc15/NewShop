@@ -22,6 +22,32 @@ const PRODUCT_STATUS_COLORS: Record<string, string> = {
   sold_out: 'bg-red-100 text-red-800',
 }
 
+const INITIAL_FORM_DATA: AdminProductFormData = {
+  name: '',
+  description: '',
+  detail: '',
+  price: 0,
+  category_id: 0,
+  status: 'draft',
+  stock: 0,
+  is_hot: false,
+  is_sale: false,
+  sort: 0,
+  images: [],
+  skus: [],
+}
+
+function parseImageList(images: string | null): string[] {
+  if (!images) {
+    return []
+  }
+
+  return images
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0)
+}
+
 export function AdminProductsPage() {
   // 列表数据
   const [products, setProducts] = useState<AdminProduct[]>([])
@@ -39,17 +65,7 @@ export function AdminProductsPage() {
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<AdminProduct | null>(null)
-  const [formData, setFormData] = useState<AdminProductFormData>({
-    name: '',
-    description: '',
-    price: 0,
-    category_id: 0,
-    status: 'draft',
-    is_hot: false,
-    is_sale: false,
-    images: [],
-    skus: [],
-  })
+  const [formData, setFormData] = useState<AdminProductFormData>(INITIAL_FORM_DATA)
   const [saving, setSaving] = useState(false)
 
   // 获取商品列表
@@ -98,34 +114,27 @@ export function AdminProductsPage() {
       setFormData({
         name: product.name,
         description: product.description,
+        detail: product.detail || '',
         price: product.price,
         original_price: product.original_price || undefined,
         category_id: product.category_id,
         status: product.status,
+        stock: product.stock,
         is_hot: product.is_hot,
         is_sale: product.is_sale,
-        images: [],
+        sort: product.sort,
+        images: parseImageList(product.images),
         skus: [],
       })
     } else {
       setSelectedProduct(null)
-      setFormData({
-        name: '',
-        description: '',
-        price: 0,
-        category_id: 0,
-        status: 'draft',
-        is_hot: false,
-        is_sale: false,
-        images: [],
-        skus: [],
-      })
+      setFormData(INITIAL_FORM_DATA)
     }
     setEditModalOpen(true)
   }
 
   // 保存商品
-  const handleSave = async () => {
+  const handleSave = async (continueCreate = false) => {
     if (!formData.name || !formData.category_id) {
       alert('请填写必填项')
       return
@@ -137,7 +146,20 @@ export function AdminProductsPage() {
         await adminService.updateProduct(selectedProduct.id, formData)
       } else {
         await adminService.createProduct(formData)
+
+        if (continueCreate) {
+          setFormData((prev) => ({
+            ...INITIAL_FORM_DATA,
+            category_id: prev.category_id,
+            status: prev.status,
+            is_hot: prev.is_hot,
+            is_sale: prev.is_sale,
+          }))
+          fetchProducts()
+          return
+        }
       }
+
       setEditModalOpen(false)
       fetchProducts()
     } catch (error) {
@@ -357,6 +379,19 @@ export function AdminProductsPage() {
             />
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-charcoal mb-1">
+              商品说明
+            </label>
+            <textarea
+              value={formData.detail || ''}
+              onChange={(e) => setFormData((prev) => ({ ...prev, detail: e.target.value }))}
+              placeholder="请输入商品说明（如材质、规格、卖点等）"
+              className="w-full px-3 py-2 text-sm border border-cream-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-transparent resize-none"
+              rows={4}
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-charcoal mb-1">
@@ -418,6 +453,18 @@ export function AdminProductsPage() {
             </div>
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-charcoal mb-1">
+              库存
+            </label>
+            <Input
+              type="number"
+              value={formData.stock ?? 0}
+              onChange={(e) => setFormData((prev) => ({ ...prev, stock: Number(e.target.value) || 0 }))}
+              placeholder="请输入库存"
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <label className="flex items-center gap-2 rounded-lg border border-cream-300 px-3 py-2 cursor-pointer">
               <input
@@ -444,8 +491,13 @@ export function AdminProductsPage() {
             <Button variant="secondary" onClick={() => setEditModalOpen(false)}>
               取消
             </Button>
-            <Button onClick={handleSave} loading={saving}>
-              {saving ? '保存中...' : '保存'}
+            {!selectedProduct && (
+              <Button variant="secondary" onClick={() => { void handleSave(true) }} loading={saving}>
+                {saving ? '保存中...' : '保存并继续新增'}
+              </Button>
+            )}
+            <Button onClick={() => { void handleSave(false) }} loading={saving}>
+              {saving ? '保存中...' : selectedProduct ? '保存修改' : '保存并关闭'}
             </Button>
           </div>
         </div>

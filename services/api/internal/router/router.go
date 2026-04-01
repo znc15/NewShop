@@ -93,6 +93,7 @@ type Router struct {
 	userAdminHandler       *adminhandler.UserAdminHandler
 	configAdminHandler     *adminhandler.ConfigAdminHandler
 	pageAdminHandler       *adminhandler.PageAdminHandler
+	couponAdminHandler     *adminhandler.CouponAdminHandler
 }
 
 // NewRouter 创建路由管理器
@@ -170,6 +171,7 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 	userAdminHandler := adminhandler.NewUserAdminHandler(userAdminSvc, logger)
 	configAdminHandler := adminhandler.NewConfigAdminHandler(configService, logger)
 	pageAdminHandler := adminhandler.NewPageAdminHandler(pageService, logger)
+	couponAdminHandler := adminhandler.NewCouponAdminHandler(db, logger)
 
 	return &Router{
 		db:         db,
@@ -232,6 +234,7 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 		userAdminHandler:       userAdminHandler,
 		configAdminHandler:     configAdminHandler,
 		pageAdminHandler:       pageAdminHandler,
+		couponAdminHandler:     couponAdminHandler,
 	}
 }
 
@@ -549,6 +552,16 @@ func (r *Router) setupAdminRoutes(rg *gin.RouterGroup) {
 		configs.PUT("/:key", r.configAdminHandler.Update)
 		configs.DELETE("/:key", r.configAdminHandler.Delete)
 		configs.GET("/:key/histories", r.configAdminHandler.GetHistories)
+	}
+
+	// 优惠券管理
+	coupons := rg.Group("/coupons")
+	{
+		coupons.GET("", r.couponAdminHandler.List)
+		coupons.POST("", r.couponAdminHandler.Create)
+		coupons.GET("/:id", r.couponAdminHandler.Get)
+		coupons.PUT("/:id", r.couponAdminHandler.Update)
+		coupons.DELETE("/:id", r.couponAdminHandler.Delete)
 	}
 
 	pages := rg.Group("/pages")

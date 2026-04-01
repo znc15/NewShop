@@ -68,12 +68,22 @@ function toArray(value: unknown): unknown[] {
   return Array.isArray(value) ? value : []
 }
 
+function pickArray(source: UnknownRecord, keys: string[]): unknown[] {
+  for (const key of keys) {
+    const value = source[key]
+    if (Array.isArray(value)) {
+      return value
+    }
+  }
+  return []
+}
+
 function normalizePaginated<T>(
   raw: unknown,
   mapper: (item: unknown) => T
 ): AdminPaginatedResponse<T> {
   const source = asRecord(raw) ?? {}
-  const items = toArray(source.items).map(mapper)
+  const items = pickArray(source, ['items', 'list']).map(mapper)
   const total = toNumber(source.total, items.length)
   const page = toNumber(source.page, 1)
   const pageSize = toNumber(source.page_size, items.length > 0 ? items.length : 20)
@@ -221,6 +231,27 @@ function mapCategory(item: unknown): AdminCategory {
   }
 }
 
+function mapCoupon(item: unknown): AdminCoupon {
+  const record = asRecord(item) ?? {}
+
+  return {
+    id: toNumber(record.id),
+    code: toString(record.code),
+    name: toString(record.name),
+    type: toString(record.type, 'fixed') as AdminCoupon['type'],
+    value: toNumber(record.value),
+    min_amount: toNumber(record.min_amount),
+    max_discount: record.max_discount === null ? null : toNumber(record.max_discount, 0),
+    total_count: toNumber(record.total_count),
+    used_count: toNumber(record.used_count),
+    start_time: toString(record.start_time),
+    end_time: toString(record.end_time),
+    status: toString(record.status),
+    created_at: toString(record.created_at),
+    updated_at: toString(record.updated_at),
+  }
+}
+
 export const adminService = {
   // ==================== 仪表盘 ====================
   getDashboardStats(): Promise<DashboardStats> {
@@ -306,7 +337,7 @@ export const adminService = {
       return []
     }
 
-    const list = toArray(record.items)
+    const list = pickArray(record, ['items', 'list'])
     return list.map(mapCategory)
   },
 
@@ -328,8 +359,9 @@ export const adminService = {
   },
 
   // ==================== 优惠券管理 ====================
-  getCoupons(params: AdminCouponListParams): Promise<AdminPaginatedResponse<AdminCoupon>> {
-    return adminHttp.get('/coupons', params as Record<string, unknown>)
+  async getCoupons(params: AdminCouponListParams): Promise<AdminPaginatedResponse<AdminCoupon>> {
+    const data = await adminHttp.get<unknown>('/coupons', params as Record<string, unknown>)
+    return normalizePaginated(data, mapCoupon)
   },
 
   getCoupon(id: number): Promise<AdminCoupon> {
@@ -349,8 +381,18 @@ export const adminService = {
   },
 
   // ==================== 配置管理 ====================
-  getConfigs(category?: string): Promise<AdminConfigItem[]> {
-    return adminHttp.get('/configs', category ? { category } : undefined)
+  async getConfigs(category?: string): Promise<AdminConfigItem[]> {
+    const data = await adminHttp.get<unknown>('/configs', category ? { category } : undefined)
+    if (Array.isArray(data)) {
+      return data as AdminConfigItem[]
+    }
+
+    const record = asRecord(data)
+    if (!record) {
+      return []
+    }
+
+    return pickArray(record, ['items', 'list']) as AdminConfigItem[]
   },
 
   upsertConfig(data: AdminConfigPayload): Promise<AdminConfigItem> {

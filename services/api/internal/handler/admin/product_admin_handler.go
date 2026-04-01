@@ -52,11 +52,14 @@ type ProductListResponse struct {
 type ProductListItem struct {
 	ID            uint64 `json:"id"`
 	Name          string `json:"name"`
+	Description   string `json:"description"`
+	Detail        string `json:"detail"`
 	CategoryID    uint64 `json:"category_id"`
 	CategoryName  string `json:"category_name,omitempty"`
 	BrandID       uint64 `json:"brand_id"`
 	BrandName     string `json:"brand_name,omitempty"`
 	MainImage     string `json:"main_image"`
+	Images        string `json:"images,omitempty"`
 	Price         int64  `json:"price"`
 	OriginalPrice int64  `json:"original_price"`
 	Stock         int    `json:"stock"`
@@ -65,6 +68,7 @@ type ProductListItem struct {
 	IsHot         bool   `json:"is_hot"`
 	IsSale        bool   `json:"is_sale"`
 	Status        string `json:"status"`
+	Sort          int    `json:"sort"`
 	CreatedAt     string `json:"created_at"`
 }
 
@@ -114,8 +118,8 @@ type UpdateProductRequest struct {
 	Price         int64                  `json:"price" binding:"gte=0"`
 	OriginalPrice int64                  `json:"original_price"`
 	Stock         int                    `json:"stock" binding:"gte=0"`
-	Description   string                 `json:"description"`
-	Detail        string                 `json:"detail"`
+	Description   *string                `json:"description"`
+	Detail        *string                `json:"detail"`
 	IsHot         *bool                  `json:"is_hot"`
 	IsSale        *bool                  `json:"is_sale"`
 	Sort          int                    `json:"sort"`
@@ -260,9 +264,12 @@ func (h *ProductAdminHandler) List(c *gin.Context) {
 		item := ProductListItem{
 			ID:            p.ID,
 			Name:          p.Name,
+			Description:   p.Description,
+			Detail:        p.Detail,
 			CategoryID:    p.CategoryID,
 			BrandID:       p.BrandID,
 			MainImage:     p.MainImage,
+			Images:        p.Images,
 			Price:         p.Price,
 			OriginalPrice: p.OriginalPrice,
 			Stock:         p.Stock,
@@ -271,6 +278,7 @@ func (h *ProductAdminHandler) List(c *gin.Context) {
 			IsHot:         p.IsHot,
 			IsSale:        p.IsSale,
 			Status:        p.Status,
+			Sort:          p.Sort,
 			CreatedAt:     p.CreatedAt.Format("2006-01-02 15:04:05"),
 		}
 		if p.Category != nil {
@@ -586,8 +594,12 @@ func (h *ProductAdminHandler) Update(c *gin.Context) {
 	if req.IsSale != nil {
 		product.IsSale = *req.IsSale
 	}
-	product.Description = req.Description
-	product.Detail = req.Detail
+	if req.Description != nil {
+		product.Description = *req.Description
+	}
+	if req.Detail != nil {
+		product.Detail = *req.Detail
+	}
 	product.Sort = req.Sort
 
 	// 处理图片

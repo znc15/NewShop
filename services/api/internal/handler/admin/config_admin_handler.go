@@ -91,6 +91,71 @@ func NewConfigAdminHandler(configService *service.ConfigService, logger *zap.Log
 	}
 }
 
+func getOperatorID(c *gin.Context) (uint64, bool) {
+	if id, ok := getUint64FromContext(c, "user_id"); ok {
+		return id, true
+	}
+
+	if id, ok := getUint64FromContext(c, "admin_id"); ok {
+		return id, true
+	}
+
+	return 0, false
+}
+
+func getUint64FromContext(c *gin.Context, key string) (uint64, bool) {
+	raw, exists := c.Get(key)
+	if !exists || raw == nil {
+		return 0, false
+	}
+
+	switch value := raw.(type) {
+	case uint64:
+		return value, true
+	case uint:
+		return uint64(value), true
+	case uint32:
+		return uint64(value), true
+	case uint16:
+		return uint64(value), true
+	case uint8:
+		return uint64(value), true
+	case int64:
+		if value < 0 {
+			return 0, false
+		}
+		return uint64(value), true
+	case int:
+		if value < 0 {
+			return 0, false
+		}
+		return uint64(value), true
+	case int32:
+		if value < 0 {
+			return 0, false
+		}
+		return uint64(value), true
+	case int16:
+		if value < 0 {
+			return 0, false
+		}
+		return uint64(value), true
+	case int8:
+		if value < 0 {
+			return 0, false
+		}
+		return uint64(value), true
+	case string:
+		parsed, err := strconv.ParseUint(value, 10, 64)
+		if err != nil {
+			return 0, false
+		}
+		return parsed, true
+	default:
+		return 0, false
+	}
+}
+
 // List 获取配置列表
 // @Summary 获取配置列表
 // @Description 获取所有系统配置，支持按分类筛选
@@ -193,10 +258,16 @@ func (h *ConfigAdminHandler) Update(c *gin.Context) {
 		return
 	}
 
-	// 获取管理员ID
-	adminID, _ := c.Get("admin_id")
+	operatorID, ok := getOperatorID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"code":    40100,
+			"message": "未提供认证信息",
+		})
+		return
+	}
 
-	err := h.configService.UpdateConfigValue(c.Request.Context(), key, json.RawMessage(req.Value), adminID.(uint64))
+	err := h.configService.UpdateConfigValue(c.Request.Context(), key, json.RawMessage(req.Value), operatorID)
 	if err != nil {
 		if err == service.ErrConfigNotFound {
 			c.JSON(http.StatusNotFound, gin.H{
@@ -267,8 +338,16 @@ func (h *ConfigAdminHandler) Create(c *gin.Context) {
 		IsPublic:    req.IsPublic,
 	}
 
-	adminID, _ := c.Get("admin_id")
-	err := h.configService.UpsertConfig(c.Request.Context(), config, adminID.(uint64))
+	operatorID, ok := getOperatorID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"code":    40100,
+			"message": "未提供认证信息",
+		})
+		return
+	}
+
+	err := h.configService.UpsertConfig(c.Request.Context(), config, operatorID)
 	if err != nil {
 		h.logger.Error("创建配置失败", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{
