@@ -1,8 +1,9 @@
-import { Suspense, lazy, useEffect } from 'react'
+import { Suspense, lazy, useEffect, type CSSProperties } from 'react'
 import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'motion/react'
 import { PageLoader } from '@/components/ui/PageLoader'
 import { PageSkeleton } from '@/components/ui/Skeleton'
+import { useScrollPosition } from '@/hooks'
 import {
   AdminCategoriesPage,
   AdminCouponsPage,
@@ -72,12 +73,64 @@ const navLinkVariants = {
   tap: { scale: 0.98 },
 }
 
+const HEADER_TRANSITION_DISTANCE = 96
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max)
+}
+
+function blendChannel(from: number, to: number, progress: number) {
+  return Math.round(from + (to - from) * progress)
+}
+
+function blendColor(from: [number, number, number], to: [number, number, number], progress: number, alpha = 1) {
+  const red = blendChannel(from[0], to[0], progress)
+  const green = blendChannel(from[1], to[1], progress)
+  const blue = blendChannel(from[2], to[2], progress)
+
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`
+}
+
 function App() {
   const location = useLocation()
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const cartTotalCount = useCartStore((state) => state.totalCount)
   const fetchCart = useCartStore((state) => state.fetchCart)
+  const scrollY = useScrollPosition()
   const path = location.pathname
+  const isHomePage = path === '/'
+  const headerTransitionProgress = isHomePage ? clamp(scrollY / HEADER_TRANSITION_DISTANCE, 0, 1) : 1
+  const headerBrandColor = isHomePage
+    ? blendColor([255, 255, 255], [37, 99, 235], headerTransitionProgress)
+    : 'rgb(37, 99, 235)'
+  const headerBrandHoverColor = isHomePage
+    ? blendColor([255, 255, 255], [29, 78, 216], headerTransitionProgress)
+    : 'rgb(29, 78, 216)'
+  const headerLinkColor = isHomePage
+    ? blendColor([255, 255, 255], [51, 65, 85], headerTransitionProgress, 0.94)
+    : 'rgb(51, 65, 85)'
+  const headerLinkHoverColor = isHomePage
+    ? blendColor([255, 255, 255], [29, 78, 216], headerTransitionProgress)
+    : 'rgb(29, 78, 216)'
+  const headerStyle: CSSProperties & Record<string, string> = {
+    backgroundColor: isHomePage
+      ? `rgba(255, 255, 255, ${0.96 * headerTransitionProgress})`
+      : 'rgba(255, 255, 255, 0.95)',
+    borderColor: isHomePage
+      ? `rgba(226, 232, 240, ${headerTransitionProgress})`
+      : 'rgba(226, 232, 240, 1)',
+    boxShadow: isHomePage
+      ? `0 1px 0 rgba(226, 232, 240, ${0.85 * headerTransitionProgress}), 0 14px 34px rgba(15, 23, 42, ${0.08 * headerTransitionProgress})`
+      : '0 1px 0 rgba(226, 232, 240, 0.9), 0 14px 34px rgba(15, 23, 42, 0.08)',
+    backdropFilter: isHomePage ? `blur(${8 * headerTransitionProgress}px)` : 'blur(8px)',
+    color: headerLinkColor,
+    ['--nav-brand-color']: headerBrandColor,
+    ['--nav-brand-hover-color']: headerBrandHoverColor,
+    ['--nav-link-color']: headerLinkColor,
+    ['--nav-link-hover-color']: headerLinkHoverColor,
+    ['--nav-icon-color']: headerLinkColor,
+    ['--nav-icon-hover-color']: headerLinkHoverColor,
+  }
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -116,13 +169,16 @@ function App() {
       <PageLoader />
 
       {/* 顶部导航 */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-200">
+      <header
+        className="sticky top-0 z-50 border-b transition-all duration-300 ease-out"
+        style={headerStyle}
+      >
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-8">
               <Link
                 to="/"
-                className="font-display text-2xl font-semibold text-blue-700 hover:text-blue-600 transition-colors"
+                className="nav-header-brand font-display text-2xl font-semibold"
               >
                 NewShop
               </Link>
@@ -136,7 +192,7 @@ function App() {
                   <motion.div key={link.to} variants={navLinkVariants} whileHover="hover" whileTap="tap">
                     <Link
                       to={link.to}
-                      className="text-sm text-charcoal hover:text-blue-600 transition-colors"
+                      className="nav-header-link text-sm"
                     >
                       {link.label}
                     </Link>
@@ -148,7 +204,7 @@ function App() {
               <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
                 <Link
                   to="/search"
-                  className="inline-flex items-center justify-center p-2 text-charcoal hover:text-blue-600 transition-colors"
+                  className="nav-header-icon inline-flex items-center justify-center p-2"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -169,7 +225,7 @@ function App() {
               <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
                 <Link
                   to="/cart"
-                  className="inline-flex items-center justify-center p-2 text-charcoal hover:text-blue-600 transition-colors relative"
+                  className="nav-header-icon relative inline-flex items-center justify-center p-2"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -196,7 +252,7 @@ function App() {
               <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
                 <Link
                   to={isAuthenticated ? '/user/profile' : '/login'}
-                  className="inline-flex items-center justify-center p-2 text-charcoal hover:text-blue-600 transition-colors"
+                  className="nav-header-icon inline-flex items-center justify-center p-2"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

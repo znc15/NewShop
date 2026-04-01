@@ -131,6 +131,36 @@ a:hover {
   color: var(--color-blue-dark);
 }
 
+.nav-header-brand,
+.nav-header-link,
+.nav-header-icon {
+  transition: color var(--transition-base), opacity var(--transition-base);
+}
+
+.nav-header-brand {
+  color: var(--nav-brand-color, var(--color-blue-dark));
+}
+
+.nav-header-brand:hover {
+  color: var(--nav-brand-hover-color, var(--color-blue));
+}
+
+.nav-header-link {
+  color: var(--nav-link-color, var(--color-charcoal));
+}
+
+.nav-header-link:hover {
+  color: var(--nav-link-hover-color, var(--color-blue-dark));
+}
+
+.nav-header-icon {
+  color: var(--nav-icon-color, var(--color-charcoal));
+}
+
+.nav-header-icon:hover {
+  color: var(--nav-icon-hover-color, var(--color-blue-dark));
+}
+
 /* 按钮重置 */
 button {
   font-family: inherit;

@@ -1,6 +1,8 @@
 # Docker Compose 配置 - NewShop 开发环境基础设施
 # 包含数据库、缓存、搜索引擎和监控服务
 
+name: newshop-infra
+
 services:
   # PostgreSQL 数据库
   postgres:
@@ -19,6 +21,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   # Redis 缓存
   redis:
@@ -33,17 +36,24 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   # Meilisearch 搜索引擎
   meilisearch:
     image: getmeili/meilisearch:v1.5
     container_name: newshop-meili
     environment:
-      MEILI_MASTER_KEY: masterKey
+      MEILI_MASTER_KEY: newshop-master-key
     ports:
       - "7700:7700"
     volumes:
       - meili_data:/meilisearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --spider http://127.0.0.1:7700/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
 
   # Prometheus 监控
   prometheus:
@@ -54,17 +64,19 @@ services:
     volumes:
       - ../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
+    restart: unless-stopped
 
   # Grafana 可视化
   grafana:
     image: grafana/grafana:10.1.0
     container_name: newshop-grafana
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin
     volumes:
       - grafana_data:/var/lib/grafana
+    restart: unless-stopped
 
 volumes:
   postgres_data:

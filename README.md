@@ -115,7 +115,12 @@ cd newshop
 
 ### 2. 启动依赖服务
 ```bash
-docker-compose up -d
+make docker-up
+```
+
+如果需要一键启动完整栈（数据库 + API + 前端）：
+```bash
+make docker-app-up
 ```
 
 ### 3. 配置环境变量
@@ -169,8 +174,10 @@ make build         # 编译后端
 make test          # 运行测试
 
 # Docker
-make docker-up     # 启动Docker服务
-make docker-down   # 停止Docker服务
+make docker-up       # 启动基础设施（PostgreSQL/Redis/Meilisearch/Prometheus/Grafana）
+make docker-down     # 停止基础设施
+make docker-app-up   # 启动完整应用栈（基础设施 + API + Web）
+make docker-app-down # 停止完整应用栈
 
 # 数据库
 make migrate       # 执行迁移
