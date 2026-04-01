@@ -147,6 +147,9 @@ func ensureCriticalTables(db *gorm.DB) error {
 		&model.ConfigHistory{},
 		&model.Coupon{},
 		&model.UserCoupon{},
+		&model.HomeBanner{},
+		&model.HomeReview{},
+		&model.NewsletterSubscription{},
 		&scheduler.Task{},
 	)
 }

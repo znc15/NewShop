@@ -48,6 +48,7 @@ type Router struct {
 	expLogRepo      *repository.ExperienceLogRepo
 	configRepo      *repository.ConfigRepo
 	pageRepo        *repository.PageRepository
+	homePageRepo    *repository.HomePageRepo
 
 	// Services
 	userService     *service.UserService
@@ -68,6 +69,7 @@ type Router struct {
 	membershipSvc   *service.MembershipService
 	configService   *service.ConfigService
 	pageService     *service.PageService
+	homePageService *service.HomePageService
 
 	// Handlers
 	authHandler       *handler.AuthHandler
@@ -84,6 +86,7 @@ type Router struct {
 	membershipHandler *handler.MembershipHandler
 	configHandler     *handler.ConfigHandler
 	pageHandler       *handler.PageHandler
+	homePageHandler   *handler.HomePageHandler
 	// Admin handlers
 	productAdminHandler    *adminhandler.ProductAdminHandler
 	orderAdminHandler      *adminhandler.OrderAdminHandler
@@ -118,6 +121,7 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 	expLogRepo := repository.NewExperienceLogRepo(db)
 	configRepo := repository.NewConfigRepo(db)
 	pageRepo := repository.NewPageRepository(db)
+	homePageRepo := repository.NewHomePageRepo(db)
 
 	// 初始化 Services
 	userService := service.NewUserService(db)
@@ -135,6 +139,7 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 	membershipSvc := service.NewMembershipService(db, memberLevelRepo, memberExpRepo, expLogRepo)
 	configService := service.NewConfigService(db, configRepo, logger)
 	pageService := service.NewPageService(pageRepo, db)
+	homePageService := service.NewHomePageService(homePageRepo)
 	githubOAuthService := service.NewGitHubOAuthService(userService, configService, jwtManager, logger)
 	frontendLoginURL := "/login"
 	if len(cfg.CORS.AllowedOrigins) > 0 {
@@ -161,6 +166,7 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 	membershipHandler := handler.NewMembershipHandler(membershipSvc, logger)
 	configHandler := handler.NewConfigHandler(configService, logger)
 	pageHandler := handler.NewPageHandler(pageService, logger)
+	homePageHandler := handler.NewHomePageHandler(homePageService, logger)
 	// Admin handlers
 	productAdminHandler := adminhandler.NewProductAdminHandler(productAdminSvc, productRepo, logger)
 	orderAdminHandler := adminhandler.NewOrderAdminHandler(orderAdminSvc, logger)
@@ -196,6 +202,7 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 		expLogRepo:      expLogRepo,
 		configRepo:      configRepo,
 		pageRepo:        pageRepo,
+		homePageRepo:    homePageRepo,
 		// Services
 		userService:     userService,
 		productService:  productService,
@@ -212,6 +219,7 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 		membershipSvc:   membershipSvc,
 		configService:   configService,
 		pageService:     pageService,
+		homePageService: homePageService,
 		// Handlers
 		authHandler:       authHandler,
 		productHandler:    productHandler,
@@ -225,6 +233,7 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 		membershipHandler: membershipHandler,
 		configHandler:     configHandler,
 		pageHandler:       pageHandler,
+		homePageHandler:   homePageHandler,
 		// Admin handlers
 		productAdminHandler:    productAdminHandler,
 		orderAdminHandler:      orderAdminHandler,
@@ -307,6 +316,7 @@ func (r *Router) Setup(engine *gin.Engine) {
 		r.setupPointsRoutes(v1)
 		r.setupMembershipRoutes(v1)
 		r.setupPageRoutes(v1)
+		r.setupHomeRoutes(v1)
 	}
 
 	// 管理后台路由组
@@ -637,5 +647,14 @@ func (r *Router) setupPageRoutes(rg *gin.RouterGroup) {
 	pages := rg.Group("/pages")
 	{
 		pages.GET("/:slug", r.pageHandler.GetPageBySlug)
+	}
+}
+
+func (r *Router) setupHomeRoutes(rg *gin.RouterGroup) {
+	home := rg.Group("")
+	{
+		home.GET("/banners", r.homePageHandler.GetBanners)
+		home.GET("/reviews/featured", r.homePageHandler.GetFeaturedReviews)
+		home.POST("/subscriptions", r.homePageHandler.Subscribe)
 	}
 }
