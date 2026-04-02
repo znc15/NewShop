@@ -209,7 +209,6 @@ function CouponSelector({
 export default function CheckoutPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const cartItemIds = (location.state as { cartItemIds?: number[] })?.cartItemIds || [];
 
   const [loading, setLoading] = useState(true);
   const [preview, setPreview] = useState<CheckoutPreviewResponse | null>(null);
@@ -220,6 +219,8 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    const cartItemIds = (location.state as { cartItemIds?: number[] } | null)?.cartItemIds || [];
+
     if (cartItemIds.length === 0) {
       navigate('/cart');
       return;
@@ -238,7 +239,7 @@ export default function CheckoutPage() {
     };
 
     fetchPreview();
-  }, [cartItemIds, navigate]);
+  }, [location.state, navigate]);
 
   // 计算金额
   const couponDiscount = selectedCoupon

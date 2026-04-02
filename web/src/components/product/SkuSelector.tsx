@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import { cn } from '@/utils'
 import type { ProductSpec, ProductSku } from '@/types'
 
@@ -33,20 +32,12 @@ export function SkuSelector({
   onQuantityChange,
   maxQuantity = 99,
 }: SkuSelectorProps) {
-  // 当前选择的规格值
-  const [selectedSpecs, setSelectedSpecs] = useState<Record<string, string>>({})
-
-  // 根据 sku 的 specs 字段初始化 selectedSpecs
-  useEffect(() => {
-    if (selectedSku?.specs) {
-      setSelectedSpecs(parseSkuSpecs(selectedSku.specs))
-    }
-  }, [selectedSku])
+  // 当前规格选择由 selectedSku 派生，保持单一数据源
+  const selectedSpecs = selectedSku?.specs ? parseSkuSpecs(selectedSku.specs) : {}
 
   // 处理规格值选择
   const handleSpecSelect = (specName: string, value: string) => {
     const newSpecs = { ...selectedSpecs, [specName]: value }
-    setSelectedSpecs(newSpecs)
 
     // 查找匹配的 SKU
     const matchedSku = skus.find((sku) => {

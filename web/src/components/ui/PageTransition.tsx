@@ -1,4 +1,3 @@
-import { useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import { motion, AnimatePresence, type Variants } from 'motion/react'
 
@@ -26,16 +25,6 @@ const pageVariants: Variants = {
   },
 }
 
-// 容器动画变体
-const containerVariants: Variants = {
-  exit: {
-    transition: {
-      staggerChildren: 0.02,
-      staggerDirection: -1,
-    },
-  },
-}
-
 interface PageTransitionProps {
   children: React.ReactNode
   className?: string
@@ -47,39 +36,18 @@ interface PageTransitionProps {
  */
 export function PageTransition({ children, className }: PageTransitionProps) {
   const location = useLocation()
-  const isFirstRender = useRef(true)
-
-  useEffect(() => {
-    isFirstRender.current = false
-  }, [])
-
-  // 首次渲染不显示动画
-  if (isFirstRender.current) {
-    return (
-      <motion.div
-        className={className}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        {children}
-      </motion.div>
-    )
-  }
 
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence mode="wait" initial={false}>
       <motion.div
         key={location.pathname}
         className={className}
-        variants={containerVariants}
-        initial="exit"
+        variants={pageVariants}
+        initial="initial"
         animate="enter"
         exit="exit"
       >
-        <motion.div variants={pageVariants}>
-          {children}
-        </motion.div>
+        {children}
       </motion.div>
     </AnimatePresence>
   )

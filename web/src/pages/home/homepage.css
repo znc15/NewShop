@@ -1,4 +1,7 @@
 .fumo-home {
+  --hero-container-max: 1780px;
+  --hero-gutter: 1rem;
+  --hero-inline-offset: 1rem;
   --pink: #9ab17a;
   --pink-light: #c3cc9b;
   --pink-deep: #7e9462;
@@ -23,7 +26,8 @@
 
 .fumo-home .hero {
   position: relative;
-  min-height: calc(100vh - 64px);
+  min-height: 700px;
+  height: 100vh;
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -59,8 +63,14 @@
 .fumo-home .hero-content {
   position: relative;
   z-index: 2;
+  width: min(var(--hero-container-max), calc(100% - (var(--hero-inline-offset) * 2)));
+  margin: 0 auto;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.fumo-home .hero-content > * {
   max-width: 880px;
-  padding: 0 3rem;
 }
 
 .fumo-home .hero-eyebrow {
@@ -146,8 +156,8 @@
 .fumo-home .hero-stats {
   position: absolute;
   z-index: 2;
-  left: 3rem;
-  bottom: 2rem;
+  left: max(var(--hero-inline-offset), calc((100vw - var(--hero-container-max)) / 2));
+  bottom: 3rem;
   display: flex;
   gap: 2.4rem;
   color: #fff;
@@ -166,6 +176,41 @@
 .fumo-home .stat-label {
   font-size: 0.72rem;
   color: rgba(255, 255, 255, 0.65);
+}
+
+.fumo-home .hero-scroll-hint {
+  position: absolute;
+  right: 3rem;
+  bottom: 3rem;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  color: rgba(255, 255, 255, 0.52);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+}
+
+.fumo-home .scroll-line {
+  width: 1px;
+  height: 60px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.52), transparent);
+  animation: fumo-scroll-hint 1.8s ease-in-out infinite;
+}
+
+@keyframes fumo-scroll-hint {
+  0%,
+  100% {
+    transform: scaleY(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scaleY(0.6);
+    opacity: 0.15;
+  }
 }
 
 .fumo-home .marquee-band {
@@ -198,6 +243,27 @@
   margin-bottom: 2.8rem;
 }
 
+.fumo-home .section-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--pink);
+  margin-bottom: 1rem;
+}
+
+.fumo-home .section-eyebrow::before,
+.fumo-home .section-eyebrow::after {
+  content: '';
+  width: 28px;
+  height: 1px;
+  background: var(--pink);
+  opacity: 0.6;
+}
+
 .fumo-home .section-title {
   font-family: 'Noto Serif SC', serif;
   font-weight: 900;
@@ -210,35 +276,46 @@
   color: var(--text-mid);
 }
 
-.fumo-home .products-section,
+.fumo-home .products-section {
+  padding: 7rem 0;
+  background: var(--cream);
+  position: relative;
+}
+
 .fumo-home .testimonials-section,
 .fumo-home .about-section {
-  padding: 5.8rem 1.4rem;
+  padding: 7rem 2rem;
 }
 
 .fumo-home .products-grid {
   max-width: 1180px;
   margin: 0 auto;
+  padding: 0 2rem;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.6rem;
+  gap: 2rem;
 }
 
 .fumo-home .product-card {
+  position: relative;
   background: #fff;
-  border-radius: 18px;
+  border-radius: 20px;
   overflow: hidden;
-  border: 1px solid rgba(154, 177, 122, 0.2);
-  transition: all 0.3s;
+  border: 1px solid rgba(154, 177, 122, 0.15);
+  transition: transform 0.35s cubic-bezier(.22, .68, 0, 1.2), box-shadow 0.35s;
+  cursor: pointer;
 }
 
 .fumo-home .product-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 45px rgba(51, 64, 39, 0.12);
+  transform: translateY(-8px);
+  box-shadow: 0 24px 60px rgba(51, 64, 39, 0.12);
 }
 
 .fumo-home .product-img-wrap {
-  height: 250px;
+  display: block;
+  position: relative;
+  height: 280px;
+  overflow: hidden;
   background: linear-gradient(135deg, var(--cream-dark), var(--cream));
 }
 
@@ -246,28 +323,100 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.fumo-home .product-card:hover .product-img-wrap img {
+  transform: scale(1.07);
+}
+
+.fumo-home .product-badge {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  padding: 0.3rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.fumo-home .badge-new {
+  background: var(--pink);
+  color: #fff;
+}
+
+.fumo-home .badge-hot {
+  background: #e09f5a;
+  color: #fff;
+}
+
+.fumo-home .badge-limited {
+  background: var(--gold);
+  color: #fff;
+}
+
+.fumo-home .product-fav {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  border: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.fumo-home .product-fav:hover {
+  background: #fff;
+  transform: scale(1.1);
+}
+
+.fumo-home .product-fav svg {
+  width: 16px;
+  height: 16px;
+  color: #ccc;
+  transition: color 0.2s;
+}
+
+.fumo-home .product-fav:hover svg {
+  color: var(--pink);
 }
 
 .fumo-home .product-info {
-  padding: 1.2rem;
+  padding: 1.4rem;
+}
+
+.fumo-home .product-char {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--pink);
+  margin-bottom: 0.35rem;
 }
 
 .fumo-home .product-name {
   font-family: 'Noto Serif SC', serif;
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  margin-bottom: 0.45rem;
+  margin-bottom: 0.5rem;
 }
 
 .fumo-home .product-desc {
   font-size: 0.82rem;
   color: var(--text-mid);
   line-height: 1.65;
-  min-height: 52px;
+  margin-bottom: 1.1rem;
 }
 
 .fumo-home .product-footer {
-  margin-top: 0.9rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -275,14 +424,48 @@
 
 .fumo-home .product-price {
   font-family: 'Noto Serif SC', serif;
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   font-weight: 900;
   color: var(--pink-deep);
 }
 
+.fumo-home .product-price small {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  font-weight: 400;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+
+.fumo-home .btn-adopt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 1.3rem;
+  background: linear-gradient(135deg, var(--pink), var(--pink-deep));
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.fumo-home .btn-adopt:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(154, 177, 122, 0.45);
+}
+
+.fumo-home .products-more {
+  text-align: center;
+  margin-top: 3.5rem;
+}
+
 .fumo-home .showcase-item {
   position: relative;
-  min-height: 560px;
+  height: 80vh;
+  min-height: 580px;
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -297,31 +480,119 @@
 .fumo-home .showcase-bg {
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 .fumo-home .showcase-content {
   position: relative;
   z-index: 2;
-  max-width: 560px;
-  margin: 0 8%;
-  padding: 2.2rem;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  max-width: 540px;
+  padding: 3rem 3.5rem;
+  border-radius: 24px;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  transition: transform 0.4s;
   color: #fff;
+}
+
+.fumo-home .showcase-content:hover {
+  transform: translateY(-4px);
+}
+
+.fumo-home .showcase-item:nth-child(odd) .showcase-content {
+  margin-left: 8%;
+}
+
+.fumo-home .showcase-item:nth-child(even) .showcase-content {
+  margin-left: auto;
+  margin-right: 8%;
+}
+
+.fumo-home .showcase-tag {
+  display: inline-block;
+  padding: 0.28rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .fumo-home .showcase-title {
   font-family: 'Noto Serif SC', serif;
+  font-size: 2.2rem;
+  font-weight: 900;
+  margin-bottom: 0.75rem;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+}
+
+.fumo-home .showcase-desc {
+  font-size: 0.95rem;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.8;
+  margin-bottom: 1.75rem;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.fumo-home .showcase-price-tag {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.fumo-home .price-from {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.fumo-home .price-val {
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 900;
   font-size: 2rem;
-  margin-bottom: 0.6rem;
+  color: var(--gold-light);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.fumo-home .price-unit {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .fumo-home .process-section {
-  padding: 5.8rem 1.4rem;
+  padding: 7rem 2rem;
   background: var(--indigo);
+  position: relative;
+  overflow: hidden;
   color: #fff;
+}
+
+.fumo-home .process-bg-decor {
+  position: absolute;
+  top: -200px;
+  right: -200px;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(154, 177, 122, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.fumo-home .process-section .section-eyebrow {
+  color: var(--pink-light);
+}
+
+.fumo-home .process-section .section-eyebrow::before,
+.fumo-home .process-section .section-eyebrow::after {
+  background: var(--pink-light);
 }
 
 .fumo-home .process-grid {
@@ -329,20 +600,60 @@
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1.6rem;
+  gap: 2rem;
+  position: relative;
+  z-index: 2;
+}
+
+.fumo-home .process-connector {
+  position: absolute;
+  top: 3.5rem;
+  left: calc(12.5% + 1rem);
+  right: calc(12.5% + 1rem);
+  height: 1px;
+  background: repeating-linear-gradient(90deg, rgba(154, 177, 122, 0.5) 0, rgba(154, 177, 122, 0.5) 8px, transparent 8px, transparent 16px);
+  pointer-events: none;
+  z-index: 1;
 }
 
 .fumo-home .process-num {
-  width: 58px;
-  height: 58px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 1rem;
+  margin: 0 auto 1.25rem;
   background: linear-gradient(135deg, var(--pink), var(--pink-deep));
   font-family: 'Noto Serif SC', serif;
   font-weight: 900;
+  font-size: 1.4rem;
+  box-shadow: 0 8px 24px rgba(154, 177, 122, 0.3);
+}
+
+.fumo-home .process-card {
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+
+.fumo-home .process-name {
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #fff;
+  margin-bottom: 0.65rem;
+}
+
+.fumo-home .process-text {
+  font-size: 0.82rem;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.7;
+}
+
+.fumo-home .testimonials-section {
+  background: var(--cream-dark);
 }
 
 .fumo-home .testimonials-grid {
@@ -350,89 +661,389 @@
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.4rem;
+  gap: 1.75rem;
 }
 
 .fumo-home .testi-card {
   background: #fff;
-  border-radius: 18px;
+  border-radius: 20px;
   border: 1px solid rgba(154, 177, 122, 0.2);
-  padding: 1.5rem;
+  padding: 2rem;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.fumo-home .testi-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px rgba(51, 64, 39, 0.08);
+}
+
+.fumo-home .testi-quote {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 3rem;
+  color: var(--pink-light);
+  line-height: 0.5;
+  margin-bottom: 0.75rem;
+  opacity: 0.6;
+}
+
+.fumo-home .testi-stars {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 1rem;
+}
+
+.fumo-home .testi-stars svg {
+  width: 16px;
+  height: 16px;
+  color: var(--gold);
+}
+
+.fumo-home .testi-text {
+  font-size: 0.9rem;
+  line-height: 1.8;
+  color: var(--text-mid);
+  margin-bottom: 1.5rem;
+  font-weight: 300;
+}
+
+.fumo-home .testi-author {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(154, 177, 122, 0.15);
+}
+
+.fumo-home .testi-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--pink-light), var(--indigo-mid));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.fumo-home .testi-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fumo-home .testi-name {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-dark);
+}
+
+.fumo-home .testi-handle {
+  font-size: 0.75rem;
+  color: var(--text-light);
+}
+
+.fumo-home .about-section {
+  background: #fff;
 }
 
 .fumo-home .about-inner {
   max-width: 1180px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 1.05fr 1fr;
-  gap: 3rem;
+  grid-template-columns: 1fr 1fr;
+  gap: 5rem;
+  align-items: center;
+}
+
+.fumo-home .about-text h2 {
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 900;
+  font-size: clamp(2rem, 3vw, 2.6rem);
+  color: var(--text-dark);
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+}
+
+.fumo-home .about-text h2 em {
+  font-style: normal;
+  color: var(--pink);
+}
+
+.fumo-home .about-text p {
+  font-size: 0.95rem;
+  font-weight: 300;
+  color: var(--text-mid);
+  line-height: 1.9;
+  margin-bottom: 1rem;
+}
+
+.fumo-home .about-text p strong {
+  color: var(--pink);
+  font-weight: 700;
+}
+
+.fumo-home .about-divider {
+  width: 48px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--pink), var(--pink-light));
+  border-radius: 999px;
+  margin: 1.5rem 0;
 }
 
 .fumo-home .features-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
 .fumo-home .feature-card {
+  padding: 1.5rem;
   background: var(--cream);
-  border-radius: 14px;
-  padding: 1.1rem;
+  border-radius: 16px;
   border: 1px solid rgba(154, 177, 122, 0.2);
+  transition: all 0.3s;
+}
+
+.fumo-home .feature-card:hover {
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(51, 64, 39, 0.08);
+  transform: translateY(-2px);
+}
+
+.fumo-home .feature-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--cream-dark), var(--pink-light));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.85rem;
+}
+
+.fumo-home .feature-icon svg {
+  width: 20px;
+  height: 20px;
+  color: var(--indigo-mid);
+}
+
+.fumo-home .feature-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  margin-bottom: 0.35rem;
+}
+
+.fumo-home .feature-desc {
+  font-size: 0.78rem;
+  color: var(--text-light);
+  line-height: 1.65;
 }
 
 .fumo-home .newsletter-section {
+  padding: 6rem 2rem;
   background: linear-gradient(135deg, var(--indigo) 0%, #1c2415 100%);
-  color: #fff;
-  padding: 5rem 1.4rem;
+  position: relative;
+  overflow: hidden;
   text-align: center;
 }
 
+.fumo-home .newsletter-section::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -20%;
+  width: 140%;
+  height: 200%;
+  background: radial-gradient(ellipse at center, rgba(154, 177, 122, 0.15) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.fumo-home .newsletter-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--pink-light);
+  margin-bottom: 1rem;
+}
+
+.fumo-home .newsletter-title {
+  font-family: 'Noto Serif SC', serif;
+  font-weight: 900;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  color: #fff;
+  margin-bottom: 0.75rem;
+  line-height: 1.2;
+}
+
+.fumo-home .newsletter-sub {
+  font-size: 0.95rem;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.65);
+  max-width: 400px;
+  margin: 0 auto 2.5rem;
+  line-height: 1.7;
+}
+
 .fumo-home .newsletter-form {
-  max-width: 520px;
-  margin: 0 auto;
   display: flex;
-  gap: 0.7rem;
+  gap: 0.75rem;
+  justify-content: center;
+  max-width: 500px;
+  margin: 0 auto;
 }
 
 .fumo-home .newsletter-input {
   flex: 1;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 0.85rem 1.4rem;
   background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border-radius: 100px;
   color: #fff;
-  padding: 0.82rem 1.2rem;
+  font-size: 0.9rem;
+  font-family: 'Noto Sans SC', sans-serif;
+  outline: none;
+  transition: border-color 0.3s;
 }
 
 .fumo-home .newsletter-input::placeholder {
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.fumo-home .newsletter-input:focus {
+  border-color: var(--pink-light);
+}
+
+.fumo-home .newsletter-notice {
+  margin-top: 1rem;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .fumo-home footer {
   background: #1c2415;
-  color: rgba(255, 255, 255, 0.8);
-  padding: 3rem 1.4rem;
+  padding: 4rem 2rem 2rem;
 }
 
 .fumo-home .footer-inner {
-  max-width: 1100px;
+  max-width: 1180px;
   margin: 0 auto;
 }
 
 .fumo-home .footer-top {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;
-  gap: 2rem;
-  padding-bottom: 2rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  gap: 3rem;
+  padding-bottom: 3rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 2rem;
+}
+
+.fumo-home .footer-brand-logo {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 1.3rem;
+  color: #fff;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.fumo-home .footer-brand-logo span {
+  color: var(--pink-light);
+}
+
+.fumo-home .footer-about {
+  font-size: 0.82rem;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.8;
+  margin-bottom: 1.5rem;
+}
+
+.fumo-home .footer-socials {
+  display: flex;
+  gap: 0.65rem;
+}
+
+.fumo-home .social-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  text-decoration: none;
+}
+
+.fumo-home .social-btn:hover {
+  background: var(--pink);
+  border-color: var(--pink);
+  color: #fff;
+}
+
+.fumo-home .social-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.fumo-home .footer-col-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 1.25rem;
+}
+
+.fumo-home .footer-links {
+  list-style: none;
+}
+
+.fumo-home .footer-links li {
+  margin-bottom: 0.65rem;
+}
+
+.fumo-home .footer-links a {
+  font-size: 0.83rem;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.fumo-home .footer-links a:hover {
+  color: var(--pink-light);
 }
 
 .fumo-home .footer-bottom {
-  padding-top: 1.3rem;
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  color: rgba(255, 255, 255, 0.46);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.fumo-home .footer-bottom-right {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.fumo-home .footer-bottom-right a {
+  color: rgba(255, 255, 255, 0.35);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.fumo-home .footer-bottom-right a:hover {
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .fumo-home .reveal {
@@ -446,6 +1057,22 @@
   transform: none;
 }
 
+.fumo-home .reveal-delay-1 {
+  transition-delay: 0.1s;
+}
+
+.fumo-home .reveal-delay-2 {
+  transition-delay: 0.2s;
+}
+
+.fumo-home .reveal-delay-3 {
+  transition-delay: 0.3s;
+}
+
+.fumo-home .reveal-delay-4 {
+  transition-delay: 0.4s;
+}
+
 .fumo-home #sakura-canvas {
   position: fixed;
   inset: 0;
@@ -456,11 +1083,33 @@
   opacity: 0.45;
 }
 
+@media (min-width: 640px) {
+  .fumo-home {
+    --hero-gutter: 1.5rem;
+    --hero-inline-offset: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .fumo-home {
+    --hero-gutter: 2.5rem;
+    --hero-inline-offset: 2.5rem;
+  }
+}
+
 @media (max-width: 980px) {
-  .fumo-home .hero-content { padding: 0 1.4rem; }
-  .fumo-home .hero-stats { left: 1.4rem; gap: 1.5rem; }
+  .fumo-home .hero-scroll-hint { display: none; }
+  .fumo-home .hero-stats { gap: 1.5rem; }
+  .fumo-home .showcase-item:nth-child(even) .showcase-content {
+    margin-left: 5%;
+    margin-right: 5%;
+  }
+  .fumo-home .showcase-item:nth-child(odd) .showcase-content {
+    margin-left: 5%;
+  }
   .fumo-home .products-grid { grid-template-columns: repeat(2, 1fr); }
   .fumo-home .process-grid { grid-template-columns: repeat(2, 1fr); }
+  .fumo-home .process-connector { display: none; }
   .fumo-home .testimonials-grid { grid-template-columns: repeat(2, 1fr); }
   .fumo-home .about-inner { grid-template-columns: 1fr; }
   .fumo-home .footer-top { grid-template-columns: 1fr 1fr; }
@@ -471,6 +1120,7 @@
   .fumo-home .testimonials-grid,
   .fumo-home .features-grid,
   .fumo-home .footer-top { grid-template-columns: 1fr; }
+  .fumo-home .process-grid { grid-template-columns: 1fr 1fr; }
   .fumo-home .newsletter-form { flex-direction: column; }
   .fumo-home .footer-bottom { flex-direction: column; gap: 0.6rem; }
 }

@@ -153,6 +153,7 @@ func (r *ProductRepo) ListProducts(ctx context.Context, query *ProductQuery) ([]
 	err := db.
 		Preload("Category").
 		Preload("Brand").
+		Preload("Attrs").
 		Order(orderClause).
 		Offset(offset).
 		Limit(query.PageSize).

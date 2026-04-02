@@ -161,6 +161,112 @@ a:hover {
   color: var(--nav-icon-hover-color, var(--color-blue-dark));
 }
 
+.home-nav-logo {
+  color: #ffffff;
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  transition: color var(--transition-base);
+}
+
+.home-nav-logo:hover {
+  color: #f8faf2;
+}
+
+.home-nav-link {
+  position: relative;
+  color: rgba(255, 255, 255, 0.78);
+  text-decoration: none;
+  transition: color var(--transition-base);
+}
+
+.home-nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 0;
+  height: 1.5px;
+  background: #c3cc9b;
+  transition: width var(--transition-base);
+}
+
+.home-nav-link:hover {
+  color: #ffffff;
+}
+
+.home-nav-link:hover::after {
+  width: 100%;
+}
+
+.home-nav-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 1.4rem;
+  border: 1.5px solid #c3cc9b;
+  border-radius: 999px;
+  color: #c3cc9b;
+  text-decoration: none;
+  transition: background var(--transition-base), color var(--transition-base), border-color var(--transition-base);
+}
+
+.home-nav-cta:hover {
+  background: #9ab17a;
+  border-color: #9ab17a;
+  color: #ffffff;
+}
+
+.home-nav-hamburger {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  color: #ffffff;
+}
+
+.home-nav-hamburger span {
+  width: 24px;
+  height: 2px;
+  background: currentColor;
+  transition: transform var(--transition-base), opacity var(--transition-base);
+}
+
+.home-nav-hamburger.is-open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.home-nav-hamburger.is-open span:nth-child(2) {
+  opacity: 0;
+}
+
+.home-nav-hamburger.is-open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+.home-nav-mobile-link {
+  color: rgba(255, 255, 255, 0.86);
+  text-decoration: none;
+  padding: 0.5rem 0.25rem;
+  letter-spacing: 0.08em;
+  font-size: 0.9rem;
+}
+
+.home-nav-mobile-cta {
+  margin-top: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  border-radius: 999px;
+  border: 1px solid #c3cc9b;
+  color: #c3cc9b;
+  padding: 0.65rem 1rem;
+  font-size: 0.9rem;
+}
+
 /* 按钮重置 */
 button {
   font-family: inherit;

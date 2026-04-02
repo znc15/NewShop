@@ -123,6 +123,10 @@ make docker-up
 make docker-app-up
 ```
 
+说明：
+- `make docker-up` 启动基础设施，配置位于 [infra/docker/docker-compose.yml](infra/docker/docker-compose.yml)
+- `make docker-app-up` 启动完整应用栈并重建前后端镜像，配置位于根目录 [docker-compose.yml](docker-compose.yml)
+
 ### 3. 配置环境变量
 ```bash
 cp .env.example services/api/.env
@@ -183,6 +187,23 @@ make docker-app-down # 停止完整应用栈
 make migrate       # 执行迁移
 make migrate-down  # 回滚迁移
 ```
+
+## 如何添加新的 Docker 服务
+
+如果你想给项目新增一个容器，先确认它属于哪一类：
+
+- 基础设施服务：放到 [infra/docker/docker-compose.yml](infra/docker/docker-compose.yml)
+- 应用栈服务：放到根目录 [docker-compose.yml](docker-compose.yml)
+
+添加时通常按下面几步处理：
+
+1. 为服务补 `image` 或 `build` 配置。
+2. 需要持久化的数据就加 `volumes`。
+3. 需要依赖其他服务就补 `depends_on` 和健康检查。
+4. 需要外部访问就补 `ports`，避免和现有端口冲突。
+5. 如果是常用启动命令，顺手在 [Makefile](Makefile) 里加对应的 `make` 目标。
+
+改完以后，先执行 `make docker-up` 或 `make docker-app-up` 验证能否正常启动，再按需补充 README 中的端口和访问地址说明。
 
 ## API 文档
 

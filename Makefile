@@ -17,7 +17,7 @@ docker-down:
 	cd infra/docker && docker compose down
 
 docker-app-up:
-	docker compose up -d
+	docker compose up -d --build
 
 docker-app-down:
 	docker compose down

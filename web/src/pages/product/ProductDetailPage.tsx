@@ -110,7 +110,7 @@ export default function ProductDetailPage() {
         if (productData.skus.length > 0) {
           setSelectedSku(productData.skus[0])
         }
-      } catch (err) {
+      } catch {
         setError('商品不存在或已下架')
       } finally {
         setLoading(false)
@@ -130,7 +130,7 @@ export default function ProductDetailPage() {
     try {
       await addItem(product!.id, selectedSku.id, quantity)
       navigate('/cart')
-    } catch (err) {
+    } catch {
       alert('添加失败，请重试')
     } finally {
       setAddingToCart(false)

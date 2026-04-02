@@ -259,6 +259,7 @@ function OrderSkeleton() {
 }
 
 export default function OrderListPage() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const currentStatus = searchParams.get('status') || '';
 
@@ -303,22 +304,30 @@ export default function OrderListPage() {
     fetchOrders(nextPage, currentStatus);
   };
 
-  const handleCancel = async (_orderId: number) => {
+  const handleCancel = async (orderId: number) => {
     if (window.confirm('确定要取消该订单吗？')) {
-      // TODO: 调用取消订单 API
-      fetchOrders(1, currentStatus);
+      try {
+        await orderService.cancelOrder(orderId, { reason: '用户主动取消' });
+        fetchOrders(1, currentStatus);
+      } catch (error) {
+        console.error('取消订单失败:', error);
+      }
     }
   };
 
-  const handleConfirm = async (_orderId: number) => {
+  const handleConfirm = async (orderId: number) => {
     if (window.confirm('确认已收到货物吗？')) {
-      // TODO: 调用确认收货 API
-      fetchOrders(1, currentStatus);
+      try {
+        await orderService.confirmReceive(orderId);
+        fetchOrders(1, currentStatus);
+      } catch (error) {
+        console.error('确认收货失败:', error);
+      }
     }
   };
 
-  const handlePay = (_orderId: number) => {
-    // TODO: 跳转支付页面
+  const handlePay = (orderId: number) => {
+    navigate(`/orders/${orderId}`);
   };
 
   return (

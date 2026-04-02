@@ -74,6 +74,17 @@ const navItems = [
     ),
   },
   {
+    title: '首页设置',
+    href: '/admin/homepage',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m3 9 9-7 9 7" />
+        <path d="M9 22V12h6v10" />
+        <path d="M3 22h18" />
+      </svg>
+    ),
+  },
+  {
     title: 'SEO 设置',
     href: '/admin/seo',
     icon: (

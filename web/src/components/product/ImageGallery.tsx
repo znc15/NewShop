@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, ZoomIn, X } from 'lucide-react'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Pagination } from 'swiper/modules'
-// @ts-ignore - Swiper CSS imports
+// @ts-expect-error Swiper 样式声明由构建工具处理
 import 'swiper/css'
-// @ts-ignore
+// @ts-expect-error Swiper 样式声明由构建工具处理
 import 'swiper/css/pagination'
 import { cn } from '@/utils'
 

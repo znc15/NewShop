@@ -57,62 +57,62 @@ export default function CouponsPage() {
   const [claimingId, setClaimingId] = useState<number | null>(null)
 
   useEffect(() => {
-    fetchCoupons()
-  }, [activeTab])
-
-  const fetchCoupons = async () => {
-    setLoading(true)
-    try {
-      if (activeTab === 'available') {
-        // 暂时模拟优惠券数据
-        const mockCoupons: Coupon[] = [
-          {
-            id: 1,
-            name: '新用户专享',
-            code: 'NEWUSER50',
-            type: 'fixed',
-            discount_value: 5000,
-            min_order_amount: 50000,
-            max_discount: 5000,
-            valid_from: '2024-01-01',
-            valid_to: '2024-12-31',
-            status: 'active',
-          },
-          {
-            id: 2,
-            name: '满200减20',
-            code: 'SAVE20',
-            type: 'fixed',
-            discount_value: 2000,
-            min_order_amount: 20000,
-            max_discount: 2000,
-            valid_from: '2024-01-01',
-            valid_to: '2024-12-31',
-            status: 'active',
-          },
-          {
-            id: 3,
-            name: '会员9折券',
-            code: 'VIP10',
-            type: 'percent',
-            discount_value: 90,
-            min_order_amount: 10000,
-            valid_from: '2024-01-01',
-            valid_to: '2024-12-31',
-            status: 'active',
-          },
-        ]
-        setCoupons(mockCoupons)
-      } else {
-        // 我的优惠券
-        setMyCoupons([])
+    const fetchCoupons = async () => {
+      setLoading(true)
+      try {
+        if (activeTab === 'available') {
+          // 暂时模拟优惠券数据
+          const mockCoupons: Coupon[] = [
+            {
+              id: 1,
+              name: '新用户专享',
+              code: 'NEWUSER50',
+              type: 'fixed',
+              discount_value: 5000,
+              min_order_amount: 50000,
+              max_discount: 5000,
+              valid_from: '2024-01-01',
+              valid_to: '2024-12-31',
+              status: 'active',
+            },
+            {
+              id: 2,
+              name: '满200减20',
+              code: 'SAVE20',
+              type: 'fixed',
+              discount_value: 2000,
+              min_order_amount: 20000,
+              max_discount: 2000,
+              valid_from: '2024-01-01',
+              valid_to: '2024-12-31',
+              status: 'active',
+            },
+            {
+              id: 3,
+              name: '会员9折券',
+              code: 'VIP10',
+              type: 'percent',
+              discount_value: 90,
+              min_order_amount: 10000,
+              valid_from: '2024-01-01',
+              valid_to: '2024-12-31',
+              status: 'active',
+            },
+          ]
+          setCoupons(mockCoupons)
+        } else {
+          // 我的优惠券
+          setMyCoupons([])
+        }
+      } catch (error) {
+        console.error('获取优惠券失败:', error)
+      } finally {
+        setLoading(false)
       }
-    } catch (error) {
-      console.error('获取优惠券失败:', error)
-    } finally {
-      setLoading(false)
     }
-  }
+
+    void fetchCoupons()
+  }, [activeTab])
 
   const handleClaim = async (couponId: number) => {
     setClaimingId(couponId)

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { Search, X, TrendingUp } from 'lucide-react'
 import { motion, type Variants } from 'motion/react'
@@ -60,23 +60,44 @@ export default function SearchPage() {
     }
   }, [])
 
+  // 保存搜索历史
+  const saveToHistory = useCallback((term: string) => {
+    const trimmed = term.trim()
+    if (!trimmed) return
+
+    setSearchHistory((prev) => {
+      const newHistory = [trimmed, ...prev.filter((h) => h !== trimmed)].slice(0, 10)
+      localStorage.setItem('search_history', JSON.stringify(newHistory))
+      return newHistory
+    })
+  }, [])
+
   // 同步 URL 参数
   useEffect(() => {
     if (keyword) {
       setSearchTerm(keyword)
-      handleSearch(keyword)
+
+      const searchByKeyword = async () => {
+        setLoading(true)
+        setSearched(true)
+        setError(null)
+        saveToHistory(keyword)
+
+        try {
+          const data = await productService.search(keyword)
+          setResults(data.products || [])
+        } catch (err) {
+          console.error('搜索失败:', err)
+          setError('搜索失败，请稍后重试')
+          setResults([])
+        } finally {
+          setLoading(false)
+        }
+      }
+
+      void searchByKeyword()
     }
-  }, [keyword])
-
-  // 保存搜索历史
-  const saveToHistory = (term: string) => {
-    const trimmed = term.trim()
-    if (!trimmed) return
-
-    const newHistory = [trimmed, ...searchHistory.filter((h) => h !== trimmed)].slice(0, 10)
-    setSearchHistory(newHistory)
-    localStorage.setItem('search_history', JSON.stringify(newHistory))
-  }
+  }, [keyword, saveToHistory])
 
   // 执行搜索
   const handleSearch = async (term?: string) => {

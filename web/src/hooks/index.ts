@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useSyncExternalStore } from 'react'
 
 export function useLocalStorage<T>(key: string, initialValue: T) {
   const [storedValue, setStoredValue] = useState<T>(() => {
@@ -40,19 +40,16 @@ export function useDebounce<T>(value: T, delay: number): T {
 }
 
 export function useMediaQuery(query: string): boolean {
-  const [matches, setMatches] = useState(false)
+  const subscribe = useCallback((onStoreChange: () => void) => {
+    const mediaQueryList = window.matchMedia(query)
+    mediaQueryList.addEventListener('change', onStoreChange)
+    return () => mediaQueryList.removeEventListener('change', onStoreChange)
+  }, [query])
 
-  useEffect(() => {
-    const media = window.matchMedia(query)
-    if (media.matches !== matches) {
-      setMatches(media.matches)
-    }
-    const listener = () => setMatches(media.matches)
-    media.addEventListener('change', listener)
-    return () => media.removeEventListener('change', listener)
-  }, [matches, query])
+  const getSnapshot = useCallback(() => window.matchMedia(query).matches, [query])
+  const getServerSnapshot = useCallback(() => false, [])
 
-  return matches
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 }
 
 export function useScrollPosition(): number {

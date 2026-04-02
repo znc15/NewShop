@@ -79,16 +79,4 @@ export function PageLoader() {
   return null
 }
 
-/**
- * 手动控制进度条的 Hook
- */
-export function useProgress() {
-  const start = () => NProgress.start()
-  const done = () => NProgress.done()
-  const set = (value: number) => NProgress.set(value)
-  const inc = (amount?: number) => NProgress.inc(amount)
-
-  return { start, done, set, inc }
-}
-
 export default PageLoader

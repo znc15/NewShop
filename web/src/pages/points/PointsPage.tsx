@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, type Variants } from 'motion/react'
-import { Spinner } from '@/components/ui/Loading'
 import type { PointRecord } from '@/types'
 
 // 动画变体配置
@@ -47,19 +46,11 @@ const calendarDayVariants: Variants = {
 }
 
 export default function PointsPage() {
-  const [loading, setLoading] = useState(true)
-  const [points, setPoints] = useState(0)
-  const [_records, _setRecords] = useState<PointRecord[]>([])
+  const [points, setPoints] = useState(1580)
+  const [records] = useState<PointRecord[]>([])
   const [checkedIn, setCheckedIn] = useState(false)
-  const [streakDays, setStreakDays] = useState(0)
+  const [streakDays, setStreakDays] = useState(3)
   const [isCheckingIn, setIsCheckingIn] = useState(false)
-
-  useEffect(() => {
-    // 模拟数据
-    setPoints(1580)
-    setStreakDays(3)
-    setLoading(false)
-  }, [])
 
   const handleCheckIn = async () => {
     if (checkedIn || isCheckingIn) return
@@ -72,14 +63,6 @@ export default function PointsPage() {
       setCheckedIn(true)
       setIsCheckingIn(false)
     }, 1000)
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Spinner size="lg" />
-      </div>
-    )
   }
 
   return (
@@ -263,7 +246,7 @@ export default function PointsPage() {
         transition={{ delay: 0.6, duration: 0.5 }}
       >
         <h3 className="font-semibold text-charcoal mb-4">积分记录</h3>
-        {_records.length === 0 ? (
+        {records.length === 0 ? (
           <motion.div
             className="text-center py-8 text-stone"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -280,7 +263,7 @@ export default function PointsPage() {
             initial="hidden"
             animate="visible"
           >
-            {_records.map((record) => (
+            {records.map((record) => (
               <motion.div
                 key={record.id}
                 variants={itemVariants}
