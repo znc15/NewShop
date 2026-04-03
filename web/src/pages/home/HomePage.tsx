@@ -234,38 +234,13 @@ function toCurrency(value: number): string {
 
 const showcaseStartPrices = ['368', '368', '398']
 
-const aboutFeatureItems = [
-  {
-    title: '100% 正版保证',
-    desc: '坚决抵制盗版，所有商品均采购自 Gift 等官方正规渠道，提供防伪验证。',
-    iconPath:
-      'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 0 0 1.946-.806 3.42 3.42 0 0 1 4.438 0 3.42 3.42 0 0 0 1.946.806 3.42 3.42 0 0 1 3.138 3.138 3.42 3.42 0 0 0 .806 1.946 3.42 3.42 0 0 1 0 4.438 3.42 3.42 0 0 0-.806 1.946 3.42 3.42 0 0 1-3.138 3.138 3.42 3.42 0 0 0-1.946.806 3.42 3.42 0 0 1-4.438 0 3.42 3.42 0 0 0-1.946-.806 3.42 3.42 0 0 1-3.138-3.138 3.42 3.42 0 0 0-.806-1.946 3.42 3.42 0 0 1 0-4.438 3.42 3.42 0 0 0 .806-1.946 3.42 3.42 0 0 1 3.138-3.138z',
-  },
-  {
-    title: '加固八角包装',
-    desc: '定制飞机盒 + 双层泡棉缓冲，确保玩偶和吊牌在运输中完美无损。',
-    iconPath: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
-  },
-  {
-    title: '绝版代寻服务',
-    desc: '找不到心仪的老款？联系客服，我们利用全球渠道为你圆梦，合理定价。',
-    iconPath: 'M21 21l-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0z',
-  },
-  {
-    title: '同好专属客服',
-    desc: '客服皆为车万同好，沟通无障碍，售前售后提供最贴心的一对一服务。',
-    iconPath: 'M4.318 6.318a4.5 4.5 0 0 0 0 6.364L12 20.364l7.682-7.682a4.5 4.5 0 0 0-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 0 0-6.364 0z',
-  },
-  {
-    title: '当日极速发货',
-    desc: '14:00 前下单，当日打包发货，全程物流追踪，一般 2-3 日到达。',
-    iconPath: 'M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z',
-  },
-  {
-    title: '预约优先渠道',
-    desc: '订阅新品通知，新款开放预约时第一时间收到消息，锁定优先购买名额。',
-    iconPath: 'M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z',
-  },
+const ABOUT_FEATURE_ICON_PATHS = [
+  'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 0 0 1.946-.806 3.42 3.42 0 0 1 4.438 0 3.42 3.42 0 0 0 1.946.806 3.42 3.42 0 0 1 3.138 3.138 3.42 3.42 0 0 0 .806 1.946 3.42 3.42 0 0 1 0 4.438 3.42 3.42 0 0 0-.806 1.946 3.42 3.42 0 0 1-3.138 3.138 3.42 3.42 0 0 0-1.946.806 3.42 3.42 0 0 1-4.438 0 3.42 3.42 0 0 0-1.946-.806 3.42 3.42 0 0 1-3.138-3.138 3.42 3.42 0 0 0-.806-1.946 3.42 3.42 0 0 1 0-4.438 3.42 3.42 0 0 0 .806-1.946 3.42 3.42 0 0 1 3.138-3.138z',
+  'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
+  'M21 21l-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0z',
+  'M4.318 6.318a4.5 4.5 0 0 0 0 6.364L12 20.364l7.682-7.682a4.5 4.5 0 0 0-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 0 0-6.364 0z',
+  'M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z',
+  'M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z',
 ]
 
 function getAuthorInitial(author: string): string {
@@ -324,8 +299,26 @@ function resolveBadgeMeta(product: Product): { className: 'badge-hot' | 'badge-n
   return { className: 'badge-new', text: badgeText }
 }
 
+function splitHeroStatValue(value: string): { main: string; suffix: string } {
+  const normalized = value.trim()
+  if (!normalized) {
+    return { main: '', suffix: '' }
+  }
+
+  const match = normalized.match(/^(.+?)([+%])$/)
+  if (!match) {
+    return { main: normalized, suffix: '' }
+  }
+
+  return {
+    main: match[1],
+    suffix: match[2],
+  }
+}
+
 export default function HomePage() {
   const [hotProducts, setHotProducts] = useState<Product[]>([])
+  const [configuredProducts, setConfiguredProducts] = useState<Product[]>([])
   const [banners, setBanners] = useState<HomeBanner[]>([])
   const [reviews, setReviews] = useState<HomeReview[]>([])
   const [publicConfigs, setPublicConfigs] = useState<Record<string, unknown>>({})
@@ -388,6 +381,53 @@ export default function HomePage() {
     document.querySelectorAll('.fumo-home .reveal').forEach((node) => observer.observe(node))
     return () => observer.disconnect()
   }, [loading])
+
+  const homeDisplayConfig = useMemo(() => resolveHomeDisplayConfig(publicConfigs), [publicConfigs])
+  const aboutFeatureItems = useMemo(
+    () =>
+      homeDisplayConfig.aboutFeatures.map((feature, index) => ({
+        ...feature,
+        iconPath: ABOUT_FEATURE_ICON_PATHS[index % ABOUT_FEATURE_ICON_PATHS.length],
+      })),
+    [homeDisplayConfig.aboutFeatures]
+  )
+
+  useEffect(() => {
+    let active = true
+
+    const fetchConfiguredProducts = async () => {
+      const targetProductIds = homeDisplayConfig.productsDisplayIds.slice(0, 12)
+
+      if (targetProductIds.length === 0) {
+        setConfiguredProducts([])
+        return
+      }
+
+      try {
+        const result = await Promise.allSettled(targetProductIds.map((productId) => productService.getProduct(productId)))
+        if (!active) {
+          return
+        }
+
+        const nextConfiguredProducts = result
+          .filter((item): item is PromiseFulfilledResult<Product> => item.status === 'fulfilled')
+          .map((item) => item.value)
+
+        setConfiguredProducts(nextConfiguredProducts)
+      } catch (error) {
+        if (active) {
+          console.error('获取首页配置商品失败:', error)
+          setConfiguredProducts([])
+        }
+      }
+    }
+
+    void fetchConfiguredProducts()
+
+    return () => {
+      active = false
+    }
+  }, [homeDisplayConfig.productsDisplayIds])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -498,6 +538,10 @@ export default function HomePage() {
   }, [])
 
   const displayHotProducts = useMemo(() => {
+    if (homeDisplayConfig.productsDisplayIds.length > 0 && configuredProducts.length > 0) {
+      return configuredProducts
+    }
+
     const primaryProducts = hotProducts.slice(0, 6)
     if (primaryProducts.length >= 6) {
       return primaryProducts
@@ -509,13 +553,12 @@ export default function HomePage() {
       .slice(0, 6 - primaryProducts.length)
 
     return [...primaryProducts, ...fallbackProducts]
-  }, [hotProducts])
+  }, [configuredProducts, homeDisplayConfig.productsDisplayIds.length, hotProducts])
   const featuredBanners = useMemo(() => {
     const displayBanners = banners.length > 0 ? banners : fallbackShowcaseBanners
     return displayBanners.slice(0, 3)
   }, [banners])
   const displayReviews = useMemo(() => (reviews.length > 0 ? reviews : fallbackReviews), [reviews])
-  const homeDisplayConfig = useMemo(() => resolveHomeDisplayConfig(publicConfigs), [publicConfigs])
   const resolvedHeroBackgroundImage =
     homeDisplayConfig.heroBackgroundImage || featuredBanners[0]?.image_url || fallbackBannerImage
   const homeStyleVars = useMemo(
@@ -525,6 +568,20 @@ export default function HomePage() {
       }) as CSSProperties,
     [homeDisplayConfig.layoutMaxWidth]
   )
+  const heroStats = [
+    {
+      value: homeDisplayConfig.heroStatAdoptedValue,
+      label: homeDisplayConfig.heroStatAdoptedLabel,
+    },
+    {
+      value: homeDisplayConfig.heroStatRatingValue,
+      label: homeDisplayConfig.heroStatRatingLabel,
+    },
+    {
+      value: homeDisplayConfig.heroStatStockValue,
+      label: homeDisplayConfig.heroStatStockLabel,
+    },
+  ]
 
   const onSubscribe = async () => {
     if (!email.includes('@')) {
@@ -599,18 +656,19 @@ export default function HomePage() {
         </div>
 
         <div className="hero-stats">
-          <div>
-            <div className="stat-num">500<span>+</span></div>
-            <div className="stat-label">已领养玩偶</div>
-          </div>
-          <div>
-            <div className="stat-num">98<span>%</span></div>
-            <div className="stat-label">好评率</div>
-          </div>
-          <div>
-            <div className="stat-num">{Math.max(30, displayHotProducts.length)}<span>+</span></div>
-            <div className="stat-label">角色库存</div>
-          </div>
+          {heroStats.map((item, index) => {
+            const { main, suffix } = splitHeroStatValue(item.value)
+
+            return (
+              <div key={`${item.label}-${index}`}>
+                <div className="stat-num">
+                  {main}
+                  {suffix && <span>{suffix}</span>}
+                </div>
+                <div className="stat-label">{item.label}</div>
+              </div>
+            )
+          })}
         </div>
 
         <div className="hero-scroll-hint" aria-hidden="true">
@@ -631,9 +689,9 @@ export default function HomePage() {
 
       <section className="products-section" id="products">
         <div className="section-header reveal">
-          <div className="section-eyebrow">New Arrivals</div>
-          <h2 className="section-title">精选角色商品</h2>
-          <p className="section-sub">每一只都经过严格正品验证，安全送达你的手中</p>
+          <div className="section-eyebrow">{homeDisplayConfig.productsSectionEyebrow}</div>
+          <h2 className="section-title">{homeDisplayConfig.productsSectionTitle}</h2>
+          <p className="section-sub">{homeDisplayConfig.productsSectionSub}</p>
         </div>
         <div className="products-grid">
           {displayHotProducts.map((product, index) => {
@@ -642,12 +700,13 @@ export default function HomePage() {
             const revealDelayClass = index % 3 === 0 ? 'reveal-delay-1' : index % 3 === 1 ? 'reveal-delay-2' : 'reveal-delay-3'
             const isLiked = Boolean(likedProductIds[product.id])
             const actionText = badgeMeta?.text.includes('预约') ? '预约领养' : '立即领养'
+            const configuredImage = homeDisplayConfig.productsImageOverrides[index] || ''
 
             return (
             <article className={`product-card reveal ${revealDelayClass}`} key={product.id}>
               <Link to={`/products/${product.id}`} className="product-img-wrap">
                 <img
-                  src={product.main_image || (Array.isArray(product.images) ? product.images[0] : '') || fallbackBannerImage}
+                  src={configuredImage || product.main_image || (Array.isArray(product.images) ? product.images[0] : '') || fallbackBannerImage}
                   alt={product.name}
                 />
                 {badgeMeta && <span className={`product-badge ${badgeMeta.className}`}>{badgeMeta.text}</span>}
@@ -692,7 +751,7 @@ export default function HomePage() {
 
         <div className="products-more reveal">
           <Link to="/products" className="btn-primary">
-            查看全部 30+ 款角色 →
+            {homeDisplayConfig.productsMoreButtonText}
           </Link>
         </div>
       </section>
@@ -812,17 +871,17 @@ export default function HomePage() {
       <section className="about-section" id="about">
         <div className="about-inner">
           <div className="about-text reveal">
-            <div className="section-eyebrow" style={{ justifyContent: 'flex-start' }}>Our Story</div>
+            <div className="section-eyebrow" style={{ justifyContent: 'flex-start' }}>{homeDisplayConfig.aboutSectionEyebrow}</div>
             <h2>
-              不止是一家店，<br />
-              更是<em>车万人的据点</em>
+              {homeDisplayConfig.aboutTitleLine1}<br />
+              <em>{homeDisplayConfig.aboutTitleEmphasis}</em>
             </h2>
             <div className="about-divider" />
-            <p>我们是一群极度热爱东方 Project 文化的狂热粉丝。成立 <strong>FumoShop</strong> 的初衷非常简单：我们深知在圈内以合理价格购买到正版 Fumo 玩偶的艰难。</p>
-            <p>这里没有鱼龙混杂的盗版，也没有高昂离谱的溢价。我们承诺店内每一只 Fumo 都来自官方 <strong>Gift</strong> 或正规授权渠道。</p>
-            <p>把最可爱的幻想乡少女带回家，给她们一个温暖的居所，这就是我们的终极使命。</p>
+            <p>{homeDisplayConfig.aboutParagraph1}</p>
+            <p>{homeDisplayConfig.aboutParagraph2}</p>
+            <p>{homeDisplayConfig.aboutParagraph3}</p>
             <div style={{ marginTop: 22 }}>
-              <a href="#products" className="btn-primary">探索商品</a>
+              <a href="#products" className="btn-primary">{homeDisplayConfig.aboutButtonText}</a>
             </div>
           </div>
 
@@ -856,76 +915,12 @@ export default function HomePage() {
               placeholder="输入你的邮箱地址…"
             />
             <button className="btn-primary" onClick={onSubscribe} disabled={submitting}>
-              {submitting ? '提交中...' : '订阅通知'}
+              {submitting ? '提交中...' : '登陆关注'}
             </button>
           </div>
           <p className="newsletter-notice reveal">{notice || '不会滥发邮件，仅在有重要新品资讯时通知你 · 随时可退订'}</p>
         </div>
       </section>
-
-      <footer>
-        <div className="footer-inner">
-          <div className="footer-top">
-            <div>
-              <span className="footer-brand-logo">
-                Fumo<span>Shop</span>
-              </span>
-              <p className="footer-about">幻想乡少女的现实据点。100% 正版保障，让每一只 Fumo 都能找到真正爱她的主人。</p>
-              <div className="footer-socials">
-                <a href="#" className="social-btn" title="微博" aria-label="微博">
-                  <svg fill="currentColor" viewBox="0 0 24 24"><path d="M9.31 13.53c-2.227 0-4.02 1.43-4.02 3.2 0 1.76 1.793 3.19 4.02 3.19 2.226 0 4.02-1.43 4.02-3.19 0-1.77-1.794-3.2-4.02-3.2zm0 5.04c-1.106 0-2-.84-2-1.84s.894-1.83 2-1.83c1.105 0 2 .83 2 1.83s-.895 1.84-2 1.84z" /><path d="M20.065 10.02c.097-.32.15-.65.15-.99C20.215 6.79 18.2 5 15.75 5c-1.695 0-3.17.85-3.99 2.13-.67-.19-1.38-.3-2.12-.3C5.87 6.83 2.5 9.72 2.5 13.27c0 3.55 3.37 6.44 7.14 6.44 3.768 0 6.81-2.89 6.81-6.44 0-.51-.07-1-.19-1.47.42-.08.83-.18 1.23-.32.82-.27 1.58-.67 2.18-1.19.6-.52 1.07-1.17 1.35-1.91l.05-.16-.01-.18zM9.64 18.58c-3.05 0-5.52-2.34-5.52-5.23 0-2.88 2.47-5.23 5.52-5.23.68 0 1.33.13 1.93.36-.05.26-.08.52-.08.79 0 2.75 2.52 4.98 5.62 4.98.13 0 .26-.01.39-.02-.79 2.37-3.1 4.35-7.86 4.35z" /></svg>
-                </a>
-                <a href="#" className="social-btn" title="Twitter" aria-label="Twitter">
-                  <svg fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
-                </a>
-                <a href="#" className="social-btn" title="Discord" aria-label="Discord">
-                  <svg fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z" /></svg>
-                </a>
-                <a href="#" className="social-btn" title="哔哩哔哩" aria-label="哔哩哔哩">
-                  <svg fill="currentColor" viewBox="0 0 24 24"><path d="M17.813 4.653h.854c1.51.054 2.769.578 3.773 1.574 1.004.995 1.524 2.249 1.56 3.76v7.36c-.036 1.51-.556 2.769-1.56 3.773s-2.262 1.524-3.773 1.56H5.333c-1.51-.036-2.769-.556-3.773-1.56S.036 18.858 0 17.347v-7.36c.036-1.511.556-2.765 1.56-3.76 1.004-.996 2.262-1.52 3.773-1.574h.774l-1.174-1.12a1.234 1.234 0 0 1-.373-.906c0-.356.124-.658.373-.907l.027-.027c.267-.249.573-.373.92-.373.347 0 .653.124.92.373L9.653 4.44c.071.071.134.142.187.213h4.267a.836.836 0 0 1 .16-.213l2.853-2.747c.267-.249.573-.373.92-.373.347 0 .662.151.929.4.267.249.391.551.391.907 0 .355-.124.657-.373.906zM5.333 7.24c-.746.018-1.373.276-1.88.773-.506.498-.769 1.13-.786 1.894v7.52c.017.764.28 1.395.786 1.893.507.498 1.134.756 1.88.773h13.334c.746-.017 1.373-.275 1.88-.773.506-.498.769-1.129.786-1.893v-7.52c-.017-.765-.28-1.396-.786-1.894-.507-.497-1.134-.755-1.88-.773zM8 11.107c.373 0 .684.124.933.373.25.249.383.569.4.96v1.173c-.017.391-.15.711-.4.96-.249.25-.56.374-.933.374s-.684-.125-.933-.374c-.25-.249-.383-.569-.4-.96V12.44c0-.373.129-.689.386-.947.258-.257.574-.386.947-.386zm8 0c.373 0 .684.124.933.373.25.249.383.569.4.96v1.173c-.017.391-.15.711-.4.96-.249.25-.56.374-.933.374s-.684-.125-.933-.374c-.25-.249-.383-.569-.4-.96V12.44c.017-.391.15-.711.4-.96.249-.249.56-.373.933-.373z" /></svg>
-                </a>
-              </div>
-            </div>
-            <div>
-              <div className="footer-col-title">商品分类</div>
-              <ul className="footer-links">
-                <li><a href="#">经典角色</a></li>
-                <li><a href="#">新品上架</a></li>
-                <li><a href="#">限定款式</a></li>
-                <li><a href="#">预约专区</a></li>
-                <li><a href="#">绝版代寻</a></li>
-              </ul>
-            </div>
-            <div>
-              <div className="footer-col-title">客户服务</div>
-              <ul className="footer-links">
-                <li><a href="#">购买流程</a></li>
-                <li><a href="#">包装说明</a></li>
-                <li><a href="#">物流追踪</a></li>
-                <li><a href="#">售后政策</a></li>
-                <li><a href="#">联系客服</a></li>
-              </ul>
-            </div>
-            <div>
-              <div className="footer-col-title">关于我们</div>
-              <ul className="footer-links">
-                <li><a href="#">品牌故事</a></li>
-                <li><a href="#">正品鉴别</a></li>
-                <li><a href="#">合作伙伴</a></li>
-                <li><a href="#">加入我们</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="footer-bottom">
-            <span>© 2026 FumoShop · 幻想乡正规据点 · All Rights Reserved.</span>
-            <div className="footer-bottom-right">
-              <a href="#">隐私政策</a>
-              <a href="#">服务条款</a>
-              <a href="#">Cookie 设置</a>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

@@ -3,12 +3,14 @@ import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'motion/react'
 import { PageLoader } from '@/components/ui/PageLoader'
 import { PageSkeleton } from '@/components/ui/Skeleton'
+import SiteFooter from '@/components/site/SiteFooter'
 import { useScrollPosition } from '@/hooks'
 import { resolveHomeDisplayConfig } from '@/lib/homeConfig'
 import {
   AdminCategoriesPage,
   AdminCouponsPage,
   AdminDashboard,
+  AdminFooterSettingsPage,
   AdminHomepageSettingsPage,
   AdminLayout,
   AdminOrdersPage,
@@ -187,6 +189,7 @@ function App() {
     if (path === '/admin/categories') return <AdminCategoriesPage />
     if (path === '/admin/coupons') return <AdminCouponsPage />
     if (path === '/admin/homepage') return <AdminHomepageSettingsPage />
+    if (path === '/admin/footer') return <AdminFooterSettingsPage />
     if (path === '/admin/seo') return <AdminSeoPage />
     return <AdminDashboard />
   }
@@ -252,7 +255,7 @@ function App() {
             </div>
 
             <div className="flex items-center gap-4">
-              <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
+              <motion.div className="hidden md:block" whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
                 <Link
                   to="/search"
                   className="inline-flex items-center justify-center p-2 text-white/80 transition-colors hover:text-white"
@@ -273,7 +276,7 @@ function App() {
                   </svg>
                 </Link>
               </motion.div>
-              <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
+              <motion.div className="hidden md:block" whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
                 <Link
                   to="/cart"
                   className="relative inline-flex items-center justify-center p-2 text-white/80 transition-colors hover:text-white"
@@ -300,7 +303,7 @@ function App() {
                   )}
                 </Link>
               </motion.div>
-              <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
+              <motion.div className="hidden md:block" whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
                 <Link
                   to={isAuthenticated ? '/user/profile' : '/login'}
                   className="inline-flex items-center justify-center p-2 text-white/80 transition-colors hover:text-white"
@@ -363,6 +366,33 @@ function App() {
                       </a>
                     )
                   ))}
+                  <div className="mt-1 h-px w-full bg-white/15" />
+                  <Link
+                    to="/search"
+                    className="home-nav-mobile-link"
+                    onClick={() => setIsHomeMenuOpen(false)}
+                  >
+                    搜索
+                  </Link>
+                  <Link
+                    to="/cart"
+                    className="home-nav-mobile-link flex items-center justify-between"
+                    onClick={() => setIsHomeMenuOpen(false)}
+                  >
+                    <span>购物车</span>
+                    {cartTotalCount > 0 && (
+                      <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#9ab17a] px-1.5 text-xs text-white">
+                        {cartTotalCount > 99 ? '99+' : cartTotalCount}
+                      </span>
+                    )}
+                  </Link>
+                  <Link
+                    to={isAuthenticated ? '/user/profile' : '/login'}
+                    className="home-nav-mobile-link"
+                    onClick={() => setIsHomeMenuOpen(false)}
+                  >
+                    {isAuthenticated ? '个人中心' : '登录 / 注册'}
+                  </Link>
                 </div>
               </div>
             </div>
@@ -370,10 +400,13 @@ function App() {
         </header>
       ) : (
         <header
-          className="sticky top-0 z-50 border-b transition-all duration-300 ease-out"
+          className="sticky top-0 z-50 border-b px-4 transition-all duration-300 ease-out sm:px-6 lg:px-10"
           style={headerStyle}
         >
-          <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav
+            className="mx-auto w-full"
+            style={{ maxWidth: `${homeDisplayConfig.layoutMaxWidth}px` }}
+          >
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center gap-8">
                 <Link
@@ -534,107 +567,7 @@ function App() {
         </AnimatePresence>
       </main>
 
-      {/* 底部页脚 */}
-      {path !== '/' && (
-      <footer className="bg-slate-800 text-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-            >
-              <h3 className="font-display text-xl font-semibold mb-4">NewShop</h3>
-              <p className="text-sm text-slate-300 opacity-80">精选好物，品质生活</p>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-            >
-              <h4 className="font-semibold mb-4">购物指南</h4>
-               <ul className="space-y-2 text-sm text-slate-300 opacity-80">
-                <li>
-                  <Link to="/page/guide" className="hover:opacity-100 transition-opacity">
-                    购物流程
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/page/shipping" className="hover:opacity-100 transition-opacity">
-                    配送说明
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/page/returns" className="hover:opacity-100 transition-opacity">
-                    退换货政策
-                  </Link>
-                </li>
-              </ul>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
-            >
-              <h4 className="font-semibold mb-4">关于我们</h4>
-               <ul className="space-y-2 text-sm text-slate-300 opacity-80">
-                <li>
-                  <Link to="/page/story" className="hover:opacity-100 transition-opacity">
-                    品牌故事
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/page/contact" className="hover:opacity-100 transition-opacity">
-                    联系我们
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/page/join" className="hover:opacity-100 transition-opacity">
-                    加入我们
-                  </Link>
-                </li>
-              </ul>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3 }}
-            >
-              <h4 className="font-semibold mb-4">客户服务</h4>
-               <ul className="space-y-2 text-sm text-slate-300 opacity-80">
-                <li>
-                  <Link to="/page/service" className="hover:opacity-100 transition-opacity">
-                    在线客服
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/page/help" className="hover:opacity-100 transition-opacity">
-                    帮助中心
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/page/feedback" className="hover:opacity-100 transition-opacity">
-                    意见反馈
-                  </Link>
-                </li>
-              </ul>
-            </motion.div>
-          </div>
-          <motion.div
-            className="mt-12 pt-8 border-t border-slate-700 text-center text-sm text-slate-300 opacity-60"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 0.6 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.4 }}
-          >
-            <p>&copy; 2024 NewShop. All rights reserved.</p>
-          </motion.div>
-        </div>
-      </footer>
-      )}
+      <SiteFooter configSource={publicConfigs} />
     </div>
   )
 }

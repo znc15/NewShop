@@ -162,6 +162,10 @@ a:hover {
 }
 
 .home-nav-logo {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  white-space: nowrap;
   color: #ffffff;
   text-decoration: none;
   letter-spacing: 0.04em;
