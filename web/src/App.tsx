@@ -294,7 +294,7 @@ function App() {
                     <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
                   </svg>
                   {cartTotalCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#9ab17a] px-1 text-xs text-white">
+                    <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-[12px] bg-[#9ab17a] px-1 text-xs text-white">
                       {cartTotalCount > 99 ? '99+' : cartTotalCount}
                     </span>
                   )}
@@ -338,7 +338,7 @@ function App() {
           {isHomeMenuOpen && (
             <div className="pb-4 md:hidden">
               <div
-                className="mx-auto w-full rounded-2xl border border-white/20 bg-[rgba(51,64,39,0.96)] p-4 shadow-2xl backdrop-blur-xl"
+                className="mx-auto w-full rounded-[12px] border border-white/20 bg-[rgba(51,64,39,0.96)] p-4 shadow-2xl backdrop-blur-xl"
                 style={{ maxWidth: `${homeDisplayConfig.layoutMaxWidth}px` }}
               >
                 <div className="flex flex-col gap-3">

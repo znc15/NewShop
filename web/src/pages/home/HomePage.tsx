@@ -516,6 +516,8 @@ export default function HomePage() {
   }, [banners])
   const displayReviews = useMemo(() => (reviews.length > 0 ? reviews : fallbackReviews), [reviews])
   const homeDisplayConfig = useMemo(() => resolveHomeDisplayConfig(publicConfigs), [publicConfigs])
+  const resolvedHeroBackgroundImage =
+    homeDisplayConfig.heroBackgroundImage || featuredBanners[0]?.image_url || fallbackBannerImage
   const homeStyleVars = useMemo(
     () =>
       ({
@@ -558,7 +560,7 @@ export default function HomePage() {
   if (loading) {
     return (
       <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-[#fbe8ce]">
-        <div className="w-10 h-10 rounded-full border-4 border-[#9ab17a] border-t-transparent animate-spin" />
+        <div className="w-10 h-10 rounded-[12px] border-4 border-[#9ab17a] border-t-transparent animate-spin" />
       </div>
     )
   }
@@ -571,7 +573,7 @@ export default function HomePage() {
         <div
           className="hero-bg"
           style={{
-            backgroundImage: `url(${featuredBanners[0]?.image_url || fallbackBannerImage})`,
+            backgroundImage: `url(${resolvedHeroBackgroundImage})`,
           }}
         />
         <div className="hero-overlay" />
@@ -696,33 +698,41 @@ export default function HomePage() {
       </section>
 
       <section id="showcase">
-        {featuredBanners.map((banner, index) => (
-          <div className="showcase-item" key={banner.id}>
-            <div className="showcase-bg" style={{ backgroundImage: `url(${banner.image_url || fallbackBannerImage})` }} />
-            <div
-              className="showcase-overlay"
-              style={{
-                background:
-                  index % 2 === 0
-                    ? homeDisplayConfig.showcaseOverlayOdd
-                    : homeDisplayConfig.showcaseOverlayEven,
-              }}
-            />
-            <div className="showcase-content reveal">
-              <span className="showcase-tag">{banner.subtitle || 'Featured'}</span>
-              <h2 className="showcase-title">{banner.title}</h2>
-              <p className="showcase-desc">{banner.description}</p>
-              <div className="showcase-price-tag">
-                <span className="price-from">起售价</span>
-                <span className="price-val">¥{showcaseStartPrices[index % showcaseStartPrices.length]}</span>
-                <span className="price-unit">/ 只</span>
+        {featuredBanners.map((banner, index) => {
+          const resolvedShowcaseBackgroundImage =
+            homeDisplayConfig.showcaseBackgroundImages[index] ||
+            banner.image_url ||
+            fallbackShowcaseBanners[index % fallbackShowcaseBanners.length]?.image_url ||
+            fallbackBannerImage
+
+          return (
+            <div className="showcase-item" key={banner.id}>
+              <div className="showcase-bg" style={{ backgroundImage: `url(${resolvedShowcaseBackgroundImage})` }} />
+              <div
+                className="showcase-overlay"
+                style={{
+                  background:
+                    index % 2 === 0
+                      ? homeDisplayConfig.showcaseOverlayOdd
+                      : homeDisplayConfig.showcaseOverlayEven,
+                }}
+              />
+              <div className="showcase-content reveal">
+                <span className="showcase-tag">{banner.subtitle || 'Featured'}</span>
+                <h2 className="showcase-title">{banner.title}</h2>
+                <p className="showcase-desc">{banner.description}</p>
+                <div className="showcase-price-tag">
+                  <span className="price-from">起售价</span>
+                  <span className="price-val">¥{showcaseStartPrices[index % showcaseStartPrices.length]}</span>
+                  <span className="price-unit">/ 只</span>
+                </div>
+                <Link to={banner.link || '/products'} className="btn-primary">
+                  {banner.button_text || '立即查看'}
+                </Link>
               </div>
-              <Link to={banner.link || '/products'} className="btn-primary">
-                {banner.button_text || '立即查看'}
-              </Link>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </section>
 
       <section className="process-section" id="process">

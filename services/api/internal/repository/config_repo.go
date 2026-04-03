@@ -55,6 +55,12 @@ func (r *ConfigRepo) Upsert(ctx context.Context, config *model.Config) error {
 		var existing model.Config
 		err := tx.Where("key = ?", config.Key).First(&existing).Error
 		if err == gorm.ErrRecordNotFound {
+			if !json.Valid([]byte(config.PreviousValue)) {
+				config.PreviousValue = "null"
+			}
+			if config.Version <= 0 {
+				config.Version = 1
+			}
 			// 创建新配置
 			return tx.Create(config).Error
 		} else if err != nil {

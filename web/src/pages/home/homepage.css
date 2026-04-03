@@ -56,7 +56,7 @@
   transform: translateY(-50%);
   width: 680px;
   height: 680px;
-  border-radius: 50%;
+  border-radius: 12px;
   background: radial-gradient(circle, rgba(154, 177, 122, 0.25) 0%, transparent 70%);
 }
 
@@ -130,7 +130,7 @@
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  border-radius: 999px;
+  border-radius: 12px;
   padding: 0.82rem 1.8rem;
   font-size: 0.9rem;
   transition: all 0.25s;
@@ -299,7 +299,7 @@
 .fumo-home .product-card {
   position: relative;
   background: #fff;
-  border-radius: 20px;
+  border-radius: 12px;
   overflow: hidden;
   border: 1px solid rgba(154, 177, 122, 0.15);
   transition: transform 0.35s cubic-bezier(.22, .68, 0, 1.2), box-shadow 0.35s;
@@ -335,7 +335,7 @@
   top: 1rem;
   left: 1rem;
   padding: 0.3rem 0.85rem;
-  border-radius: 999px;
+  border-radius: 12px;
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -363,7 +363,7 @@
   right: 1rem;
   width: 34px;
   height: 34px;
-  border-radius: 50%;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.9);
   border: 0;
   display: flex;
@@ -444,7 +444,7 @@
   background: linear-gradient(135deg, var(--pink), var(--pink-deep));
   color: #fff;
   border: 0;
-  border-radius: 999px;
+  border-radius: 12px;
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -489,7 +489,7 @@
   z-index: 2;
   max-width: 540px;
   padding: 3rem 3.5rem;
-  border-radius: 24px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.25);
@@ -514,7 +514,7 @@
 .fumo-home .showcase-tag {
   display: inline-block;
   padding: 0.28rem 0.85rem;
-  border-radius: 999px;
+  border-radius: 12px;
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.15em;
@@ -581,7 +581,7 @@
   right: -200px;
   width: 600px;
   height: 600px;
-  border-radius: 50%;
+  border-radius: 12px;
   background: radial-gradient(circle, rgba(154, 177, 122, 0.15) 0%, transparent 70%);
   pointer-events: none;
 }
@@ -619,7 +619,7 @@
 .fumo-home .process-num {
   width: 64px;
   height: 64px;
-  border-radius: 50%;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -666,7 +666,7 @@
 
 .fumo-home .testi-card {
   background: #fff;
-  border-radius: 20px;
+  border-radius: 12px;
   border: 1px solid rgba(154, 177, 122, 0.2);
   padding: 2rem;
   transition: transform 0.3s, box-shadow 0.3s;
@@ -717,7 +717,7 @@
 .fumo-home .testi-avatar {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  border-radius: 12px;
   background: linear-gradient(135deg, var(--pink-light), var(--indigo-mid));
   display: flex;
   align-items: center;
@@ -790,7 +790,7 @@
   width: 48px;
   height: 3px;
   background: linear-gradient(90deg, var(--pink), var(--pink-light));
-  border-radius: 999px;
+  border-radius: 12px;
   margin: 1.5rem 0;
 }
 
@@ -803,7 +803,7 @@
 .fumo-home .feature-card {
   padding: 1.5rem;
   background: var(--cream);
-  border-radius: 16px;
+  border-radius: 12px;
   border: 1px solid rgba(154, 177, 122, 0.2);
   transition: all 0.3s;
 }
@@ -903,7 +903,7 @@
   padding: 0.85rem 1.4rem;
   background: rgba(255, 255, 255, 0.08);
   border: 1.5px solid rgba(255, 255, 255, 0.2);
-  border-radius: 100px;
+  border-radius: 12px;
   color: #fff;
   font-size: 0.9rem;
   font-family: 'Noto Sans SC', sans-serif;
@@ -972,7 +972,7 @@
 .fumo-home .social-btn {
   width: 34px;
   height: 34px;
-  border-radius: 50%;
+  border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   display: flex;
   align-items: center;
