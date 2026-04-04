@@ -16,7 +16,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
     <Link
       to={`/products/${product.id}`}
       className={cn(
-        'group block overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:border-slate-300 hover:shadow-md',
+        'group block h-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:border-slate-300 hover:shadow-md flex flex-col',
         className
       )}
     >
@@ -41,13 +41,13 @@ export function ProductCard({ product, className }: ProductCardProps) {
       </div>
 
       {/* 商品信息 */}
-      <div className="p-4">
-        <h3 className="text-sm font-medium text-gray-800 line-clamp-2 mb-2 group-hover:text-primary transition-colors">
+      <div className="flex flex-1 flex-col p-4">
+        <h3 className="text-sm font-medium text-gray-800 line-clamp-2 mb-2 min-h-[2.5rem] group-hover:text-primary transition-colors">
           {product.name}
         </h3>
 
         {/* 价格 - 后端价格单位为分，需要除以100 */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2">
           <span className="text-lg font-bold text-red-500">
             ¥{(price / 100).toFixed(2)}
           </span>
@@ -56,6 +56,9 @@ export function ProductCard({ product, className }: ProductCardProps) {
               ¥{(originalPrice / 100).toFixed(2)}
             </span>
           )}
+        </div>
+
+        <div className="mt-1 flex min-h-[1.25rem] flex-wrap items-center gap-1">
           {product.is_hot && (
             <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-500">
               热卖
@@ -69,7 +72,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
         </div>
 
         {/* 销量 */}
-        <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
+        <div className="flex items-center justify-between mt-auto pt-2 text-xs text-gray-500">
           <span>已售 {product.sales || 0}</span>
         </div>
       </div>

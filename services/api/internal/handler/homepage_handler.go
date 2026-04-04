@@ -65,6 +65,39 @@ func (h *HomePageHandler) GetFeaturedReviews(c *gin.Context) {
 	})
 }
 
+func (h *HomePageHandler) GetProductReviews(c *gin.Context) {
+	productID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil || productID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    pkgerrors.ErrBadRequest.Code,
+			"message": "无效的商品ID",
+		})
+		return
+	}
+
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	if limit <= 0 || limit > 100 {
+		limit = 20
+	}
+
+	reviews, err := h.homePageService.ListProductReviews(c.Request.Context(), productID, limit)
+	if err != nil {
+		h.logger.Error("获取商品评价失败", zap.Error(err), zap.Uint64("product_id", productID))
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"code":    pkgerrors.ErrInternalServer.Code,
+			"message": pkgerrors.ErrInternalServer.Message,
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": pkgerrors.ErrSuccess.Code,
+		"data": gin.H{
+			"reviews": reviews,
+		},
+	})
+}
+
 func (h *HomePageHandler) Subscribe(c *gin.Context) {
 	var req subscribeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

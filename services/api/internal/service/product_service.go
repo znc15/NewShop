@@ -35,8 +35,63 @@ type ProductListResult struct {
 	PageSize int             `json:"page_size"`
 }
 
+// ProductListFilters 商品列表筛选参数
+type ProductListFilters struct {
+	CategoryID uint64
+	BrandID    uint64
+	Status     string
+	MinPrice   *int64
+	MaxPrice   *int64
+	SortBy     string
+	SortOrder  string
+	Page       int
+	PageSize   int
+}
+
+func normalizeSortField(sortBy string) string {
+	switch sortBy {
+	case "price":
+		return "price"
+	case "sales":
+		return "sales"
+	case "created", "created_at":
+		return "created_at"
+	default:
+		return ""
+	}
+}
+
+// visibleProductStatuses 统一前台可见状态，兼容历史 on_sale/off_sale 与后台 active/inactive。
+func visibleProductStatuses(status string) []string {
+	switch status {
+	case "", "on_sale", "active":
+		return []string{"on_sale", "active"}
+	case "off_sale", "inactive":
+		return []string{"off_sale", "inactive"}
+	default:
+		return []string{status}
+	}
+}
+
 // GetProductList 分页查询商品列表
 func (s *ProductService) GetProductList(ctx context.Context, categoryID, brandID uint64, status string, page, pageSize int) (*ProductListResult, error) {
+	return s.GetProductListWithFilters(ctx, &ProductListFilters{
+		CategoryID: categoryID,
+		BrandID:    brandID,
+		Status:     status,
+		Page:       page,
+		PageSize:   pageSize,
+	})
+}
+
+// GetProductListWithFilters 分页查询商品列表（支持价格区间、排序等筛选）
+func (s *ProductService) GetProductListWithFilters(ctx context.Context, filters *ProductListFilters) (*ProductListResult, error) {
+	if filters == nil {
+		filters = &ProductListFilters{}
+	}
+
+	page := filters.Page
+	pageSize := filters.PageSize
 	if page < 1 {
 		page = 1
 	}
@@ -45,11 +100,16 @@ func (s *ProductService) GetProductList(ctx context.Context, categoryID, brandID
 	}
 
 	query := repository.NewProductQuery()
-	query.CategoryID = categoryID
-	query.BrandID = brandID
-	query.Status = status
+	query.CategoryID = filters.CategoryID
+	query.BrandID = filters.BrandID
+	query.Status = filters.Status
+	query.StatusList = visibleProductStatuses(filters.Status)
+	query.MinPrice = filters.MinPrice
+	query.MaxPrice = filters.MaxPrice
 	query.Page = page
 	query.PageSize = pageSize
+	query.OrderBy = normalizeSortField(filters.SortBy)
+	query.OrderDesc = filters.SortOrder != "asc"
 
 	products, total, err := s.repo.ListProducts(ctx, query)
 	if err != nil {
@@ -88,6 +148,7 @@ func (s *ProductService) GetProductsByCategory(ctx context.Context, categoryID u
 	query := repository.NewProductQuery()
 	query.CategoryID = categoryID
 	query.Status = "on_sale"
+	query.StatusList = visibleProductStatuses(query.Status)
 	query.Page = page
 	query.PageSize = pageSize
 
@@ -125,6 +186,7 @@ func (s *ProductService) SearchProducts(ctx context.Context, keyword string, pag
 	query := repository.NewProductQuery()
 	query.Keyword = keyword
 	query.Status = "on_sale"
+	query.StatusList = visibleProductStatuses(query.Status)
 	query.Page = page
 	query.PageSize = pageSize
 
@@ -224,6 +286,7 @@ func (s *ProductService) GetProductsByBrand(ctx context.Context, brandID uint64,
 	query := repository.NewProductQuery()
 	query.BrandID = brandID
 	query.Status = "on_sale"
+	query.StatusList = visibleProductStatuses(query.Status)
 	query.Page = page
 	query.PageSize = pageSize
 
@@ -279,6 +342,7 @@ func (s *ProductService) GetHotProducts(ctx context.Context, limit int) ([]model
 
 	query := repository.NewProductQuery()
 	query.Status = "on_sale"
+	query.StatusList = visibleProductStatuses(query.Status)
 	query.Page = 1
 	query.PageSize = limit
 	query.OrderBy = "sales"
@@ -300,6 +364,7 @@ func (s *ProductService) GetNewProducts(ctx context.Context, limit int) ([]model
 
 	query := repository.NewProductQuery()
 	query.Status = "on_sale"
+	query.StatusList = visibleProductStatuses(query.Status)
 	query.Page = 1
 	query.PageSize = limit
 	query.OrderBy = "created_at"

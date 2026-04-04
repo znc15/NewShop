@@ -15,6 +15,9 @@ import type {
   AdminCoupon,
   AdminCouponListParams,
   AdminCouponFormData,
+  AdminReview,
+  AdminReviewListParams,
+  AdminReviewFormData,
   AdminPaginatedResponse,
   DashboardStats,
   AdminConfigItem,
@@ -68,6 +71,24 @@ function toArray(value: unknown): unknown[] {
   return Array.isArray(value) ? value : []
 }
 
+function toStringArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .filter((item): item is string => typeof item === 'string')
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0)
+  }
+
+  if (typeof value === 'string') {
+    return value
+      .split(',')
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0)
+  }
+
+  return []
+}
+
 function pickArray(source: UnknownRecord, keys: string[]): unknown[] {
   for (const key of keys) {
     const value = source[key]
@@ -113,6 +134,7 @@ function mapProduct(item: unknown): AdminProduct {
     name: toString(record.name),
     description: toString(record.description),
     detail: toNullableString(record.detail),
+    detail_images: toStringArray(record.detail_images),
     price: toNumber(record.price),
     original_price: toNumber(record.original_price),
     main_image: toString(record.main_image),
@@ -252,6 +274,27 @@ function mapCoupon(item: unknown): AdminCoupon {
   }
 }
 
+function mapReview(item: unknown): AdminReview {
+  const record = asRecord(item) ?? {}
+  const statusValue = toString(record.status, 'active')
+  const status: AdminReview['status'] = statusValue === 'inactive' ? 'inactive' : 'active'
+
+  return {
+    id: toNumber(record.id),
+    product_id: toNumber(record.product_id),
+    product_name: toString(record.product_name),
+    author: toString(record.author),
+    handle: toString(record.handle),
+    avatar: toString(record.avatar),
+    content: toString(record.content),
+    rating: toNumber(record.rating, 5),
+    sort: toNumber(record.sort),
+    status,
+    created_at: toString(record.created_at),
+    updated_at: toString(record.updated_at),
+  }
+}
+
 export const adminService = {
   // ==================== 仪表盘 ====================
   getDashboardStats(): Promise<DashboardStats> {
@@ -378,6 +421,29 @@ export const adminService = {
 
   deleteCoupon(id: number): Promise<void> {
     return adminHttp.delete(`/coupons/${id}`)
+  },
+
+  // ==================== 评价管理 ====================
+  async getReviews(params: AdminReviewListParams): Promise<AdminPaginatedResponse<AdminReview>> {
+    const data = await adminHttp.get<unknown>('/reviews', params as Record<string, unknown>)
+    return normalizePaginated(data, mapReview)
+  },
+
+  async getReview(id: number): Promise<AdminReview> {
+    const data = await adminHttp.get<unknown>(`/reviews/${id}`)
+    return mapReview(data)
+  },
+
+  createReview(data: AdminReviewFormData): Promise<AdminReview> {
+    return adminHttp.post('/reviews', data)
+  },
+
+  updateReview(id: number, data: Partial<AdminReviewFormData>): Promise<AdminReview> {
+    return adminHttp.put(`/reviews/${id}`, data)
+  },
+
+  deleteReview(id: number): Promise<void> {
+    return adminHttp.delete(`/reviews/${id}`)
   },
 
   // ==================== 配置管理 ====================

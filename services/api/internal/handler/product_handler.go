@@ -39,13 +39,50 @@ func (h *ProductHandler) GetProductList(c *gin.Context) {
 	categoryID, _ := strconv.ParseUint(c.Query("category_id"), 10, 64)
 	brandID, _ := strconv.ParseUint(c.Query("brand_id"), 10, 64)
 	status := c.Query("status")
+	sortBy := c.Query("sort_by")
+	sortOrder := c.DefaultQuery("sort_order", "desc")
+
+	var minPrice *int64
+	if minPriceRaw := c.Query("min_price"); minPriceRaw != "" {
+		value, err := strconv.ParseInt(minPriceRaw, 10, 64)
+		if err != nil || value < 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"code": 40001, "message": "min_price 参数无效"})
+			return
+		}
+		minPrice = &value
+	}
+
+	var maxPrice *int64
+	if maxPriceRaw := c.Query("max_price"); maxPriceRaw != "" {
+		value, err := strconv.ParseInt(maxPriceRaw, 10, 64)
+		if err != nil || value < 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"code": 40001, "message": "max_price 参数无效"})
+			return
+		}
+		maxPrice = &value
+	}
+
+	if minPrice != nil && maxPrice != nil && *minPrice > *maxPrice {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 40001, "message": "min_price 不能大于 max_price"})
+		return
+	}
 
 	// 默认只显示在售商品（非管理端请求）
 	if status == "" {
 		status = "on_sale"
 	}
 
-	result, err := h.productService.GetProductList(c.Request.Context(), categoryID, brandID, status, page, pageSize)
+	result, err := h.productService.GetProductListWithFilters(c.Request.Context(), &service.ProductListFilters{
+		CategoryID: categoryID,
+		BrandID:    brandID,
+		Status:     status,
+		MinPrice:   minPrice,
+		MaxPrice:   maxPrice,
+		SortBy:     sortBy,
+		SortOrder:  sortOrder,
+		Page:       page,
+		PageSize:   pageSize,
+	})
 	if err != nil {
 		h.logger.Error("获取商品列表失败", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "获取商品列表失败"})

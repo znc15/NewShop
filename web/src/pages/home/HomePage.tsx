@@ -701,10 +701,16 @@ export default function HomePage() {
             const isLiked = Boolean(likedProductIds[product.id])
             const actionText = badgeMeta?.text.includes('预约') ? '预约领养' : '立即领养'
             const configuredImage = homeDisplayConfig.productsImageOverrides[index] || ''
+            const canOpenDetail =
+              Number.isFinite(product.id) &&
+              product.id > 0 &&
+              Boolean(product.created_at) &&
+              Boolean(product.updated_at)
+            const productLink = canOpenDetail ? `/products/${product.id}` : '/products'
 
             return (
             <article className={`product-card reveal ${revealDelayClass}`} key={product.id}>
-              <Link to={`/products/${product.id}`} className="product-img-wrap">
+              <Link to={productLink} className="product-img-wrap">
                 <img
                   src={configuredImage || product.main_image || (Array.isArray(product.images) ? product.images[0] : '') || fallbackBannerImage}
                   alt={product.name}
@@ -739,7 +745,7 @@ export default function HomePage() {
                   <div className="product-price">
                     {toCurrency(product.price)} <small>含税</small>
                   </div>
-                  <Link to={`/products/${product.id}`} className="btn-adopt">
+                  <Link to={productLink} className="btn-adopt">
                     {actionText}
                   </Link>
                 </div>

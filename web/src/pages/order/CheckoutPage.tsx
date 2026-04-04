@@ -3,8 +3,10 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { MapPin, CreditCard, Tag, ChevronRight, Check, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence, type Variants } from 'motion/react';
 import orderService from '../../services/order';
+import userService from '../../services/user';
 import { formatPriceWithSymbol } from '../../lib/utils';
 import type { CheckoutPreviewResponse, CheckoutItem, OrderAddress } from '../../types/order';
+import type { UserAddress } from '../../types/user';
 
 // 动画变体配置
 const containerVariants: Variants = {
@@ -218,6 +220,16 @@ export default function CheckoutPage() {
   const [remark, setRemark] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const toOrderAddress = (address: UserAddress): OrderAddress => ({
+    name: address.name,
+    phone: address.phone,
+    province: address.province,
+    city: address.city,
+    district: address.district,
+    address: address.address,
+    full_address: address.full_address,
+  });
+
   useEffect(() => {
     const cartItemIds = (location.state as { cartItemIds?: number[] } | null)?.cartItemIds || [];
 
@@ -228,11 +240,25 @@ export default function CheckoutPage() {
 
     const fetchPreview = async () => {
       try {
-        const data = await orderService.getCheckoutPreview({ cart_item_ids: cartItemIds });
+        const addresses = await userService.getAddresses();
+        const defaultAddress = addresses.find((item) => item.is_default) || addresses[0];
+
+        if (!defaultAddress) {
+          setPreview(null);
+          setSelectedAddress(null);
+          return;
+        }
+
+        setSelectedAddress(toOrderAddress(defaultAddress));
+
+        const data = await orderService.getCheckoutPreview({
+          address_id: defaultAddress.id,
+          item_ids: cartItemIds,
+        });
         setPreview(data);
-        setSelectedAddress(data.default_address);
       } catch (error) {
         console.error('获取结算预览失败:', error);
+        setPreview(null);
       } finally {
         setLoading(false);
       }

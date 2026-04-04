@@ -3,6 +3,7 @@ package admin
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"newshop/api/internal/model"
 	"newshop/api/internal/repository"
@@ -54,6 +55,7 @@ type ProductListItem struct {
 	Name          string `json:"name"`
 	Description   string `json:"description"`
 	Detail        string `json:"detail"`
+	DetailImages  string `json:"detail_images,omitempty"`
 	CategoryID    uint64 `json:"category_id"`
 	CategoryName  string `json:"category_name,omitempty"`
 	BrandID       uint64 `json:"brand_id"`
@@ -79,6 +81,7 @@ type CreateProductRequest struct {
 	BrandID       uint64                 `json:"brand_id"`
 	MainImage     string                 `json:"main_image" binding:"max=500"`
 	Images        []string               `json:"images"`
+	DetailImages  []string               `json:"detail_images"`
 	Price         int64                  `json:"price" binding:"required,gte=0"`
 	OriginalPrice int64                  `json:"original_price"`
 	Stock         int                    `json:"stock" binding:"gte=0"`
@@ -115,6 +118,7 @@ type UpdateProductRequest struct {
 	BrandID       uint64                 `json:"brand_id"`
 	MainImage     string                 `json:"main_image" binding:"max=500"`
 	Images        []string               `json:"images"`
+	DetailImages  []string               `json:"detail_images"`
 	Price         int64                  `json:"price" binding:"gte=0"`
 	OriginalPrice int64                  `json:"original_price"`
 	Stock         int                    `json:"stock" binding:"gte=0"`
@@ -165,6 +169,7 @@ type ProductDetailResponse struct {
 	Brand         *BrandInfo    `json:"brand,omitempty"`
 	MainImage     string        `json:"main_image"`
 	Images        []string      `json:"images"`
+	DetailImages  []string      `json:"detail_images"`
 	Price         int64         `json:"price"`
 	OriginalPrice int64         `json:"original_price"`
 	Stock         int           `json:"stock"`
@@ -266,6 +271,7 @@ func (h *ProductAdminHandler) List(c *gin.Context) {
 			Name:          p.Name,
 			Description:   p.Description,
 			Detail:        p.Detail,
+			DetailImages:  p.DetailImages,
 			CategoryID:    p.CategoryID,
 			BrandID:       p.BrandID,
 			MainImage:     p.MainImage,
@@ -379,16 +385,8 @@ func (h *ProductAdminHandler) Create(c *gin.Context) {
 	}
 
 	// 处理图片
-	if len(req.Images) > 0 {
-		imagesJSON := ""
-		for i, img := range req.Images {
-			if i > 0 {
-				imagesJSON += ","
-			}
-			imagesJSON += img
-		}
-		product.Images = imagesJSON
-	}
+	product.Images = joinImages(req.Images)
+	product.DetailImages = joinImages(req.DetailImages)
 
 	// 构建 SKU 列表
 	for _, skuReq := range req.Skus {
@@ -459,6 +457,12 @@ func (h *ProductAdminHandler) Get(c *gin.Context) {
 			images = append(images, img)
 		}
 	}
+	detailImages := []string{}
+	if product.DetailImages != "" {
+		for _, img := range splitImages(product.DetailImages) {
+			detailImages = append(detailImages, img)
+		}
+	}
 
 	// 构建响应
 	resp := ProductDetailResponse{
@@ -468,6 +472,7 @@ func (h *ProductAdminHandler) Get(c *gin.Context) {
 		BrandID:       product.BrandID,
 		MainImage:     product.MainImage,
 		Images:        images,
+		DetailImages:  detailImages,
 		Price:         product.Price,
 		OriginalPrice: product.OriginalPrice,
 		Stock:         product.Stock,
@@ -604,14 +609,10 @@ func (h *ProductAdminHandler) Update(c *gin.Context) {
 
 	// 处理图片
 	if req.Images != nil {
-		imagesJSON := ""
-		for i, img := range req.Images {
-			if i > 0 {
-				imagesJSON += ","
-			}
-			imagesJSON += img
-		}
-		product.Images = imagesJSON
+		product.Images = joinImages(req.Images)
+	}
+	if req.DetailImages != nil {
+		product.DetailImages = joinImages(req.DetailImages)
 	}
 
 	// 处理 SKU 更新
@@ -809,4 +810,26 @@ func splitImages(images string) []string {
 		result = append(result, images[start:])
 	}
 	return result
+}
+
+func joinImages(images []string) string {
+	if len(images) == 0 {
+		return ""
+	}
+	result := make([]string, 0, len(images))
+	for _, img := range images {
+		trimmed := strings.TrimSpace(img)
+		if trimmed == "" {
+			continue
+		}
+		result = append(result, trimmed)
+	}
+	if len(result) == 0 {
+		return ""
+	}
+	joined := result[0]
+	for i := 1; i < len(result); i++ {
+		joined += "," + result[i]
+	}
+	return joined
 }

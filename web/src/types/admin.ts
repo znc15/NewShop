@@ -27,6 +27,7 @@ export interface AdminProduct {
   name: string
   description: string
   detail: string | null
+  detail_images?: string[]
   price: number
   original_price: number
   main_image: string
@@ -82,6 +83,7 @@ export interface AdminProductFormData {
   name: string
   description: string
   detail?: string
+  detail_images?: string[]
   price: number
   original_price?: number
   category_id: number
@@ -305,4 +307,38 @@ export interface AdminConfigPayload {
   category: string
   description: string
   is_public: boolean
+}
+
+export interface AdminReview {
+  id: number
+  product_id: number
+  product_name: string
+  author: string
+  handle: string
+  avatar: string
+  content: string
+  rating: number
+  sort: number
+  status: 'active' | 'inactive'
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminReviewListParams {
+  page?: number
+  page_size?: number
+  keyword?: string
+  status?: string
+  product_id?: number
+}
+
+export interface AdminReviewFormData {
+  product_id: number
+  author: string
+  handle?: string
+  avatar?: string
+  content: string
+  rating: number
+  sort?: number
+  status?: 'active' | 'inactive'
 }

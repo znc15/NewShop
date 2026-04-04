@@ -40,7 +40,24 @@ func (r *HomePageRepo) ListActiveReviews(ctx context.Context, limit int) ([]mode
 
 	var reviews []model.HomeReview
 	err := r.db.WithContext(ctx).
-		Where("status = ?", model.HomeBannerStatusActive).
+		Where("status = ? AND product_id = 0", model.HomeBannerStatusActive).
+		Order("sort ASC, id DESC").
+		Limit(limit).
+		Find(&reviews).Error
+	if err != nil {
+		return nil, err
+	}
+	return reviews, nil
+}
+
+func (r *HomePageRepo) ListActiveReviewsByProductID(ctx context.Context, productID uint64, limit int) ([]model.HomeReview, error) {
+	if limit <= 0 {
+		limit = 10
+	}
+
+	var reviews []model.HomeReview
+	err := r.db.WithContext(ctx).
+		Where("status = ? AND product_id = ?", model.HomeBannerStatusActive, productID).
 		Order("sort ASC, id DESC").
 		Limit(limit).
 		Find(&reviews).Error

@@ -56,7 +56,13 @@ func (r *CartRepo) AddItem(ctx context.Context, item *model.CartItem) error {
 
 		// 已存在，更新数量
 		existing.Quantity += item.Quantity
-		return tx.Save(&existing).Error
+		if err := tx.Save(&existing).Error; err != nil {
+			return err
+		}
+
+		// 回填更新后的购物车项，确保上层能拿到正确 ID/数量。
+		*item = existing
+		return nil
 	})
 }
 

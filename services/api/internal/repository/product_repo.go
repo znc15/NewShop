@@ -129,11 +129,19 @@ func (r *ProductRepo) ListProducts(ctx context.Context, query *ProductQuery) ([]
 	if query.BrandID > 0 {
 		db = db.Where("brand_id = ?", query.BrandID)
 	}
-	if query.Status != "" {
+	if len(query.StatusList) > 0 {
+		db = db.Where("status IN ?", query.StatusList)
+	} else if query.Status != "" {
 		db = db.Where("status = ?", query.Status)
 	}
 	if query.Keyword != "" {
 		db = db.Where("name LIKE ?", "%"+query.Keyword+"%")
+	}
+	if query.MinPrice != nil {
+		db = db.Where("price >= ?", *query.MinPrice)
+	}
+	if query.MaxPrice != nil {
+		db = db.Where("price <= ?", *query.MaxPrice)
 	}
 
 	db.Count(&total)
@@ -147,7 +155,7 @@ func (r *ProductRepo) ListProducts(ctx context.Context, query *ProductQuery) ([]
 		if query.OrderDesc {
 			orderDirection = "DESC"
 		}
-		orderClause = query.OrderBy + " " + orderDirection
+		orderClause = query.OrderBy + " " + orderDirection + ", id DESC"
 	}
 
 	err := db.
@@ -269,7 +277,10 @@ type ProductQuery struct {
 	CategoryID uint64
 	BrandID    uint64
 	Status     string
+	StatusList []string
 	Keyword    string
+	MinPrice   *int64
+	MaxPrice   *int64
 	Page       int
 	PageSize   int
 	OrderBy    string

@@ -25,7 +25,7 @@ func NewCartHandler(cartService *service.CartService, logger *zap.Logger) *CartH
 // AddItemRequest 添加商品请求
 type AddItemRequest struct {
 	ProductID uint64 `json:"product_id" binding:"required"`
-	SkuID     uint64 `json:"sku_id" binding:"required"`
+	SkuID     uint64 `json:"sku_id"`
 	Quantity  int    `json:"quantity" binding:"required,min=1"`
 }
 

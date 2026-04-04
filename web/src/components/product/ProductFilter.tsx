@@ -32,9 +32,19 @@ const sortOptions = [
   { label: '价格从低到高', value: 'price_asc' },
   { label: '价格从高到低', value: 'price_desc' },
   { label: '销量优先', value: 'sales_desc' },
-  { label: '评分优先', value: 'rating_desc' },
-  { label: '新品优先', value: 'created_desc' },
+  { label: '新品优先', value: 'created_at_desc' },
 ]
+
+function parseSortValue(value: string): { field: string; order: 'asc' | 'desc' } {
+  if (value === 'default') {
+    return { field: 'default', order: 'desc' }
+  }
+
+  const separatorIndex = value.lastIndexOf('_')
+  const field = value.slice(0, separatorIndex)
+  const order = value.slice(separatorIndex + 1) as 'asc' | 'desc'
+  return { field, order }
+}
 
 export function ProductFilter({
   categories,
@@ -58,11 +68,11 @@ export function ProductFilter({
   }
 
   const handleSortChange = (value: string) => {
-    const [field, order] = value.split('_')
+    const { field, order } = parseSortValue(value)
     if (field === 'default') {
       onSortChange('default', 'desc')
     } else {
-      onSortChange(field, order as 'asc' | 'desc')
+      onSortChange(field, order)
     }
   }
 
@@ -72,21 +82,28 @@ export function ProductFilter({
     <div className="bg-white rounded-xl shadow-sm p-6 space-y-6">
       {/* 排序选项 */}
       <div className="flex items-center gap-4 flex-wrap">
-        {sortOptions.map((option) => (
-          <button
-            key={option.value}
-            onClick={() => handleSortChange(option.value)}
-            className={cn(
-              'px-4 py-2 rounded-lg text-sm transition-colors',
-              (sortBy === option.value.split('_')[0] && sortOrder === option.value.split('_')[1]) ||
-                (option.value === 'default' && sortBy === 'default')
-                ? 'bg-blue-700 text-white'
-                : 'bg-blue-50 text-slate-700 hover:bg-slate-100'
-            )}
-          >
-            {option.label}
-          </button>
-        ))}
+        {sortOptions.map((option) => {
+          const { field, order } = parseSortValue(option.value)
+          const isActive =
+            option.value === 'default'
+              ? sortBy === 'default'
+              : sortBy === field && sortOrder === order
+
+          return (
+            <button
+              key={option.value}
+              onClick={() => handleSortChange(option.value)}
+              className={cn(
+                'px-4 py-2 rounded-lg text-sm transition-colors',
+                isActive
+                  ? 'bg-blue-700 text-white'
+                  : 'bg-blue-50 text-slate-700 hover:bg-slate-100'
+              )}
+            >
+              {option.label}
+            </button>
+          )
+        })}
       </div>
 
       {/* 分类筛选 */}

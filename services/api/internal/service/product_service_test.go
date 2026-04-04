@@ -39,9 +39,9 @@ func TestGetProductList(t *testing.T) {
 	db.Create(category)
 
 	brand := &model.Brand{
-		Name:  "测试品牌",
-		Logo:  "test.png",
-		Sort:  1,
+		Name: "测试品牌",
+		Logo: "test.png",
+		Sort: 1,
 	}
 	db.Create(brand)
 
@@ -109,6 +109,137 @@ func TestGetProductList(t *testing.T) {
 			if p.CategoryID != category.ID {
 				t.Errorf("分类ID不匹配")
 			}
+		}
+	})
+}
+
+// TestGetProductListStatusAlias 测试状态别名兼容（on_sale <-> active, off_sale <-> inactive）
+func TestGetProductListStatusAlias(t *testing.T) {
+	db := setupProductTestDB(t)
+
+	category := &model.Category{
+		Name:  "状态兼容分类",
+		Level: 1,
+		Sort:  1,
+	}
+	db.Create(category)
+
+	brand := &model.Brand{
+		Name: "状态兼容品牌",
+		Logo: "test.png",
+		Sort: 1,
+	}
+	db.Create(brand)
+
+	products := []model.Product{
+		{Name: "上架旧值", CategoryID: category.ID, BrandID: brand.ID, Price: 100, Stock: 10, Status: "on_sale", Sort: 1},
+		{Name: "上架新值", CategoryID: category.ID, BrandID: brand.ID, Price: 120, Stock: 10, Status: "active", Sort: 2},
+		{Name: "下架旧值", CategoryID: category.ID, BrandID: brand.ID, Price: 90, Stock: 10, Status: "off_sale", Sort: 3},
+		{Name: "下架新值", CategoryID: category.ID, BrandID: brand.ID, Price: 80, Stock: 10, Status: "inactive", Sort: 4},
+	}
+	for _, p := range products {
+		db.Create(&p)
+	}
+
+	repo := repository.NewProductRepo(db)
+	svc := NewProductService(repo, db)
+
+	t.Run("on_sale 查询兼容 active", func(t *testing.T) {
+		result, err := svc.GetProductList(context.Background(), 0, 0, "on_sale", 1, 20)
+		if err != nil {
+			t.Fatalf("查询失败: %v", err)
+		}
+		if result.Total != 2 {
+			t.Fatalf("期望 2 条上架商品，实际 %d 条", result.Total)
+		}
+	})
+
+	t.Run("active 查询兼容 on_sale", func(t *testing.T) {
+		result, err := svc.GetProductList(context.Background(), 0, 0, "active", 1, 20)
+		if err != nil {
+			t.Fatalf("查询失败: %v", err)
+		}
+		if result.Total != 2 {
+			t.Fatalf("期望 2 条上架商品，实际 %d 条", result.Total)
+		}
+	})
+
+	t.Run("inactive 查询兼容 off_sale", func(t *testing.T) {
+		result, err := svc.GetProductList(context.Background(), 0, 0, "inactive", 1, 20)
+		if err != nil {
+			t.Fatalf("查询失败: %v", err)
+		}
+		if result.Total != 2 {
+			t.Fatalf("期望 2 条下架商品，实际 %d 条", result.Total)
+		}
+	})
+}
+
+// TestGetProductListWithFilters 测试筛选参数（品牌、价格、排序）
+func TestGetProductListWithFilters(t *testing.T) {
+	db := setupProductTestDB(t)
+
+	category := &model.Category{Name: "筛选分类", Level: 1, Sort: 1}
+	db.Create(category)
+
+	brandA := &model.Brand{Name: "品牌A", Logo: "a.png", Sort: 1}
+	brandB := &model.Brand{Name: "品牌B", Logo: "b.png", Sort: 2}
+	db.Create(brandA)
+	db.Create(brandB)
+
+	products := []model.Product{
+		{Name: "A-低价", CategoryID: category.ID, BrandID: brandA.ID, Price: 100, Stock: 10, Status: "on_sale", Sales: 5, Sort: 1},
+		{Name: "B-中价", CategoryID: category.ID, BrandID: brandB.ID, Price: 300, Stock: 10, Status: "active", Sales: 9, Sort: 2},
+		{Name: "A-高价", CategoryID: category.ID, BrandID: brandA.ID, Price: 500, Stock: 10, Status: "on_sale", Sales: 3, Sort: 3},
+	}
+	for _, p := range products {
+		db.Create(&p)
+	}
+
+	repo := repository.NewProductRepo(db)
+	svc := NewProductService(repo, db)
+
+	minPrice := int64(150)
+	maxPrice := int64(600)
+
+	t.Run("品牌+价格筛选", func(t *testing.T) {
+		result, err := svc.GetProductListWithFilters(context.Background(), &ProductListFilters{
+			BrandID:   brandA.ID,
+			Status:    "on_sale",
+			MinPrice:  &minPrice,
+			MaxPrice:  &maxPrice,
+			SortBy:    "price",
+			SortOrder: "asc",
+			Page:      1,
+			PageSize:  20,
+		})
+		if err != nil {
+			t.Fatalf("查询失败: %v", err)
+		}
+		if result.Total != 1 {
+			t.Fatalf("期望 1 条记录，实际 %d 条", result.Total)
+		}
+		if len(result.Products) != 1 || result.Products[0].Name != "A-高价" {
+			t.Fatalf("筛选结果不符合预期")
+		}
+	})
+
+	t.Run("价格倒序排序", func(t *testing.T) {
+		result, err := svc.GetProductListWithFilters(context.Background(), &ProductListFilters{
+			Status:    "on_sale",
+			SortBy:    "price",
+			SortOrder: "desc",
+			Page:      1,
+			PageSize:  20,
+		})
+		if err != nil {
+			t.Fatalf("查询失败: %v", err)
+		}
+		if len(result.Products) < 2 {
+			t.Fatalf("数据不足，无法验证排序")
+		}
+		if result.Products[0].Price < result.Products[1].Price {
+			t.Fatalf("价格排序未生效")
 		}
 	})
 }

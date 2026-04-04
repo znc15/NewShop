@@ -34,6 +34,7 @@ func (HomeBanner) TableName() string {
 // HomeReview 首页评价。
 type HomeReview struct {
 	ID        uint64         `gorm:"primaryKey" json:"id"`
+	ProductID uint64         `gorm:"default:0;index" json:"product_id"`
 	Author    string         `gorm:"size:80;not null" json:"author"`
 	Handle    string         `gorm:"size:120" json:"handle"`
 	Avatar    string         `gorm:"size:10" json:"avatar"`

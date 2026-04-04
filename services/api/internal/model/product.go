@@ -58,6 +58,7 @@ type Product struct {
 	IsSale        bool           `gorm:"default:false" json:"is_sale"`
 	Description   string         `gorm:"type:text" json:"description"`
 	Detail        string         `gorm:"type:text" json:"detail"`
+	DetailImages  string         `gorm:"type:text" json:"detail_images"`
 	Status        string         `gorm:"size:50;default:draft;index" json:"status"`
 	Sort          int            `gorm:"default:0" json:"sort"`
 	Category      *Category      `gorm:"foreignKey:CategoryID" json:"category,omitempty"`

@@ -32,6 +32,10 @@ func (s *HomePageService) ListReviews(ctx context.Context, limit int) ([]model.H
 	return s.repo.ListActiveReviews(ctx, limit)
 }
 
+func (s *HomePageService) ListProductReviews(ctx context.Context, productID uint64, limit int) ([]model.HomeReview, error) {
+	return s.repo.ListActiveReviewsByProductID(ctx, productID, limit)
+}
+
 func (s *HomePageService) Subscribe(ctx context.Context, email string) (*model.NewsletterSubscription, bool, error) {
 	normalizedEmail := strings.ToLower(strings.TrimSpace(email))
 	if !isValidEmail(normalizedEmail) {

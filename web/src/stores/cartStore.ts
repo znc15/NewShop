@@ -14,7 +14,7 @@ interface CartState {
 
   // 操作
   fetchCart: () => Promise<void>;
-  addItem: (productId: number, skuId: number | undefined, quantity: number) => Promise<void>;
+  addItem: (productId: number, skuId: number | undefined, quantity: number) => Promise<CartItem>;
   updateQuantity: (itemId: number, quantity: number) => Promise<void>;
   removeItem: (itemId: number) => Promise<void>;
   removeItems: (itemIds: number[]) => Promise<void>;
@@ -70,13 +70,14 @@ export const useCartStore = create<CartState>((set, get) => ({
   addItem: async (productId, skuId, quantity) => {
     set({ loading: true, error: null });
     try {
-      await cartService.addToCart({
+      const addedItem = await cartService.addToCart({
         product_id: productId,
         sku_id: skuId ?? undefined,
         quantity,
       });
       await syncCart(set);
       set({ loading: false });
+      return addedItem;
     } catch (error) {
       set({
         error: error instanceof Error ? error.message : '添加购物车失败',

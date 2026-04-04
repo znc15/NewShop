@@ -1,11 +1,12 @@
-import { Suspense, lazy, useEffect, useState, type CSSProperties } from 'react'
-import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { Suspense, lazy, useEffect, useRef, useState, type CSSProperties } from 'react'
+import { Link, Navigate, Route, Routes, matchPath, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'motion/react'
 import { PageLoader } from '@/components/ui/PageLoader'
 import { PageSkeleton } from '@/components/ui/Skeleton'
 import SiteFooter from '@/components/site/SiteFooter'
 import { useScrollPosition } from '@/hooks'
 import { resolveHomeDisplayConfig } from '@/lib/homeConfig'
+import { resolveSeo } from '@/lib/seo'
 import {
   AdminCategoriesPage,
   AdminCouponsPage,
@@ -15,6 +16,7 @@ import {
   AdminLayout,
   AdminOrdersPage,
   AdminProductsPage,
+  AdminReviewsPage,
   AdminSeoPage,
   AdminUsersPage,
 } from '@/pages/admin'
@@ -80,6 +82,76 @@ const navLinkVariants = {
 
 const HEADER_TRANSITION_DISTANCE = 96
 
+const ROUTE_TITLE_MAP: Record<string, string> = {
+  '/': '首页',
+  '/products': '全部商品',
+  '/categories': '商品分类',
+  '/new': '新品首发',
+  '/sale': '特惠专区',
+  '/search': '商品搜索',
+  '/brands': '品牌馆',
+  '/preorder': '预售专区',
+  '/coupons': '优惠券中心',
+  '/points': '积分中心',
+  '/member': '会员中心',
+  '/cart': '购物车',
+  '/checkout': '提交订单',
+  '/orders': '我的订单',
+  '/login': '用户登录',
+  '/register': '用户注册',
+  '/forgot-password': '找回密码',
+  '/user/profile': '个人资料',
+  '/user/addresses': '收货地址',
+  '/address/select': '选择地址',
+  '/admin/login': '管理员登录',
+  '/admin': '管理后台',
+  '/admin/products': '后台商品管理',
+  '/admin/reviews': '后台评价管理',
+  '/admin/orders': '后台订单管理',
+  '/admin/users': '后台用户管理',
+  '/admin/categories': '后台分类管理',
+  '/admin/coupons': '后台优惠券管理',
+  '/admin/homepage': '后台首页配置',
+  '/admin/footer': '后台页脚配置',
+  '/admin/seo': '后台 SEO 配置',
+}
+
+const ROUTE_TITLE_PATTERNS: Array<{ pattern: string; title: string }> = [
+  { pattern: '/products/:id', title: '商品详情' },
+  { pattern: '/orders/:id', title: '订单详情' },
+  { pattern: '/page/:slug', title: '内容详情' },
+]
+
+function normalizePath(pathname: string) {
+  if (pathname === '/') {
+    return pathname
+  }
+
+  return pathname.endsWith('/') ? pathname.slice(0, -1) : pathname
+}
+
+function resolveRouteTitle(pathname: string): string | null {
+  if (ROUTE_TITLE_MAP[pathname]) {
+    return ROUTE_TITLE_MAP[pathname]
+  }
+
+  for (const route of ROUTE_TITLE_PATTERNS) {
+    if (matchPath({ path: route.pattern, end: true }, pathname)) {
+      return route.title
+    }
+  }
+
+  return null
+}
+
+function formatDocumentTitle(pageTitle: string | null, siteTitle: string): string {
+  if (!pageTitle) {
+    return siteTitle
+  }
+
+  return `${pageTitle} - ${siteTitle}`
+}
+
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max)
 }
@@ -104,6 +176,8 @@ function App() {
   const [publicConfigs, setPublicConfigs] = useState<Record<string, unknown>>({})
   const [failedBrandLogoUrl, setFailedBrandLogoUrl] = useState('')
   const [isHomeMenuOpen, setIsHomeMenuOpen] = useState(false)
+  const lastAutoTitleRef = useRef('')
+  const previousPathRef = useRef('')
   const scrollY = useScrollPosition()
   const path = location.pathname
   const isHomePage = path === '/'
@@ -181,9 +255,26 @@ function App() {
     }
   }, [])
 
+  useEffect(() => {
+    const normalizedPath = normalizePath(path)
+    const siteTitle = resolveSeo(undefined, publicConfigs).siteTitle
+    const routeTitle = resolveRouteTitle(normalizedPath)
+    const nextTitle = formatDocumentTitle(routeTitle, siteTitle)
+    const hasPathChanged = previousPathRef.current !== normalizedPath
+
+    // 在路由切换时强制写入自动标题；若页面已主动覆盖标题，则避免被配置刷新回写覆盖。
+    if (hasPathChanged || document.title === lastAutoTitleRef.current || !document.title.trim()) {
+      document.title = nextTitle
+      lastAutoTitleRef.current = nextTitle
+    }
+
+    previousPathRef.current = normalizedPath
+  }, [path, publicConfigs])
+
   const renderAdminPage = () => {
     if (path === '/admin') return <AdminDashboard />
     if (path === '/admin/products') return <AdminProductsPage />
+    if (path === '/admin/reviews') return <AdminReviewsPage />
     if (path === '/admin/orders') return <AdminOrdersPage />
     if (path === '/admin/users') return <AdminUsersPage />
     if (path === '/admin/categories') return <AdminCategoriesPage />

@@ -26,6 +26,7 @@ const INITIAL_FORM_DATA: AdminProductFormData = {
   name: '',
   description: '',
   detail: '',
+  detail_images: [],
   price: 0,
   category_id: 0,
   status: 'draft',
@@ -43,9 +44,28 @@ function parseImageList(images: string | null): string[] {
   }
 
   return images
-    .split(',')
+    .split(/[\n,]/)
     .map((item) => item.trim())
     .filter((item) => item.length > 0)
+}
+
+function parseLineImageList(images: string): string[] {
+  if (!images) {
+    return []
+  }
+
+  return images
+    .split(/[\n,]/)
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0)
+}
+
+function formatImageList(images: string[] | undefined): string {
+  if (!images || images.length === 0) {
+    return ''
+  }
+
+  return images.join('\n')
 }
 
 export function AdminProductsPage() {
@@ -115,6 +135,7 @@ export function AdminProductsPage() {
         name: product.name,
         description: product.description,
         detail: product.detail || '',
+        detail_images: product.detail_images || [],
         price: product.price,
         original_price: product.original_price || undefined,
         category_id: product.category_id,
@@ -389,6 +410,32 @@ export function AdminProductsPage() {
               placeholder="请输入商品说明（如材质、规格、卖点等）"
               className="w-full px-3 py-2 text-sm border border-cream-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-transparent resize-none"
               rows={4}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-charcoal mb-1">
+              轮播图 URL 列表
+            </label>
+            <textarea
+              value={formatImageList(formData.images)}
+              onChange={(e) => setFormData((prev) => ({ ...prev, images: parseLineImageList(e.target.value) }))}
+              placeholder="每行一个图片地址，可直接粘贴淘宝图床链接"
+              className="w-full px-3 py-2 text-sm border border-cream-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-transparent resize-none"
+              rows={4}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-charcoal mb-1">
+              详情导入图片 URL 列表
+            </label>
+            <textarea
+              value={formatImageList(formData.detail_images)}
+              onChange={(e) => setFormData((prev) => ({ ...prev, detail_images: parseLineImageList(e.target.value) }))}
+              placeholder="支持淘宝详情图导入，每行一个图片地址"
+              className="w-full px-3 py-2 text-sm border border-cream-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-transparent resize-none"
+              rows={6}
             />
           </div>
 

@@ -36,6 +36,7 @@ export interface Product {
   name: string
   description: string
   detail: string | null
+  detail_images?: string[] | string | null
   price: number
   original_price: number
   main_image: string
@@ -75,6 +76,18 @@ export interface ProductAttr {
   name: string
   value: string
   sort: number
+}
+
+export interface ProductReview {
+  id: number
+  product_id: number
+  author: string
+  handle: string
+  avatar: string
+  content: string
+  rating: number
+  created_at: string
+  updated_at: string
 }
 
 // 前端规格展示用类型（从 SKU 聚合生成）

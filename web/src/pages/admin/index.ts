@@ -1,6 +1,7 @@
 export { AdminLayout } from './AdminLayout'
 export { AdminDashboard } from './AdminDashboard'
 export { AdminProductsPage } from './AdminProductsPage'
+export { AdminReviewsPage } from './AdminReviewsPage'
 export { AdminOrdersPage } from './AdminOrdersPage'
 export { AdminUsersPage } from './AdminUsersPage'
 export { AdminCategoriesPage } from './AdminCategoriesPage'

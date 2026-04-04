@@ -58,13 +58,58 @@ export const orderService = {
   },
 
   // 获取结算预览
-  getCheckoutPreview(params: {
-    cart_item_ids?: number[]
-    product_id?: number
-    sku_id?: number
-    quantity?: number
+  async getCheckoutPreview(params: {
+    address_id: number
+    item_ids: number[]
   }): Promise<CheckoutPreviewResponse> {
-    return http.get('/orders/checkout/preview', params as Record<string, unknown>)
+    type RawCheckoutPreviewItem = {
+      product_id: number
+      sku_id: number
+      product_name: string
+      sku_name: string
+      image: string
+      price: number
+      quantity: number
+      total_amount: number
+    }
+
+    type RawCheckoutPreviewResponse = {
+      items?: RawCheckoutPreviewItem[]
+      total_amount?: number
+      freight_amount?: number
+      pay_amount?: number
+    }
+
+    const res = await http.post<RawCheckoutPreviewResponse>('/orders/checkout/preview', {
+      address_id: params.address_id,
+      item_ids: params.item_ids,
+    })
+
+    const items = (res.items || []).map((item, index) => ({
+      cart_item_id: params.item_ids[index] ?? index + 1,
+      product_id: item.product_id,
+      product_name: item.product_name,
+      product_image: item.image || '',
+      sku_id: item.sku_id,
+      sku_specs: item.sku_name || '',
+      price: item.price,
+      quantity: item.quantity,
+      subtotal: item.total_amount,
+      stock: 0,
+    }))
+
+    return {
+      items,
+      total_amount: res.total_amount || 0,
+      freight_amount: res.freight_amount || 0,
+      shipping_fee: res.freight_amount || 0,
+      discount_amount: 0,
+      pay_amount: res.pay_amount || 0,
+      default_address: null,
+      available_coupons: [],
+      user_points: 0,
+      max_points_usable: 0,
+    }
   },
 
   // 申请退款

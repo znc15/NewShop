@@ -97,6 +97,7 @@ type Router struct {
 	configAdminHandler     *adminhandler.ConfigAdminHandler
 	pageAdminHandler       *adminhandler.PageAdminHandler
 	couponAdminHandler     *adminhandler.CouponAdminHandler
+	reviewAdminHandler     *adminhandler.ReviewAdminHandler
 }
 
 // NewRouter 创建路由管理器
@@ -178,6 +179,7 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 	configAdminHandler := adminhandler.NewConfigAdminHandler(configService, logger)
 	pageAdminHandler := adminhandler.NewPageAdminHandler(pageService, logger)
 	couponAdminHandler := adminhandler.NewCouponAdminHandler(db, logger)
+	reviewAdminHandler := adminhandler.NewReviewAdminHandler(db, logger)
 
 	return &Router{
 		db:         db,
@@ -244,6 +246,7 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 		configAdminHandler:     configAdminHandler,
 		pageAdminHandler:       pageAdminHandler,
 		couponAdminHandler:     couponAdminHandler,
+		reviewAdminHandler:     reviewAdminHandler,
 	}
 }
 
@@ -389,6 +392,7 @@ func (r *Router) setupProductRoutes(rg *gin.RouterGroup) {
 		products.GET("", r.productHandler.GetProductList)
 		products.GET("/hot", r.productHandler.GetHotProducts) // 热门商品
 		products.GET("/new", r.productHandler.GetNewProducts) // 新品推荐
+		products.GET("/:id/reviews", r.homePageHandler.GetProductReviews)
 		products.GET("/search", r.productHandler.SearchProducts)
 		products.GET("/:id", r.productHandler.GetProductDetail) // 动态路由放最后
 	}
@@ -572,6 +576,15 @@ func (r *Router) setupAdminRoutes(rg *gin.RouterGroup) {
 		coupons.GET("/:id", r.couponAdminHandler.Get)
 		coupons.PUT("/:id", r.couponAdminHandler.Update)
 		coupons.DELETE("/:id", r.couponAdminHandler.Delete)
+	}
+
+	reviews := rg.Group("/reviews")
+	{
+		reviews.GET("", r.reviewAdminHandler.List)
+		reviews.POST("", r.reviewAdminHandler.Create)
+		reviews.GET("/:id", r.reviewAdminHandler.Get)
+		reviews.PUT("/:id", r.reviewAdminHandler.Update)
+		reviews.DELETE("/:id", r.reviewAdminHandler.Delete)
 	}
 
 	pages := rg.Group("/pages")

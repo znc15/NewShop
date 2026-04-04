@@ -1,5 +1,5 @@
 import http from './http'
-import type { Product, ProductListParams, PaginatedResponse, Category, SearchResult } from '@/types'
+import type { Product, ProductListParams, PaginatedResponse, Category, Brand, SearchResult, ProductReview } from '@/types'
 
 export const productService = {
   // 获取商品列表
@@ -19,6 +19,12 @@ export const productService = {
     return http.get(`/products/${id}`)
   },
 
+  // 获取商品评价
+  async getProductReviews(id: number, limit: number = 20): Promise<ProductReview[]> {
+    const res = await http.get<{ reviews: ProductReview[] }>(`/products/${id}/reviews`, { limit })
+    return res.reviews || []
+  },
+
   // 获取分类列表
   async getCategories(): Promise<Category[]> {
     const res = await http.get<{ categories: Category[] }>('/categories')
@@ -29,6 +35,12 @@ export const productService = {
   async getCategoryTree(): Promise<Category[]> {
     const res = await http.get<{ categories: Category[] }>('/categories/tree')
     return res.categories || []
+  },
+
+  // 获取品牌列表
+  async getBrands(): Promise<Brand[]> {
+    const res = await http.get<{ brands: Brand[] }>('/brands', { page: 1, page_size: 200 })
+    return res.brands || []
   },
 
   // 搜索商品

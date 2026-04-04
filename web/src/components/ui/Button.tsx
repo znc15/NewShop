@@ -15,7 +15,7 @@ const buttonVariants = cva(
         outline:
           'border-2 border-blue-600 bg-transparent text-blue-600 hover:bg-blue-50 active:bg-blue-100',
         'outline-thick':
-          'border-[3px] border-solid border-blue-600 bg-transparent text-blue-600 hover:bg-blue-50 active:bg-blue-100',
+          'border-2 border-solid border-blue-600 bg-transparent text-blue-600 hover:bg-blue-50 active:bg-blue-100',
         secondary:
           'bg-cream-200 text-charcoal shadow-sm hover:bg-cream-300 active:bg-cream-400',
         ghost:

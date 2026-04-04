@@ -37,33 +37,69 @@ const fadeVariants: Variants = {
   },
 }
 
+function flattenCategories(nodes: Category[]): Category[] {
+  const result: Category[] = []
+
+  const walk = (items: Category[]) => {
+    items.forEach((item) => {
+      result.push(item)
+      if (Array.isArray(item.children) && item.children.length > 0) {
+        walk(item.children)
+      }
+    })
+  }
+
+  walk(nodes)
+  return result
+}
+
 export default function ProductListPage() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const categoryId = searchParams.get('category') ? parseInt(searchParams.get('category')!) : undefined
+  const parseNumberParam = (key: string): number | undefined => {
+    const raw = searchParams.get(key)
+    if (!raw) {
+      return undefined
+    }
+    const value = Number(raw)
+    return Number.isFinite(value) ? value : undefined
+  }
+
+  const categoryId = parseNumberParam('category')
+  const brandId = parseNumberParam('brand')
+  const minPrice = parseNumberParam('minPrice')
+  const maxPrice = parseNumberParam('maxPrice')
   const sortBy = searchParams.get('sort') || 'default'
-  const sortOrder = searchParams.get('order') as 'asc' | 'desc' || 'desc'
+  const sortOrder = searchParams.get('order') === 'asc' ? 'asc' : 'desc'
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
-  const [brands] = useState<Brand[]>([])
+  const [brands, setBrands] = useState<Brand[]>([])
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [showMobileFilter, setShowMobileFilter] = useState(false)
+  const selectedPriceRange =
+    minPrice !== undefined || maxPrice !== undefined
+      ? { min: minPrice || 0, max: maxPrice ?? Infinity }
+      : undefined
 
-  // 获取分类列表
+  // 获取筛选项（分类、品牌）
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchFilterOptions = async () => {
       try {
-        const categoriesData = await productService.getCategories()
-        setCategories(categoriesData)
+        const [categoriesData, brandsData] = await Promise.all([
+          productService.getCategories(),
+          productService.getBrands(),
+        ])
+        setCategories(flattenCategories(categoriesData))
+        setBrands(brandsData)
       } catch (error) {
-        console.error('获取分类失败:', error)
+        console.error('获取筛选项失败:', error)
       }
     }
 
-    fetchCategories()
+    fetchFilterOptions()
   }, [])
 
   // 获取商品列表
@@ -75,13 +111,16 @@ export default function ProductListPage() {
     try {
       const params: Record<string, unknown> = {
         page: pageNum,
-        pageSize: 20,
+        page_size: 20,
       }
 
-      if (categoryId) params.categoryId = categoryId
+      if (categoryId) params.category_id = categoryId
+      if (brandId) params.brand_id = brandId
+      if (minPrice !== undefined) params.min_price = minPrice * 100
+      if (maxPrice !== undefined) params.max_price = maxPrice * 100
       if (sortBy !== 'default') {
-        params.sortBy = sortBy
-        params.sortOrder = sortOrder
+        params.sort_by = sortBy
+        params.sort_order = sortOrder
       }
 
       const response: PaginatedResponse<Product> = await productService.getProducts(params)
@@ -100,7 +139,7 @@ export default function ProductListPage() {
     } finally {
       setLoading(false)
     }
-  }, [categoryId, sortBy, sortOrder])
+  }, [brandId, categoryId, maxPrice, minPrice, sortBy, sortOrder])
 
   useEffect(() => {
     setPage(1)
@@ -116,20 +155,46 @@ export default function ProductListPage() {
     }
   }
 
+  const updateSearchParams = (updates: Record<string, string | undefined>) => {
+    const next = new URLSearchParams(searchParams)
+
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === undefined || value === '') {
+        next.delete(key)
+      } else {
+        next.set(key, value)
+      }
+    })
+
+    setSearchParams(next)
+  }
+
   // 筛选处理
   const handleCategoryChange = (catId?: number) => {
-    if (catId) {
-      setSearchParams({ category: String(catId) })
-    } else {
-      setSearchParams({})
+    updateSearchParams({ category: catId ? String(catId) : undefined })
+  }
+
+  const handleBrandChange = (nextBrandId?: number) => {
+    updateSearchParams({ brand: nextBrandId ? String(nextBrandId) : undefined })
+  }
+
+  const handlePriceRangeChange = (range?: { min: number; max: number }) => {
+    if (!range) {
+      updateSearchParams({ minPrice: undefined, maxPrice: undefined })
+      return
     }
+
+    updateSearchParams({
+      minPrice: String(range.min),
+      maxPrice: Number.isFinite(range.max) ? String(range.max) : undefined,
+    })
   }
 
   const handleSortChange = (field: string, order: 'asc' | 'desc') => {
     if (field === 'default') {
-      setSearchParams({})
+      updateSearchParams({ sort: undefined, order: undefined })
     } else {
-      setSearchParams({ sort: field, order })
+      updateSearchParams({ sort: field, order })
     }
   }
 
@@ -162,7 +227,7 @@ export default function ProductListPage() {
       >
         <Filter className="w-4 h-4" />
         <span>筛选</span>
-        {categoryId && (
+        {(categoryId || brandId || selectedPriceRange) && (
           <span className="ml-1 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
             已选
           </span>
@@ -202,14 +267,22 @@ export default function ProductListPage() {
                   brands={brands}
                   priceRanges={priceRanges}
                   selectedCategory={categoryId}
+                  selectedBrand={brandId}
+                  selectedPriceRange={selectedPriceRange}
                   sortBy={sortBy}
                   sortOrder={sortOrder}
                   onCategoryChange={(catId) => {
                     handleCategoryChange(catId)
                     setShowMobileFilter(false)
                   }}
-                  onBrandChange={() => {}}
-                  onPriceRangeChange={() => {}}
+                  onBrandChange={(nextBrandId) => {
+                    handleBrandChange(nextBrandId)
+                    setShowMobileFilter(false)
+                  }}
+                  onPriceRangeChange={(range) => {
+                    handlePriceRangeChange(range)
+                    setShowMobileFilter(false)
+                  }}
                   onSortChange={(field, order) => {
                     handleSortChange(field, order)
                     setShowMobileFilter(false)
@@ -238,11 +311,13 @@ export default function ProductListPage() {
             brands={brands}
             priceRanges={priceRanges}
             selectedCategory={categoryId}
+            selectedBrand={brandId}
+            selectedPriceRange={selectedPriceRange}
             sortBy={sortBy}
             sortOrder={sortOrder}
             onCategoryChange={handleCategoryChange}
-            onBrandChange={() => {}}
-            onPriceRangeChange={() => {}}
+            onBrandChange={handleBrandChange}
+            onPriceRangeChange={handlePriceRangeChange}
             onSortChange={handleSortChange}
             onReset={handleReset}
           />
