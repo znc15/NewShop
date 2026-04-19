@@ -6,7 +6,7 @@ name: newshop-infra
 services:
   # PostgreSQL 数据库
   postgres:
-    image: postgres:15-alpine
+    image: postgres:15
     container_name: newshop-postgres
     environment:
       POSTGRES_USER: postgres
@@ -25,7 +25,7 @@ services:
 
   # Redis 缓存
   redis:
-    image: redis:7-alpine
+    image: redis:7
     container_name: newshop-redis
     ports:
       - "6379:6379"

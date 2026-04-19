@@ -13,15 +13,17 @@ import (
 
 // OrderHandler 订单处理器
 type OrderHandler struct {
-	orderService *service.OrderService
-	logger       *zap.Logger
+	orderService  *service.OrderService
+	configService *service.ConfigService
+	logger        *zap.Logger
 }
 
 // NewOrderHandler 创建订单处理器实例
-func NewOrderHandler(orderService *service.OrderService, logger *zap.Logger) *OrderHandler {
+func NewOrderHandler(orderService *service.OrderService, configService *service.ConfigService, logger *zap.Logger) *OrderHandler {
 	return &OrderHandler{
-		orderService: orderService,
-		logger:       logger,
+		orderService:  orderService,
+		configService: configService,
+		logger:        logger,
 	}
 }
 
@@ -43,6 +45,17 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 			"code":    40001,
 			"message": "请求参数错误: " + err.Error(),
 		})
+		return
+	}
+
+	// 极验验证
+	if code, msg := VerifyGeetestForAction(c.Request.Context(), h.configService, h.logger, "checkout", GeetestParams{
+		GeetestChallenge: req.GeetestChallenge,
+		GeetestValidate:  req.GeetestValidate,
+		GeetestSeccode:   req.GeetestSeccode,
+		GeetestGenTime:   req.GeetestGenTime,
+	}); code != 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"code": code, "message": msg})
 		return
 	}
 

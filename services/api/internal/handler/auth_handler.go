@@ -1,11 +1,13 @@
 package handler
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/url"
 
 	"newshop/api/internal/model"
+	"newshop/api/internal/pkg/geetest"
 	"newshop/api/internal/pkg/jwt"
 	"newshop/api/internal/service"
 
@@ -19,16 +21,18 @@ type AuthHandler struct {
 	userService        *service.UserService
 	emailService       *service.EmailService
 	githubOAuthService *service.GitHubOAuthService
+	configService      *service.ConfigService
 	frontendLoginURL   string
 	jwtManager         *jwt.JWTManager
 	logger             *zap.Logger
 }
 
-func NewAuthHandler(userService *service.UserService, emailService *service.EmailService, githubOAuthService *service.GitHubOAuthService, frontendLoginURL string, jwtManager *jwt.JWTManager, logger *zap.Logger) *AuthHandler {
+func NewAuthHandler(userService *service.UserService, emailService *service.EmailService, githubOAuthService *service.GitHubOAuthService, configService *service.ConfigService, frontendLoginURL string, jwtManager *jwt.JWTManager, logger *zap.Logger) *AuthHandler {
 	return &AuthHandler{
 		userService:        userService,
 		emailService:       emailService,
 		githubOAuthService: githubOAuthService,
+		configService:      configService,
 		frontendLoginURL:   frontendLoginURL,
 		jwtManager:         jwtManager,
 		logger:             logger,
@@ -38,20 +42,24 @@ func NewAuthHandler(userService *service.UserService, emailService *service.Emai
 const githubOAuthStateCookieName = "github_oauth_state"
 
 type RegisterRequest struct {
-	Email        string `json:"email" binding:"required,email"`
-	Password     string `json:"password" binding:"required,min=6,max=20"`
-	Nickname     string `json:"nickname"`
-	Code         string `json:"code"`
-	CaptchaID    string `json:"captcha_id"`
-	CaptchaToken string `json:"captcha_token"`
+	Email            string `json:"email" binding:"required,email"`
+	Password         string `json:"password" binding:"required,min=6,max=20"`
+	Nickname         string `json:"nickname"`
+	Code             string `json:"code"`
+	GeetestChallenge string `json:"geetest_challenge"`
+	GeetestValidate  string `json:"geetest_validate"`
+	GeetestSeccode   string `json:"geetest_seccode"`
+	GeetestGenTime   string `json:"gen_time"`
 }
 
 type LoginRequest struct {
-	Email        string `json:"email" binding:"required,email"`
-	Password     string `json:"password" binding:"required"`
-	Code         string `json:"code"`
-	CaptchaID    string `json:"captcha_id"`
-	CaptchaToken string `json:"captcha_token"`
+	Email            string `json:"email" binding:"required,email"`
+	Password         string `json:"password" binding:"required"`
+	Code             string `json:"code"`
+	GeetestChallenge string `json:"geetest_challenge"`
+	GeetestValidate  string `json:"geetest_validate"`
+	GeetestSeccode   string `json:"geetest_seccode"`
+	GeetestGenTime   string `json:"gen_time"`
 }
 
 type RefreshRequest struct {
@@ -59,10 +67,97 @@ type RefreshRequest struct {
 }
 
 type SendCodeRequest struct {
-	Email        string `json:"email" binding:"required,email"`
-	Type         string `json:"type" binding:"required,oneof=register login reset"`
-	CaptchaID    string `json:"captcha_id"`
-	CaptchaToken string `json:"captcha_token"`
+	Email            string `json:"email" binding:"required,email"`
+	Type             string `json:"type" binding:"required,oneof=register login reset"`
+	CaptchaID        string `json:"captcha_id"`
+	CaptchaToken     string `json:"captcha_token"`
+	GeetestChallenge string `json:"geetest_challenge"`
+	GeetestValidate  string `json:"geetest_validate"`
+	GeetestSeccode   string `json:"geetest_seccode"`
+	GeetestGenTime   string `json:"gen_time"`
+}
+
+type GeetestParams struct {
+	GeetestChallenge string
+	GeetestValidate  string
+	GeetestSeccode   string
+	GeetestGenTime   string
+}
+
+func VerifyGeetestForAction(ctx context.Context, configService *service.ConfigService, logger *zap.Logger, action string, params GeetestParams) (int, string) {
+	var enabledActions []string
+	if err := configService.GetJSONConfig(ctx, model.ConfigKeyGeetestActions, &enabledActions); err != nil {
+		logger.Error("获取极验配置失败", zap.Error(err))
+		return 50000, "系统配置错误"
+	}
+
+	isRequired := false
+	for _, a := range enabledActions {
+		if a == action {
+			isRequired = true
+			break
+		}
+	}
+
+	if !isRequired {
+		return 0, ""
+	}
+
+	id, _ := configService.GetStringConfig(ctx, model.ConfigKeyGeetestID)
+	key, _ := configService.GetStringConfig(ctx, model.ConfigKeyGeetestKey)
+	if id == "" || key == "" {
+		return 0, ""
+	}
+
+	if params.GeetestChallenge == "" || params.GeetestValidate == "" || params.GeetestSeccode == "" {
+		return 40001, "请完成行为验证"
+	}
+
+	client := geetest.NewClient(id, key)
+	valid, err := client.Verify(geetest.VerifyRequest{
+		LotNumber:     params.GeetestChallenge,
+		CaptchaOutput: params.GeetestValidate,
+		PassToken:     params.GeetestSeccode,
+		GenTime:       params.GeetestGenTime,
+	})
+	if err != nil {
+		logger.Error("极验服务器请求失败", zap.Error(err))
+		return 50000, "验证码校验失败"
+	}
+	if !valid {
+		return 40002, "验证码错误或已过期"
+	}
+
+	return 0, ""
+}
+
+// GetGeetestInfo 获取极验初始化信息
+// @Summary 获取极验初始化信息
+// @Tags 认证
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Router /api/v1/auth/geetest [get]
+func (h *AuthHandler) GetGeetestInfo(c *gin.Context) {
+	id, err := h.configService.GetStringConfig(c.Request.Context(), model.ConfigKeyGeetestID)
+	if err != nil {
+		h.logger.Error("获取极验 ID 失败", zap.Error(err))
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "获取验证配置失败"})
+		return
+	}
+
+	var enabledActions []string
+	if err := h.configService.GetJSONConfig(c.Request.Context(), model.ConfigKeyGeetestActions, &enabledActions); err != nil {
+		h.logger.Warn("获取启用的极验行为失败, 默认全部关闭", zap.Error(err))
+		enabledActions = []string{}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code": 0,
+		"data": gin.H{
+			"geetest_id":      id,
+			"enabled_actions": enabledActions,
+		},
+	})
 }
 
 // Register 用户注册
@@ -80,6 +175,17 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"code": 40001, "message": "请求参数错误: " + err.Error()})
+		return
+	}
+
+	// 极验验证
+	if code, msg := VerifyGeetestForAction(c.Request.Context(), h.configService, h.logger, "register", GeetestParams{
+		GeetestChallenge: req.GeetestChallenge,
+		GeetestValidate:  req.GeetestValidate,
+		GeetestSeccode:   req.GeetestSeccode,
+		GeetestGenTime:   req.GeetestGenTime,
+	}); code != 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"code": code, "message": msg})
 		return
 	}
 
@@ -170,6 +276,17 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"code": 40001, "message": "请求参数错误"})
+		return
+	}
+
+	// 极验验证
+	if code, msg := VerifyGeetestForAction(c.Request.Context(), h.configService, h.logger, "login", GeetestParams{
+		GeetestChallenge: req.GeetestChallenge,
+		GeetestValidate:  req.GeetestValidate,
+		GeetestSeccode:   req.GeetestSeccode,
+		GeetestGenTime:   req.GeetestGenTime,
+	}); code != 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"code": code, "message": msg})
 		return
 	}
 
@@ -371,6 +488,17 @@ func (h *AuthHandler) SendCode(c *gin.Context) {
 		return
 	}
 
+	// 极验验证
+	if code, msg := VerifyGeetestForAction(c.Request.Context(), h.configService, h.logger, "send_code", GeetestParams{
+		GeetestChallenge: req.GeetestChallenge,
+		GeetestValidate:  req.GeetestValidate,
+		GeetestSeccode:   req.GeetestSeccode,
+		GeetestGenTime:   req.GeetestGenTime,
+	}); code != 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"code": code, "message": msg})
+		return
+	}
+
 	codeType := req.Type
 	if codeType == "register" {
 		existingUser, err := h.userService.GetByEmail(c.Request.Context(), req.Email)
@@ -557,9 +685,13 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 
 // ResetPasswordRequest 重置密码请求
 type ResetPasswordRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Code     string `json:"code" binding:"required"`
-	Password string `json:"password" binding:"required,min=6,max=20"`
+	Email            string `json:"email" binding:"required,email"`
+	Code             string `json:"code" binding:"required"`
+	Password         string `json:"password" binding:"required,min=6,max=20"`
+	GeetestChallenge string `json:"geetest_challenge"`
+	GeetestValidate  string `json:"geetest_validate"`
+	GeetestSeccode   string `json:"geetest_seccode"`
+	GeetestGenTime   string `json:"gen_time"`
 }
 
 // ResetPassword 重置密码（忘记密码）
@@ -576,6 +708,17 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	var req ResetPasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"code": 40001, "message": "请求参数错误: " + err.Error()})
+		return
+	}
+
+	// 极验验证
+	if code, msg := VerifyGeetestForAction(c.Request.Context(), h.configService, h.logger, "reset_password", GeetestParams{
+		GeetestChallenge: req.GeetestChallenge,
+		GeetestValidate:  req.GeetestValidate,
+		GeetestSeccode:   req.GeetestSeccode,
+		GeetestGenTime:   req.GeetestGenTime,
+	}); code != 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"code": code, "message": msg})
 		return
 	}
 

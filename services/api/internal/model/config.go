@@ -98,4 +98,10 @@ const (
 	ConfigKeyGitHubClientID     = "github_client_id"
 	ConfigKeyGitHubClientSecret = "github_client_secret"
 	ConfigKeyGitHubRedirectURI  = "github_redirect_uri"
+
+	// 极验配置
+	ConfigKeyGeetestID      = "geetest.id"
+	ConfigKeyGeetestKey     = "geetest.key"
+	ConfigKeyGeetestActions = "geetest.enabled_actions"
 )
+

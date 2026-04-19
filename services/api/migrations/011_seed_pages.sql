@@ -234,4 +234,14 @@ A: 请检查网络和账户余额，或更换支付方式。
 -- +goose Down
 -- +goose StatementBegin
 DELETE FROM pages WHERE slug IN ('about', 'story', 'contact', 'join', 'guide', 'shipping', 'returns', 'service', 'help', 'feedback');
+-- +goose StatementEnd-- +goose Up
+-- +goose StatementBegin
+
+DELETE FROM pages WHERE slug IN ('about', 'story', 'contact', 'join', 'guide', 'shipping', 'returns', 'service', 'help', 'feedback');
+
+-- +goose StatementEnd
+
+-- +goose Down
+-- +goose StatementBegin
+SELECT 1;
 -- +goose StatementEnd

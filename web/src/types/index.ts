@@ -15,6 +15,10 @@ export interface User {
 export interface LoginRequest {
   email: string
   password: string
+  geetest_challenge?: string
+  geetest_validate?: string
+  geetest_seccode?: string
+  gen_time?: string
 }
 
 export interface RegisterRequest {
@@ -22,6 +26,29 @@ export interface RegisterRequest {
   email: string
   password: string
   phone?: string
+  geetest_challenge?: string
+  geetest_validate?: string
+  geetest_seccode?: string
+  gen_time?: string
+}
+
+export interface SendCodeRequest {
+  email: string
+  type: 'register' | 'login' | 'reset'
+  geetest_challenge?: string
+  geetest_validate?: string
+  geetest_seccode?: string
+  gen_time?: string
+}
+
+export interface ResetPasswordRequest {
+  email: string
+  code: string
+  password?: string
+  geetest_challenge?: string
+  geetest_validate?: string
+  geetest_seccode?: string
+  gen_time?: string
 }
 
 export interface AuthResponse {

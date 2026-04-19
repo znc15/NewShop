@@ -33,7 +33,6 @@ const ProductDetailPage = lazy(() => import('./pages/product/ProductDetailPage')
 const SearchPage = lazy(() => import('./pages/product/SearchPage'))
 const NewProductsPage = lazy(() => import('./pages/product/NewProductsPage'))
 const SalePage = lazy(() => import('./pages/product/SalePage'))
-const CategoriesPage = lazy(() => import('./pages/category/CategoriesPage'))
 const BrandsPage = lazy(() => import('./pages/brand/BrandsPage'))
 const PreorderPage = lazy(() => import('./pages/preorder/PreorderPage'))
 const CouponsPage = lazy(() => import('./pages/coupon/CouponsPage'))
@@ -85,7 +84,6 @@ const HEADER_TRANSITION_DISTANCE = 96
 const ROUTE_TITLE_MAP: Record<string, string> = {
   '/': '首页',
   '/products': '全部商品',
-  '/categories': '商品分类',
   '/new': '新品首发',
   '/sale': '特惠专区',
   '/search': '商品搜索',
@@ -186,7 +184,6 @@ function App() {
   const showBrandLogo = Boolean(homeDisplayConfig.brandLogo) && failedBrandLogoUrl !== homeDisplayConfig.brandLogo
   const homeNavLinks: Array<{ label: string; to?: string; href?: string }> = [
     { to: '/products', label: '全部商品' },
-    { to: '/categories', label: '分类' },
     { to: '/new', label: '新品' },
     { to: '/sale', label: '特惠' },
     { href: '#reviews', label: '评价' },
@@ -520,7 +517,6 @@ function App() {
                 <div className="hidden md:flex items-center gap-6">
                   {[
                     { to: '/products', label: '全部商品' },
-                    { to: '/categories', label: '分类' },
                     { to: '/new', label: '新品' },
                     { to: '/sale', label: '特惠' },
                   ].map((link) => (
@@ -629,7 +625,7 @@ function App() {
                     <Route path="/" element={<HomePage />} />
                     <Route path="/products" element={<ProductListPage />} />
                     <Route path="/products/:id" element={<ProductDetailPage />} />
-                    <Route path="/categories" element={<CategoriesPage />} />
+                    <Route path="/categories" element={<Navigate to="/products" replace />} />
                     <Route path="/new" element={<NewProductsPage />} />
                     <Route path="/sale" element={<SalePage />} />
                     <Route path="/search" element={<SearchPage />} />

@@ -1,5 +1,5 @@
 import http from './http'
-import type { User, LoginRequest, RegisterRequest, AuthResponse } from '@/types'
+import type { User, LoginRequest, RegisterRequest, AuthResponse, SendCodeRequest, ResetPasswordRequest } from '@/types'
 
 export const authService = {
   // 登录
@@ -23,13 +23,13 @@ export const authService = {
   },
 
   // 发送验证码
-  sendVerifyCode(email: string, type: 'register' | 'login' | 'reset' = 'register'): Promise<void> {
-    return http.post('/auth/send-code', { email, type })
+  sendCode(data: SendCodeRequest): Promise<void> {
+    return http.post('/auth/send-code', data)
   },
 
   // 重置密码
-  resetPassword(email: string, code: string, password: string): Promise<void> {
-    return http.post('/auth/reset-password', { email, code, password })
+  resetPassword(data: ResetPasswordRequest): Promise<void> {
+    return http.post('/auth/reset-password', data)
   },
 }
 

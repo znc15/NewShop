@@ -150,7 +150,13 @@ func (s *ConfigService) GetStringConfig(ctx context.Context, key string) (string
 		return "", ErrInvalidConfigType
 	}
 
-	return config.Value, nil
+	var value string
+	if err := json.Unmarshal([]byte(config.Value), &value); err != nil {
+		// 兼容非 JSON 格式的老数据
+		return config.Value, nil
+	}
+
+	return value, nil
 }
 
 // GetJSONConfig 获取 JSON 类型配置

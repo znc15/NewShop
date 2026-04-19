@@ -25,6 +25,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores'
 import { MemberLevels, type UserProfile } from '@/types/user'
 import { cn, getApiErrorMessage } from '@/utils'
+import { useGeetest } from '@/hooks/useGeetest'
 
 type UserProfileResponse = Partial<UserProfile> & {
   member_level?: number
@@ -183,6 +184,7 @@ export default function UserProfilePage() {
   const navigate = useNavigate()
   const clearAuth = useAuthStore((state) => state.logout)
   const resetCart = useCartStore((state) => state.resetCart)
+  const { verify } = useGeetest()
 
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -338,7 +340,8 @@ export default function UserProfilePage() {
     setPasswordFeedback(null)
 
     try {
-      await authService.sendVerifyCode(profile.email, 'reset')
+      const geetestResult = await verify('send_code')
+      await authService.sendCode({ email: profile.email, type: 'reset', ...geetestResult })
       setPasswordExpanded(true)
       setPasswordCountdown(60)
       setPasswordFeedback({

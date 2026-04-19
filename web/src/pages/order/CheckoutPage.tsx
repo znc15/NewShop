@@ -7,6 +7,7 @@ import userService from '../../services/user';
 import { formatPriceWithSymbol } from '../../lib/utils';
 import type { CheckoutPreviewResponse, CheckoutItem, OrderAddress } from '../../types/order';
 import type { UserAddress } from '../../types/user';
+import { useGeetest } from '../../hooks/useGeetest';
 
 // 动画变体配置
 const containerVariants: Variants = {
@@ -211,6 +212,7 @@ function CouponSelector({
 export default function CheckoutPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { verify } = useGeetest();
 
   const [loading, setLoading] = useState(true);
   const [preview, setPreview] = useState<CheckoutPreviewResponse | null>(null);
@@ -221,6 +223,7 @@ export default function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const toOrderAddress = (address: UserAddress): OrderAddress => ({
+    id: address.id,
     name: address.name,
     phone: address.phone,
     province: address.province,
@@ -282,7 +285,20 @@ export default function CheckoutPage() {
 
     setSubmitting(true);
     try {
-      // TODO: 调用创建订单 API
+      const geetestResult = await verify('checkout');
+      if (preview) {
+        await orderService.createOrder({
+          address_id: selectedAddress.id,
+          items: preview.items.map(item => ({
+            product_id: item.product_id,
+            sku_id: item.sku_id,
+            quantity: item.quantity,
+          })),
+          remark: remark || undefined,
+          coupon_id: selectedCoupon || undefined,
+          ...geetestResult,
+        });
+      }
       navigate('/order/success');
     } catch (error) {
       console.error('创建订单失败:', error);

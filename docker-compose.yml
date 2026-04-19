@@ -2,7 +2,7 @@ name: newshop
 
 services:
   postgres:
-    image: postgres:15-alpine
+    image: postgres:15
     container_name: newshop-postgres
     environment:
       POSTGRES_USER: postgres
@@ -21,7 +21,7 @@ services:
       - newshop-network
 
   redis:
-    image: redis:7-alpine
+    image: redis:7
     container_name: newshop-redis
     ports:
       - "6379:6379"

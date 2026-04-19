@@ -29,9 +29,10 @@ func TestGeetestVerifyWithInvalidData(t *testing.T) {
 	client := geetest.NewClient("test-id", "test-key")
 
 	valid, err := client.Verify(geetest.VerifyRequest{
-		Challenge: "invalid",
-		Validate:  "invalid",
-		Seccode:   "invalid",
+		LotNumber:     "invalid",
+		CaptchaOutput: "invalid",
+		PassToken:     "invalid",
+		GenTime:       "invalid",
 	})
 
 	if err != nil {

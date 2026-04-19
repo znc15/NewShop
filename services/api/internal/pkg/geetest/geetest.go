@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
+	"net/url"
 	"time"
 )
 
@@ -30,30 +30,28 @@ func NewClient(id, key string) *Client {
 }
 
 type VerifyRequest struct {
-	Challenge string `json:"challenge"`
-	Validate  string `json:"validate"`
-	Seccode   string `json:"seccode"`
+	LotNumber     string `json:"lot_number"`
+	CaptchaOutput string `json:"captcha_output"`
+	PassToken     string `json:"pass_token"`
+	GenTime       string `json:"gen_time"`
 }
 
-// Verify 验证极验二次验证
+// Verify 验证极验二次验证 (Geetest V4)
 func (c *Client) Verify(req VerifyRequest) (bool, error) {
-	// 本地校验：validate 是否等于 hmac-sha256(key, challenge)
-	expectedValidate := c.hashHmacSha256(req.Challenge, c.config.Key)
-	if req.Validate != expectedValidate {
-		return false, nil
-	}
+	// 生成 sign_token: hmac_sha256(lot_number, key)
+	signToken := c.hashHmacSha256(req.LotNumber, c.config.Key)
 
 	// 服务器二次验证
-	verifyURL := fmt.Sprintf(
-		"http://gcaptcha4.geetest.com/validate?captcha_id=%s&lot_number=%s&captcha_output=%s&pass_token=%s&gen_time=%s",
-		c.config.ID,
-		req.Challenge,
-		req.Validate,
-		req.Seccode,
-		strconv.FormatInt(time.Now().UnixMilli(), 10),
-	)
+	verifyURL := "http://gcaptcha4.geetest.com/validate"
+	params := url.Values{}
+	params.Add("captcha_id", c.config.ID)
+	params.Add("lot_number", req.LotNumber)
+	params.Add("captcha_output", req.CaptchaOutput)
+	params.Add("pass_token", req.PassToken)
+	params.Add("gen_time", req.GenTime)
+	params.Add("sign_token", signToken)
 
-	resp, err := c.http.Get(verifyURL)
+	resp, err := c.http.PostForm(verifyURL, params)
 	if err != nil {
 		return false, fmt.Errorf("极验服务器请求失败: %w", err)
 	}

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input'
 import { authService } from '@/services/auth'
 import { useAuthStore } from '@/stores/auth'
 import { cn, getApiErrorMessage } from '@/utils'
+import { useGeetest } from '@/hooks/useGeetest'
 
 // 动画变体配置
 const containerVariants: Variants = {
@@ -41,6 +42,7 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { setUser, setToken } = useAuthStore()
+  const { verify } = useGeetest()
 
   const [formData, setFormData] = useState({
     email: '',
@@ -78,7 +80,8 @@ export default function LoginPage() {
 
     setIsLoading(true)
     try {
-      const response = await authService.login(formData)
+      const geetestResult = await verify('login')
+      const response = await authService.login({ ...formData, ...geetestResult })
       setUser(response.user)
       setToken(response.access_token)
       navigate('/')

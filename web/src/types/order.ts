@@ -57,6 +57,7 @@ export interface OrderItem {
 
 // 收货地址（用于结算预览，非订单内嵌）
 export interface OrderAddress {
+  id: number
   name: string
   phone: string
   province: string
@@ -141,6 +142,10 @@ export interface CreateOrderRequest {
   }[]
   remark?: string
   coupon_id?: number
+  geetest_challenge?: string
+  geetest_validate?: string
+  geetest_seccode?: string
+  gen_time?: string
 }
 
 // 创建订单响应

@@ -82,10 +82,14 @@ func (OrderItem) TableName() string {
 
 // CreateOrderRequest 创建订单请求
 type CreateOrderRequest struct {
-	AddressID uint64               `json:"address_id" binding:"required"`
-	Items     []CreateOrderItemReq `json:"items" binding:"required,min=1"`
-	Remark    string               `json:"remark"`
-	CouponID  uint64               `json:"coupon_id"`
+	AddressID        uint64               `json:"address_id" binding:"required"`
+	Items            []CreateOrderItemReq `json:"items" binding:"required,min=1"`
+	Remark           string               `json:"remark"`
+	CouponID         uint64               `json:"coupon_id"`
+	GeetestChallenge string      `json:"geetest_challenge"`
+	GeetestValidate  string      `json:"geetest_validate"`
+	GeetestSeccode   string      `json:"geetest_seccode"`
+	GeetestGenTime   string      `json:"gen_time"`
 }
 
 // CreateOrderItemReq 创建订单商品项请求

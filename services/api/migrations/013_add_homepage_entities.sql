@@ -62,3 +62,9 @@ VALUES
   ('苍波 Aoba', '@aobawave · 已领养：绮罗人（代寻）', '苍', '托代寻服务找到了绝版款，全程沟通顺畅，开箱那一刻真的泪目。', 5, 2, 'active'),
   ('冰见千夏', '@chinatsu_ice · 已领养：琪露诺 · 灵梦 · 咲夜', '冰', '第三次回购了，这次买的限定版从下单到收到只用了三天。', 5, 3, 'active')
 ON CONFLICT DO NOTHING;
+-- +goose Down
+-- +goose NO_TRANSACTION
+
+DROP TABLE IF EXISTS newsletter_subscriptions;
+DROP TABLE IF EXISTS home_reviews;
+DROP TABLE IF EXISTS home_banners;

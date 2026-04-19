@@ -152,13 +152,14 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 		userService,
 		nil, // emailService 需要邮件客户端，后续初始化
 		githubOAuthService,
+		configService,
 		frontendLoginURL,
 		jwtManager,
 		logger,
 	)
 	productHandler := handler.NewProductHandler(productService, logger)
 	cartHandler := handler.NewCartHandler(cartService, logger)
-	orderHandler := handler.NewOrderHandler(orderService, logger)
+	orderHandler := handler.NewOrderHandler(orderService, configService, logger)
 	adminHandler := handler.NewAdminHandler(adminService, jwtManager, logger)
 	addressHandler := handler.NewAddressHandler(addressService, logger)
 	presaleHandler := handler.NewPresaleHandler(presaleService, logger)
@@ -264,6 +265,7 @@ func (r *Router) SetEmailService(emailService *service.EmailService) {
 		r.userService,
 		emailService,
 		service.NewGitHubOAuthService(r.userService, r.configService, r.jwtManager, r.logger),
+		r.configService,
 		func() string {
 			if len(r.cfg.CORS.AllowedOrigins) > 0 {
 				return strings.TrimRight(r.cfg.CORS.AllowedOrigins[0], "/") + "/login"
@@ -341,6 +343,7 @@ func (r *Router) setupAuthRoutes(rg *gin.RouterGroup) {
 	auth := rg.Group("/auth")
 	{
 		// 公开路由
+		auth.GET("/geetest", r.authHandler.GetGeetestInfo)
 		auth.POST("/register", r.authHandler.Register)
 		auth.POST("/login", r.authHandler.Login)
 		if r.authCodeHandler != nil {

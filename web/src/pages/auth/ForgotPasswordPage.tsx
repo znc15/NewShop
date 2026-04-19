@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { authService } from '@/services/auth'
 import { cn, getApiErrorMessage } from '@/utils'
+import { useGeetest } from '@/hooks/useGeetest'
 
 type Step = 'email' | 'verify' | 'reset' | 'success'
 
@@ -48,6 +49,7 @@ const stepVariants: Variants = {
 
 export default function ForgotPasswordPage() {
   const navigate = useNavigate()
+  const { verify } = useGeetest()
 
   const [currentStep, setCurrentStep] = useState<Step>('email')
   const [direction, setDirection] = useState(1)
@@ -116,7 +118,8 @@ export default function ForgotPasswordPage() {
     setIsLoading(true)
     setServerError('')
     try {
-      await authService.sendVerifyCode(formData.email, 'reset')
+      const geetestResult = await verify('send_code')
+      await authService.sendCode({ email: formData.email, type: 'reset', ...geetestResult })
       setDirection(1)
       setCurrentStep('verify')
       setCountdown(60)
@@ -131,7 +134,8 @@ export default function ForgotPasswordPage() {
     setIsLoading(true)
     setServerError('')
     try {
-      await authService.sendVerifyCode(formData.email, 'reset')
+      const geetestResult = await verify('send_code')
+      await authService.sendCode({ email: formData.email, type: 'reset', ...geetestResult })
       setCountdown(60)
     } catch (error: unknown) {
       setServerError(getApiErrorMessage(error, '验证码发送失败，请稍后重试'))
@@ -162,7 +166,8 @@ export default function ForgotPasswordPage() {
     setIsLoading(true)
     setServerError('')
     try {
-      await authService.resetPassword(formData.email, formData.code, formData.password)
+      const geetestResult = await verify('reset_password')
+      await authService.resetPassword({ email: formData.email, code: formData.code, password: formData.password, ...geetestResult })
       setDirection(1)
       setCurrentStep('success')
     } catch (error: unknown) {

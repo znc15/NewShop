@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input'
 import { authService } from '@/services/auth'
 import { useAuthStore } from '@/stores/auth'
 import { getApiErrorMessage } from '@/utils'
+import { useGeetest } from '@/hooks/useGeetest'
 
 // 动画变体配置
 const containerVariants: Variants = {
@@ -40,6 +41,7 @@ const slideVariants: Variants = {
 export default function RegisterPage() {
   const navigate = useNavigate()
   const { setUser, setToken } = useAuthStore()
+  const { verify } = useGeetest()
 
   const [formData, setFormData] = useState({
     nickname: '',
@@ -113,7 +115,8 @@ export default function RegisterPage() {
     }
 
     try {
-      await authService.sendVerifyCode(formData.email, 'register')
+      const geetestResult = await verify('send_code')
+      await authService.sendCode({ email: formData.email, type: 'register', ...geetestResult })
       setCodeSent(true)
       setCountdown(60)
     } catch (error: unknown) {
@@ -129,10 +132,12 @@ export default function RegisterPage() {
 
     setIsLoading(true)
     try {
+      const geetestResult = await verify('register')
       const response = await authService.register({
         nickname: formData.nickname,
         email: formData.email,
         password: formData.password,
+        ...geetestResult
       })
       setUser(response.user)
       setToken(response.access_token)
