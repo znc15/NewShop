@@ -23,6 +23,21 @@ export function formatDate(date: Date | string): string {
   }).format(d)
 }
 
+export function formatPriceWithSymbol(priceInCents: number): string {
+  return `¥${(priceInCents / 100).toFixed(2)}`
+}
+
+export function formatDateTime(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date
+  return d.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 export function truncate(str: string, length: number): string {
   if (str.length <= length) return str
   return str.slice(0, length) + '...'

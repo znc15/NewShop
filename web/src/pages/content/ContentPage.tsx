@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { ArrowLeft, Loader2 } from 'lucide-react'
-import http from '@/lib/http'
+import { http } from '@/services'
 
 interface PageData {
   id: number

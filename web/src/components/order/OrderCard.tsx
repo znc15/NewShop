@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { formatPriceWithSymbol, formatDate } from '../../lib/utils';
+import { formatPriceWithSymbol, formatDate } from '@/utils';
 import { OrderStatus, OrderStatusLabels, OrderStatusColors } from '../../types/order';
 import type { OrderListItem } from '../../types/order';
 

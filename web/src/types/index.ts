@@ -97,6 +97,22 @@ export interface ProductSku {
   updated_at: string
 }
 
+// 商品详情区块类型
+export type DetailBlockType = 'text' | 'image' | 'divider'
+
+export interface DetailBlock {
+  id: string
+  type: DetailBlockType
+  title?: string
+  content?: string  // text 类型为文本内容，image 类型为图片 URL
+  alt?: string      // image 类型的 alt 文本
+}
+
+export interface DetailBlocks {
+  type: 'blocks'
+  blocks: DetailBlock[]
+}
+
 export interface ProductAttr {
   id: number
   product_id: number

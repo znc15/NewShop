@@ -8,11 +8,20 @@ export interface GeetestValidateResult {
   gen_time?: string
 }
 
+interface GeetestCaptchaObject {
+  onReady: (cb: () => void) => GeetestCaptchaObject
+  showCaptcha: () => void
+  onSuccess: (cb: () => void) => GeetestCaptchaObject
+  getValidate: () => Record<string, string>
+  onError: (cb: (err: Error) => void) => GeetestCaptchaObject
+  onClose: (cb: () => void) => GeetestCaptchaObject
+}
+
 declare global {
   interface Window {
     initGeetest4: (
       config: { captchaId: string; product: string },
-      callback: (captchaObj: any) => void
+      callback: (captchaObj: GeetestCaptchaObject) => void
     ) => void
   }
 }
@@ -51,7 +60,7 @@ export function useGeetest() {
           window.initGeetest4({
             captchaId: id,
             product: 'bind',
-          }, (captchaObj: any) => {
+          }, (captchaObj: GeetestCaptchaObject) => {
             captchaObj.onReady(() => {
               captchaObj.showCaptcha()
             }).onSuccess(() => {
@@ -64,7 +73,7 @@ export function useGeetest() {
                 gen_time: result.gen_time || '',
                 ...result 
               })
-            }).onError((err: any) => {
+            }).onError((err: Error) => {
               reject(err)
             }).onClose(() => {
               reject(new Error('Captcha closed'))

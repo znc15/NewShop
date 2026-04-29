@@ -43,6 +43,10 @@ func NewOrderService(db *gorm.DB, orderRepo *repository.OrderRepo, userRepo *rep
 
 // CreateOrder 创建订单
 func (s *OrderService) CreateOrder(ctx context.Context, userID uint64, req *model.CreateOrderRequest) (*model.Order, error) {
+	if len(req.Items) == 0 {
+		return nil, errors.New("订单项不能为空")
+	}
+
 	// 获取用户收货地址
 	var address model.UserAddress
 	if err := s.db.WithContext(ctx).First(&address, req.AddressID).Error; err != nil {

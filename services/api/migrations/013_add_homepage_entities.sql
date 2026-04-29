@@ -42,8 +42,7 @@ CREATE TABLE IF NOT EXISTS newsletter_subscriptions (
   status VARCHAR(20) NOT NULL DEFAULT 'active',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  deleted_at TIMESTAMPTZ NULL,
-  CONSTRAINT uq_newsletter_subscriptions_email UNIQUE(email)
+  deleted_at TIMESTAMPTZ NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_newsletter_subscriptions_status ON newsletter_subscriptions(status);
@@ -68,3 +67,4 @@ ON CONFLICT DO NOTHING;
 DROP TABLE IF EXISTS newsletter_subscriptions;
 DROP TABLE IF EXISTS home_reviews;
 DROP TABLE IF EXISTS home_banners;
+CREATE UNIQUE INDEX idx_newsletter_subscriptions_email ON newsletter_subscriptions(email);

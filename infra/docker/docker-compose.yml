@@ -1,12 +1,12 @@
-# Docker Compose 配置 - NewShop 开发环境基础设施
-# 包含数据库、缓存、搜索引擎和监控服务
+# Docker Compose 配置 - NewShop 完整开发环境
+# 包含数据库、缓存、搜索引擎、监控服务和应用服务
 
 name: newshop-infra
 
 services:
   # PostgreSQL 数据库
   postgres:
-    image: postgres:15
+    image: postgres:15.10
     container_name: newshop-postgres
     environment:
       POSTGRES_USER: postgres
@@ -47,12 +47,60 @@ services:
     ports:
       - "7700:7700"
     volumes:
-      - meili_data:/meilisearch/data
+      - meili_data:/meili_data
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --spider http://127.0.0.1:7700/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
+
+  # 后端 API 服务
+  api:
+    build:
+      context: ../../services/api
+      dockerfile: Dockerfile
+    container_name: newshop-api
+    ports:
+      - "8080:8080"
+    environment:
+      SERVER_PORT: "8080"
+      SERVER_MODE: debug
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: newshop
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      MEILI_HOST: http://meilisearch:7700
+      MEILI_API_KEY: newshop-master-key
+      JWT_SECRET: dev-jwt-secret-for-docker
+      CORS_ALLOWED_ORIGINS: http://localhost:3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # 前端 Web 服务
+  web:
+    build:
+      context: ../../web
+      dockerfile: Dockerfile
+    container_name: newshop-web
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --spider http://127.0.0.1/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
   # Prometheus 监控

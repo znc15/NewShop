@@ -102,7 +102,7 @@ func (s *ProductService) GetProductListWithFilters(ctx context.Context, filters 
 	query := repository.NewProductQuery()
 	query.CategoryID = filters.CategoryID
 	query.BrandID = filters.BrandID
-	query.Status = filters.Status
+	// 只设置 StatusList，不设置 Status
 	query.StatusList = visibleProductStatuses(filters.Status)
 	query.MinPrice = filters.MinPrice
 	query.MaxPrice = filters.MaxPrice

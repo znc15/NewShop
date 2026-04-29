@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence, type Variants } from 'motion/react';
 import { useCartStore } from '../../stores/cartStore';
-import { formatPriceWithSymbol } from '../../lib/utils';
+import { formatPriceWithSymbol } from '@/utils';
 import type { CartItem } from '../../types/cart';
 
 // 动画变体配置

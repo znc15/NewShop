@@ -46,7 +46,7 @@ instance.interceptors.request.use(
 instance.interceptors.response.use(
   (response) => {
     const data = response.data as ApiResponse
-    if (data.code === 0) {
+    if (data.code === 0 || data.code === 200) {
       return data.data as unknown as AxiosResponse
     }
     // 业务错误

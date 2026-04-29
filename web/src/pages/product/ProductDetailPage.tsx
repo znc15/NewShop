@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, Link, useParams } from 'react-router-dom'
 import { Heart, Share2, ShoppingCart, ChevronLeft } from 'lucide-react'
 import { motion, type Variants } from 'motion/react'
@@ -6,10 +6,11 @@ import { productService } from '@/services'
 import { useCartStore } from '@/stores/cartStore'
 import { ImageGallery } from '@/components/product/ImageGallery'
 import { SkuSelector } from '@/components/product/SkuSelector'
+import { DetailTabs } from '@/components/product/DetailTabs'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Loading'
 import { cn } from '@/utils'
-import type { Product, ProductReview, ProductSku, ProductSpec } from '@/types'
+import type { Product, ProductReview, ProductSku, ProductSpec, DetailBlock, DetailBlocks } from '@/types'
 
 // 动画变体配置
 const containerVariants: Variants = {
@@ -293,6 +294,58 @@ export default function ProductDetailPage() {
     setIsFavorite(!isFavorite)
   }
 
+  // 解析商品详情为模块化区块 - 在早期返回之前调用以符合 Hooks 规则
+  const detailBlocks = useMemo<DetailBlock[]>(() => {
+    if (!product) {
+      return []
+    }
+
+    const blocks: DetailBlock[] = []
+    let blockIndex = 0
+
+    // 尝试将 product.detail 解析为 JSON（DetailBlocks 格式）
+    const detailText = product.detail || ''
+    let parsedAsBlocks = false
+
+    if (detailText.trim()) {
+      try {
+        const parsed = JSON.parse(detailText)
+        if (parsed && parsed.type === 'blocks' && Array.isArray(parsed.blocks)) {
+          const detailBlocksData = parsed as DetailBlocks
+          for (const block of detailBlocksData.blocks) {
+            if (block.type && block.id) {
+              blocks.push(block)
+            }
+          }
+          parsedAsBlocks = true
+        }
+      } catch {
+        // 非 JSON 格式，降级为纯文本区块
+      }
+
+      if (!parsedAsBlocks) {
+        blocks.push({
+          id: `text-${blockIndex++}`,
+          type: 'text',
+          content: detailText,
+        })
+      }
+    }
+
+    // 将 detail_images 追加为 image 类型区块
+    const imageUrls = parseDetailImageUrls(product)
+    for (const url of imageUrls) {
+      blocks.push({
+        id: `image-${blockIndex++}`,
+        type: 'image',
+        content: url,
+        alt: '商品详情图',
+      })
+    }
+
+    return blocks
+  }, [product])
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -330,7 +383,6 @@ export default function ProductDetailPage() {
   const productImages = Array.isArray(product.images) ? product.images : []
   const galleryImages = productImages.length > 0 ? productImages : [product.main_image || '/placeholder.png']
   const specs = generateSpecsFromSkus(productSkus)
-  const detailImageUrls = parseDetailImageUrls(product)
   const averageRating = getAverageRating(reviews)
 
   return (
@@ -473,7 +525,7 @@ export default function ProductDetailPage() {
         </motion.div>
       </div>
 
-      {/* 商品评价 */}
+      {/* 商品详情 / 规格参数 / 商品评价 Tab 区 */}
       <motion.div
         className="mt-8"
         initial={{ opacity: 0, y: 30 }}
@@ -481,94 +533,17 @@ export default function ProductDetailPage() {
         transition={{ delay: 0.45, duration: 0.5 }}
       >
         <motion.div
-          className="bg-white rounded-xl shadow-sm p-6"
+          className="bg-white rounded-xl shadow-sm overflow-hidden"
           whileHover={{ boxShadow: '0 10px 40px rgba(0,0,0,0.08)' }}
           transition={{ duration: 0.3 }}
         >
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <h2 className="font-display text-xl font-semibold text-charcoal">宝贝评价</h2>
-            <div className="text-sm text-stone">
-              平均评分
-              <span className="ml-2 text-base font-semibold text-amber-500">{averageRating}</span>
-              <span className="ml-2">({reviews.length} 条)</span>
-            </div>
-          </div>
-
-          {reviewsLoading ? (
-            <div className="py-10 text-center text-stone">评价加载中...</div>
-          ) : reviews.length === 0 ? (
-            <div className="py-10 text-center text-stone">当前商品暂无评价，欢迎购买后分享体验。</div>
-          ) : (
-            <div className="space-y-4">
-              {reviews.map((review) => {
-                const safeRating = Math.max(1, Math.min(5, review.rating))
-
-                return (
-                  <article key={review.id} className="rounded-xl border border-slate-200 bg-slate-50/40 p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="font-medium text-charcoal">{review.author}</p>
-                        <p className="text-xs text-stone mt-0.5">{review.handle || '匿名用户'}</p>
-                      </div>
-                      <div className="flex items-center gap-1 text-amber-500" aria-label={`${safeRating} 星评价`}>
-                        {Array.from({ length: 5 }).map((_, starIndex) => (
-                          <svg
-                            key={`${review.id}-star-${starIndex}`}
-                            width="14"
-                            height="14"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                            style={{ opacity: starIndex < safeRating ? 1 : 0.25 }}
-                          >
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 0 0 .95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 0 0-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 0 0-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 0 0-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 0 0 .951-.69l1.07-3.292z" />
-                          </svg>
-                        ))}
-                      </div>
-                    </div>
-                    <p className="mt-3 text-sm leading-7 text-charcoal/90 whitespace-pre-line">{review.content}</p>
-                  </article>
-                )
-              })}
-            </div>
-          )}
-        </motion.div>
-      </motion.div>
-
-      {/* 商品详情 */}
-      <motion.div
-        className="mt-8"
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, duration: 0.5 }}
-      >
-        <motion.div
-          className="bg-white rounded-xl shadow-sm p-6"
-          whileHover={{ boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}
-          transition={{ duration: 0.3 }}
-        >
-          <h2 className="font-display text-xl font-semibold text-charcoal mb-4">商品详情</h2>
-          <div className="prose text-stone whitespace-pre-line">
-            {product.detail || product.description}
-          </div>
-          {detailImageUrls.length > 0 && (
-            <div className="mt-6 space-y-4">
-              <div className="flex items-center gap-2 text-sm font-medium text-charcoal">
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-500" />
-                淘宝导入详情图
-              </div>
-              <div className="space-y-3">
-                {detailImageUrls.map((url, index) => (
-                  <img
-                    key={`${url}-${index}`}
-                    src={url}
-                    alt={`详情图 ${index + 1}`}
-                    loading="lazy"
-                    className="w-full rounded-lg border border-slate-200 bg-white object-contain"
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+          <DetailTabs
+            blocks={detailBlocks}
+            attrs={product.attrs}
+            reviews={reviews}
+            reviewsLoading={reviewsLoading}
+            averageRating={averageRating}
+          />
         </motion.div>
       </motion.div>
     </motion.div>

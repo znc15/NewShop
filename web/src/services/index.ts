@@ -1,4 +1,4 @@
-export { default as http } from '@/lib/http'
+export { default as http } from './http'
 export { default as productService } from './product'
 export { default as authService } from './auth'
 export { default as cartService } from './cart'

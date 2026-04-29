@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import { ShoppingBag, ChevronRight } from 'lucide-react'
 import { motion, AnimatePresence, type Variants } from 'motion/react'
 import { orderService } from '../../services/order'
-import { formatPriceWithSymbol, formatDate } from '../../lib/utils'
+import { formatPriceWithSymbol, formatDate } from '@/utils'
 import { OrderStatus, OrderStatusLabels, OrderStatusColors } from '../../types/order'
 import type { OrderListItem, OrderStatusType } from '../../types/order'
 

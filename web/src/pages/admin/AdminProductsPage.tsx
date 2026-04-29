@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback } from 'react'
 import adminService from '@/services/admin'
 import type { AdminProduct, AdminProductListParams, AdminProductFormData } from '@/types/admin'
-import type { Category } from '@/types'
+import type { Category, DetailBlock } from '@/types'
 import { DataTable, Pagination, SearchInput, Select, Modal, ConfirmDialog, StatusBadge } from '@/components/admin/AdminComponents'
+import { DetailBlockEditor } from '@/components/admin/DetailBlockEditor'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { cn } from '@/utils'
@@ -68,6 +69,56 @@ function formatImageList(images: string[] | undefined): string {
   return images.join('\n')
 }
 
+// 生成唯一 id
+function generateBlockId(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+}
+
+// 将 detail 和 detail_images 合并为 DetailBlock 数组
+function convertToBlocks(detail: string | null, detailImages: string[] | undefined): DetailBlock[] {
+  const blocks: DetailBlock[] = []
+
+  // 尝试解析 detail 为 JSON blocks
+  if (detail) {
+    try {
+      const parsed = JSON.parse(detail)
+      if (parsed && parsed.type === 'blocks' && Array.isArray(parsed.blocks)) {
+        return parsed.blocks
+      }
+    } catch {
+      // 不是 JSON，作为纯文本处理
+    }
+
+    // 纯文本转 text block
+    blocks.push({
+      id: generateBlockId(),
+      type: 'text',
+      content: detail,
+    })
+  }
+
+  // detail_images 转为 image blocks
+  if (detailImages && detailImages.length > 0) {
+    for (const url of detailImages) {
+      if (url.trim()) {
+        blocks.push({
+          id: generateBlockId(),
+          type: 'image',
+          content: url.trim(),
+        })
+      }
+    }
+  }
+
+  return blocks
+}
+
+// 将 DetailBlock 数组序列化为 detail 字符串
+function serializeBlocks(blocks: DetailBlock[]): string {
+  if (blocks.length === 0) return ''
+  return JSON.stringify({ type: 'blocks', blocks })
+}
+
 export function AdminProductsPage() {
   // 列表数据
   const [products, setProducts] = useState<AdminProduct[]>([])
@@ -87,6 +138,9 @@ export function AdminProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState<AdminProduct | null>(null)
   const [formData, setFormData] = useState<AdminProductFormData>(INITIAL_FORM_DATA)
   const [saving, setSaving] = useState(false)
+
+  // 区块编辑器状态
+  const [detailBlocks, setDetailBlocks] = useState<DetailBlock[]>([])
 
   // 获取商品列表
   const fetchProducts = useCallback(async () => {
@@ -131,11 +185,13 @@ export function AdminProductsPage() {
   const openEditModal = (product?: AdminProduct) => {
     if (product) {
       setSelectedProduct(product)
+      const images = parseImageList(product.images)
+      const detailImages = product.detail_images || []
       setFormData({
         name: product.name,
         description: product.description,
         detail: product.detail || '',
-        detail_images: product.detail_images || [],
+        detail_images: detailImages,
         price: product.price,
         original_price: product.original_price || undefined,
         category_id: product.category_id,
@@ -144,12 +200,15 @@ export function AdminProductsPage() {
         is_hot: product.is_hot,
         is_sale: product.is_sale,
         sort: product.sort,
-        images: parseImageList(product.images),
+        images,
         skus: [],
       })
+      // 将 detail 和 detail_images 转换为区块
+      setDetailBlocks(convertToBlocks(product.detail, detailImages))
     } else {
       setSelectedProduct(null)
       setFormData(INITIAL_FORM_DATA)
+      setDetailBlocks([])
     }
     setEditModalOpen(true)
   }
@@ -163,10 +222,17 @@ export function AdminProductsPage() {
 
     setSaving(true)
     try {
+      // 将区块序列化后写入 formData
+      const submitData = {
+        ...formData,
+        detail: serializeBlocks(detailBlocks),
+        detail_images: [],
+      }
+
       if (selectedProduct) {
-        await adminService.updateProduct(selectedProduct.id, formData)
+        await adminService.updateProduct(selectedProduct.id, submitData)
       } else {
-        await adminService.createProduct(formData)
+        await adminService.createProduct(submitData)
 
         if (continueCreate) {
           setFormData((prev) => ({
@@ -176,6 +242,7 @@ export function AdminProductsPage() {
             is_hot: prev.is_hot,
             is_sale: prev.is_sale,
           }))
+          setDetailBlocks([])
           fetchProducts()
           return
         }
@@ -402,15 +469,14 @@ export function AdminProductsPage() {
 
           <div>
             <label className="block text-sm font-medium text-charcoal mb-1">
-              商品说明
+              详情内容（区块编辑器）
             </label>
-            <textarea
-              value={formData.detail || ''}
-              onChange={(e) => setFormData((prev) => ({ ...prev, detail: e.target.value }))}
-              placeholder="请输入商品说明（如材质、规格、卖点等）"
-              className="w-full px-3 py-2 text-sm border border-cream-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-transparent resize-none"
-              rows={4}
-            />
+            <div className="p-3 bg-white rounded-lg border border-cream-300">
+              <DetailBlockEditor
+                value={detailBlocks}
+                onChange={setDetailBlocks}
+              />
+            </div>
           </div>
 
           <div>
@@ -423,19 +489,6 @@ export function AdminProductsPage() {
               placeholder="每行一个图片地址，可直接粘贴淘宝图床链接"
               className="w-full px-3 py-2 text-sm border border-cream-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-transparent resize-none"
               rows={4}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-charcoal mb-1">
-              详情导入图片 URL 列表
-            </label>
-            <textarea
-              value={formatImageList(formData.detail_images)}
-              onChange={(e) => setFormData((prev) => ({ ...prev, detail_images: parseLineImageList(e.target.value) }))}
-              placeholder="支持淘宝详情图导入，每行一个图片地址"
-              className="w-full px-3 py-2 text-sm border border-cream-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-transparent resize-none"
-              rows={6}
             />
           </div>
 

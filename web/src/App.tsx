@@ -22,6 +22,7 @@ import {
 } from '@/pages/admin'
 import configService from '@/services/config'
 import AdminProtectedRoute from '@/components/admin/AdminProtectedRoute'
+import PrivateRoute from '@/components/auth/PrivateRoute'
 import { useAuthStore, useCartStore } from '@/stores'
 
 const AdminLoginPage = lazy(() => import('./pages/admin/AdminLoginPage'))
@@ -118,6 +119,7 @@ const ROUTE_TITLE_PATTERNS: Array<{ pattern: string; title: string }> = [
   { pattern: '/products/:id', title: '商品详情' },
   { pattern: '/orders/:id', title: '订单详情' },
   { pattern: '/page/:slug', title: '内容详情' },
+  { pattern: '/preorder/:id', title: '预售详情' },
 ]
 
 function normalizePath(pathname: string) {
@@ -632,18 +634,21 @@ function App() {
                     <Route path="/brands" element={<BrandsPage />} />
                     <Route path="/preorder" element={<PreorderPage />} />
                     <Route path="/coupons" element={<CouponsPage />} />
-                    <Route path="/points" element={<PointsPage />} />
-                    <Route path="/member" element={<MemberPage />} />
-                    <Route path="/cart" element={<CartPage />} />
-                    <Route path="/checkout" element={<CheckoutPage />} />
-                    <Route path="/orders" element={<OrderListPage />} />
-                    <Route path="/orders/:id" element={<OrderDetailPage />} />
+                    <Route path="/points" element={<PrivateRoute><PointsPage /></PrivateRoute>} />
+                    <Route path="/member" element={<PrivateRoute><MemberPage /></PrivateRoute>} />
+                    <Route path="/cart" element={<PrivateRoute><CartPage /></PrivateRoute>} />
+                    <Route path="/checkout" element={<PrivateRoute><CheckoutPage /></PrivateRoute>} />
+                    <Route path="/orders" element={<PrivateRoute><OrderListPage /></PrivateRoute>} />
+                    <Route path="/orders/:id" element={<PrivateRoute><OrderDetailPage /></PrivateRoute>} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                    <Route path="/user/profile" element={<UserProfilePage />} />
-                    <Route path="/user/addresses" element={<UserAddressesPage />} />
-                    <Route path="/address/select" element={<UserAddressesPage />} />
+                    <Route path="/user/profile" element={<PrivateRoute><UserProfilePage /></PrivateRoute>} />
+                    <Route path="/user/addresses" element={<PrivateRoute><UserAddressesPage /></PrivateRoute>} />
+                    <Route path="/address/select" element={<PrivateRoute><UserAddressesPage /></PrivateRoute>} />
+                    <Route path="/profile" element={<Navigate to="/user/profile" replace />} />
+                    <Route path="/addresses" element={<Navigate to="/user/addresses" replace />} />
+                    <Route path="/preorder/:id" element={<PreorderPage />} />
                     <Route path="/page/:slug" element={<ContentPage />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>

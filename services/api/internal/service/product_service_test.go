@@ -13,12 +13,14 @@ import (
 )
 
 func setupProductTestDB(t *testing.T) *gorm.DB {
-	db, err := gorm.Open(sqlite.Open("file::memory:"), &gorm.Config{})
+	// 使用基于测试名称的独立内存数据库
+	dbName := "file:" + t.Name() + "?mode=memory&cache=shared"
+	db, err := gorm.Open(sqlite.Open(dbName), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("连接测试数据库失败: %v", err)
 	}
 
-	err = db.AutoMigrate(&model.Product{}, &model.ProductSku{}, &model.ProductAttr{}, &model.Category{}, &model.Brand{})
+	err = db.AutoMigrate(&model.Product{}, &model.ProductSku{}, &model.ProductAttr{}, &model.ProductImage{}, &model.Category{}, &model.Brand{})
 	if err != nil {
 		t.Fatalf("数据库迁移失败: %v", err)
 	}

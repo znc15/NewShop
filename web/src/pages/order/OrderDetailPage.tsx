@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence, type Variants } from 'motion/react';
 import orderService from '../../services/order';
-import { formatPriceWithSymbol, formatDateTime } from '../../lib/utils';
+import { formatPriceWithSymbol, formatDateTime } from '@/utils';
 import { OrderStatus, OrderStatusLabels, OrderStatusColors } from '../../types/order';
 import type { Order } from '../../types/order';
 

@@ -4,7 +4,7 @@ import { MapPin, CreditCard, Tag, ChevronRight, Check, AlertCircle } from 'lucid
 import { motion, AnimatePresence, type Variants } from 'motion/react';
 import orderService from '../../services/order';
 import userService from '../../services/user';
-import { formatPriceWithSymbol } from '../../lib/utils';
+import { formatPriceWithSymbol } from '@/utils';
 import type { CheckoutPreviewResponse, CheckoutItem, OrderAddress } from '../../types/order';
 import type { UserAddress } from '../../types/user';
 import { useGeetest } from '../../hooks/useGeetest';
