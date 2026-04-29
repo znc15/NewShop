@@ -10,7 +10,7 @@ services:
     container_name: newshop-postgres
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: newshop
     ports:
       - "5432:5432"
@@ -43,13 +43,13 @@ services:
     image: getmeili/meilisearch:v1.5
     container_name: newshop-meili
     environment:
-      MEILI_MASTER_KEY: newshop-master-key
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-newshop-master-key}
     ports:
       - "7700:7700"
     volumes:
       - meili_data:/meili_data
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --spider http://127.0.0.1:7700/health || exit 1"]
+      test: ["CMD-SHELL", "if command -v wget >/dev/null 2>&1; then wget -q -O - http://127.0.0.1:7700/health >/dev/null 2>&1; elif command -v curl >/dev/null 2>&1; then curl -fsS http://127.0.0.1:7700/health >/dev/null; else echo '缺少 wget/curl，无法执行健康检查' >&2; exit 1; fi"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -69,13 +69,13 @@ services:
       DB_HOST: postgres
       DB_PORT: "5432"
       DB_USER: postgres
-      DB_PASSWORD: postgres
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       DB_NAME: newshop
       REDIS_HOST: redis
       REDIS_PORT: "6379"
       MEILI_HOST: http://meilisearch:7700
-      MEILI_API_KEY: newshop-master-key
-      JWT_SECRET: dev-jwt-secret-for-docker
+      MEILI_API_KEY: ${MEILI_MASTER_KEY:-newshop-master-key}
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-for-docker}
       CORS_ALLOWED_ORIGINS: http://localhost:3000
     depends_on:
       postgres:
@@ -84,6 +84,11 @@ services:
         condition: service_healthy
       meilisearch:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "if command -v wget >/dev/null 2>&1; then wget -q -O - http://127.0.0.1:8080/health >/dev/null 2>&1; elif command -v curl >/dev/null 2>&1; then curl -fsS http://127.0.0.1:8080/health >/dev/null; else echo '缺少 wget/curl，无法执行健康检查' >&2; exit 1; fi"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     restart: unless-stopped
 
   # 前端 Web 服务
@@ -95,9 +100,10 @@ services:
     ports:
       - "3000:80"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --spider http://127.0.0.1/health || exit 1"]
+      test: ["CMD-SHELL", "if command -v wget >/dev/null 2>&1; then wget -q -O - http://127.0.0.1/health >/dev/null 2>&1; elif command -v curl >/dev/null 2>&1; then curl -fsS http://127.0.0.1/health >/dev/null; else echo '缺少 wget/curl，无法执行健康检查' >&2; exit 1; fi"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -121,7 +127,7 @@ services:
     ports:
       - "3001:3000"
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
     volumes:
       - grafana_data:/var/lib/grafana
     restart: unless-stopped

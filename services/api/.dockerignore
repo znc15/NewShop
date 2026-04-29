@@ -1,0 +1,17 @@
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+
+# 本地构建产物
+bin/
+/tmp/
+*.log
+
+# 本地配置
+.env
+.env.*
+
+# 测试/工具（可按需放开）
+**/*_test.go

@@ -123,9 +123,44 @@ make docker-up
 make docker-app-up
 ```
 
+如果你要在 Docker 场景下覆盖默认密码/密钥（推荐），可以在项目根目录创建 `.env`（不要提交到仓库），例如：
+
+```bash
+cat > .env <<'EOF'
+POSTGRES_PASSWORD=postgres
+MEILI_MASTER_KEY=newshop-master-key
+JWT_SECRET=your-super-secret-key-change-in-production
+EOF
+```
+
 说明：
 - `make docker-up` 启动基础设施，配置位于 [infra/docker/docker-compose.yml](infra/docker/docker-compose.yml)
 - `make docker-app-up` 启动完整应用栈并重建前后端镜像，配置位于根目录 [docker-compose.yml](docker-compose.yml)
+
+### 一键运维脚本（推荐）
+
+如果你希望把「部署 / 更新 / 重启 / 日志 / 状态 / 健康检查」收敛到一个入口，可以直接使用：
+
+```bash
+bash scripts/maintain.sh help
+
+# 一键部署（默认 app 栈：根目录 docker-compose.yml）
+bash scripts/maintain.sh deploy
+
+# 一键更新（git 拉取 + 重建 + 启动）
+bash scripts/maintain.sh update
+
+# 查看状态/日志
+bash scripts/maintain.sh status app
+bash scripts/maintain.sh logs app api
+
+# 健康检查（本机 3000/8080）
+bash scripts/maintain.sh health
+```
+
+脚本支持两套栈：
+- `app`：根目录 `docker-compose.yml`（postgres/redis/meili + api + web）
+- `infra`：`infra/docker/docker-compose.yml`（prometheus/grafana + api + web）
 
 ### 3. 配置环境变量
 ```bash
@@ -180,13 +215,26 @@ make test          # 运行测试
 # Docker
 make docker-up       # 启动基础设施（PostgreSQL/Redis/Meilisearch/Prometheus/Grafana）
 make docker-down     # 停止基础设施
+make docker-infra-config # 校验基础设施 compose 配置
+make docker-infra-logs   # 跟随基础设施日志
 make docker-app-up   # 启动完整应用栈（基础设施 + API + Web）
 make docker-app-down # 停止完整应用栈
+make docker-app-config # 校验应用栈 compose 配置
+make docker-app-logs   # 跟随应用栈日志
+
+# 运维脚本（Make 快捷入口）
+make ops-check                 # 检查 Docker/Compose
+make ops-deploy STACK=app      # 一键部署（app/infra）
+make ops-update STACK=infra    # 一键更新（app/infra）
+make ops ARGS="logs app api"   # 透传脚本参数
 
 # 数据库
 make migrate       # 执行迁移
 make migrate-down  # 回滚迁移
 ```
+
+补充说明：
+- `bash scripts/maintain.sh api-seed --yes` 会重复插入测试商品与 SKU（非幂等），不要在生产环境或重复执行。
 
 ## 如何添加新的 Docker 服务
 

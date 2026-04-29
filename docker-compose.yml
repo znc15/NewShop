@@ -6,7 +6,7 @@ services:
     container_name: newshop-postgres
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: newshop
     ports:
       - "5432:5432"
@@ -19,6 +19,7 @@ services:
       retries: 5
     networks:
       - newshop-network
+    restart: unless-stopped
 
   redis:
     image: redis:7
@@ -34,23 +35,25 @@ services:
       retries: 5
     networks:
       - newshop-network
+    restart: unless-stopped
 
   meilisearch:
     image: getmeili/meilisearch:v1.5
     container_name: newshop-meili
     environment:
-      MEILI_MASTER_KEY: newshop-master-key
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-newshop-master-key}
     ports:
       - "7700:7700"
     volumes:
       - meili_data:/meili_data
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --spider http://127.0.0.1:7700/health || exit 1"]
+      test: ["CMD-SHELL", "if command -v wget >/dev/null 2>&1; then wget -q -O - http://127.0.0.1:7700/health >/dev/null 2>&1; elif command -v curl >/dev/null 2>&1; then curl -fsS http://127.0.0.1:7700/health >/dev/null; else echo '缺少 wget/curl，无法执行健康检查' >&2; exit 1; fi"]
       interval: 10s
       timeout: 5s
       retries: 10
     networks:
       - newshop-network
+    restart: unless-stopped
 
   api:
     build:
@@ -60,18 +63,20 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_NAME=newshop
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - MEILI_HOST=http://meilisearch:7700
-      - MEILI_API_KEY=newshop-master-key
-      - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
-      - JWT_EXPIRY=24h
-      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost
+      SERVER_PORT: "8080"
+      SERVER_MODE: ${SERVER_MODE:-debug}
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: newshop
+      DB_USER: postgres
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      MEILI_HOST: http://meilisearch:7700
+      MEILI_API_KEY: ${MEILI_MASTER_KEY:-newshop-master-key}
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-key-change-in-production}
+      JWT_EXPIRY: ${JWT_EXPIRY:-24h}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost}
     depends_on:
       postgres:
         condition: service_healthy
@@ -80,7 +85,7 @@ services:
       meilisearch:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --spider http://127.0.0.1:8080/health || exit 1"]
+      test: ["CMD-SHELL", "if command -v wget >/dev/null 2>&1; then wget -q -O - http://127.0.0.1:8080/health >/dev/null 2>&1; elif command -v curl >/dev/null 2>&1; then curl -fsS http://127.0.0.1:8080/health >/dev/null; else echo '缺少 wget/curl，无法执行健康检查' >&2; exit 1; fi"]
       interval: 10s
       timeout: 5s
       retries: 10

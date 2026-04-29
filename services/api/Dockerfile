@@ -19,17 +19,21 @@ COPY . .
 
 # 构建二进制文件
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /server ./cmd/server
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /migrate ./cmd/migrate
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /seed ./cmd/seed
 
 # 运行阶段
 FROM alpine:latest
 
 # 安装运行时依赖
-RUN apk --no-cache add ca-certificates tzdata
+RUN apk --no-cache add ca-certificates tzdata curl
 
 WORKDIR /app
 
 # 从构建阶段复制二进制文件
 COPY --from=builder /server .
+COPY --from=builder /migrate .
+COPY --from=builder /seed .
 
 # 暴露端口
 EXPOSE 8080
