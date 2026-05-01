@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Shield, Mail, Server, KeyRound, User, Lock, Send, List } from 'lucide-react'
+import { Shield, Mail, Server, KeyRound, User, Lock, Send, List, Globe } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import adminService from '@/services/admin'
@@ -85,11 +85,48 @@ const SMTP_FIELDS = [
   },
 ] as const
 
-type TabId = 'geetest' | 'smtp'
+// GitHub OAuth 配置字段定义
+const GITHUB_OAUTH_FIELDS = [
+  {
+    key: 'github_oauth.enabled',
+    label: '启用 GitHub 登录',
+    description: '开启后，用户可在登录页使用 GitHub 账号登录。关闭后登录页不再显示 GitHub 登录入口。',
+    placeholder: '',
+    icon: Globe,
+    type: 'toggle' as const,
+  },
+  {
+    key: 'github_client_id',
+    label: 'GitHub OAuth Client ID',
+    description: '在 GitHub Settings > Developer settings > OAuth Apps 中创建应用后获取。',
+    placeholder: '请输入 Client ID',
+    icon: Globe,
+    type: 'text' as const,
+  },
+  {
+    key: 'github_client_secret',
+    label: 'GitHub OAuth Client Secret',
+    description: 'GitHub OAuth App 的 Client Secret，保存后加密显示。',
+    placeholder: '请输入 Client Secret',
+    icon: Lock,
+    type: 'password' as const,
+  },
+  {
+    key: 'github_redirect_uri',
+    label: '回调地址',
+    description: 'GitHub OAuth 授权完成后的回调地址，需与 GitHub OAuth App 中配置的一致。通常为 http(s)://域名/api/v1/auth/github/callback。',
+    placeholder: 'http://localhost:8080/api/v1/auth/github/callback',
+    icon: Send,
+    type: 'text' as const,
+  },
+] as const
+
+type TabId = 'geetest' | 'smtp' | 'github_oauth'
 
 const TABS: { id: TabId; label: string; icon: typeof Shield }[] = [
   { id: 'geetest', label: '极验设置', icon: Shield },
   { id: 'smtp', label: 'SMTP 设置', icon: Mail },
+  { id: 'github_oauth', label: 'GitHub OAuth', icon: Globe },
 ]
 
 function parseStringValue(value: string): string {
@@ -98,6 +135,15 @@ function parseStringValue(value: string): string {
     return typeof parsed === 'string' ? parsed : value
   } catch {
     return value
+  }
+}
+
+function parseBooleanValue(value: string): boolean {
+  try {
+    const parsed = JSON.parse(value)
+    return typeof parsed === 'boolean' ? parsed : false
+  } catch {
+    return false
   }
 }
 
@@ -131,6 +177,12 @@ export function AdminSettingsPage() {
   const [smtpPassword, setSmtpPassword] = useState('')
   const [smtpFrom, setSmtpFrom] = useState('')
 
+  // GitHub OAuth 表单
+  const [githubEnabled, setGithubEnabled] = useState(false)
+  const [githubClientId, setGithubClientId] = useState('')
+  const [githubClientSecret, setGithubClientSecret] = useState('')
+  const [githubRedirectUri, setGithubRedirectUri] = useState('')
+
   useEffect(() => {
     const fetchConfigs = async () => {
       setLoading(true)
@@ -155,6 +207,12 @@ export function AdminSettingsPage() {
         setSmtpUser(parseStringValue(configMap['smtp.user']?.value ?? ''))
         setSmtpPassword(parseStringValue(configMap['smtp.password']?.value ?? ''))
         setSmtpFrom(parseStringValue(configMap['smtp.from']?.value ?? ''))
+
+        // 填充 GitHub OAuth 表单
+        setGithubEnabled(parseBooleanValue(configMap['github_oauth.enabled']?.value ?? 'false'))
+        setGithubClientId(parseStringValue(configMap['github_client_id']?.value ?? ''))
+        setGithubClientSecret(parseStringValue(configMap['github_client_secret']?.value ?? ''))
+        setGithubRedirectUri(parseStringValue(configMap['github_redirect_uri']?.value ?? ''))
       } catch (error) {
         console.error('获取系统配置失败:', error)
         alert(getApiErrorMessage(error, '获取系统配置失败，请稍后重试'))
@@ -242,6 +300,34 @@ export function AdminSettingsPage() {
     }
   }
 
+  const handleSaveGitHubOAuth = async () => {
+    setSaving(true)
+    try {
+      const payloads = [
+        buildPayload('github_oauth.enabled', JSON.stringify(githubEnabled), 'boolean' as const, 'github_oauth'),
+        buildPayload('github_client_id', JSON.stringify(githubClientId.trim()), 'string' as const, 'github_oauth'),
+        buildPayload('github_client_secret', JSON.stringify(githubClientSecret.trim()), 'string' as const, 'github_oauth'),
+        buildPayload('github_redirect_uri', JSON.stringify(githubRedirectUri.trim()), 'string' as const, 'github_oauth'),
+      ]
+
+      await Promise.all(payloads.map((p) => adminService.upsertConfig(p)))
+
+      // 重新获取以刷新配置映射
+      const latest = await adminService.getConfigs()
+      const configMap = latest.reduce<Record<string, AdminConfigItem>>((acc, item) => {
+        acc[item.key] = item
+        return acc
+      }, {})
+      setConfigs(configMap)
+      alert('GitHub OAuth 配置保存成功')
+    } catch (error) {
+      console.error('保存 GitHub OAuth 配置失败:', error)
+      alert(getApiErrorMessage(error, '保存 GitHub OAuth 配置失败，请稍后重试'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -255,7 +341,7 @@ export function AdminSettingsPage() {
       <div>
         <h2 className="text-2xl font-semibold text-charcoal">系统设置</h2>
         <p className="mt-2 max-w-2xl text-sm text-stone">
-          管理系统核心配置，包括极验验证码和 SMTP 邮件服务。修改后即时生效，无需重启服务。
+          管理系统核心配置，包括极验验证码、SMTP 邮件服务和 GitHub OAuth 登录。修改后即时生效，无需重启服务。
         </p>
       </div>
 
@@ -397,6 +483,72 @@ export function AdminSettingsPage() {
           <div className="flex justify-end">
             <Button onClick={handleSaveSMTP} loading={saving}>
               保存 SMTP 配置
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* GitHub OAuth 配置 Tab */}
+      {activeTab === 'github_oauth' && (
+        <div className="space-y-4">
+          {GITHUB_OAUTH_FIELDS.map((field) => {
+            const Icon = field.icon
+
+            return (
+              <div key={field.key} className="rounded-2xl border border-cream-200 bg-white p-6 shadow-sm">
+                <div className="flex items-start gap-4">
+                  <div className="mt-1 rounded-xl bg-blue-50 p-3 text-blue-600">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 space-y-4">
+                    <div>
+                      <h3 className="text-base font-semibold text-charcoal">{field.label}</h3>
+                      <p className="mt-1 text-sm text-stone">{field.description}</p>
+                    </div>
+
+                    {field.type === 'toggle' ? (
+                      <button
+                        type="button"
+                        onClick={() => setGithubEnabled(!githubEnabled)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                          githubEnabled ? 'bg-blue-600' : 'bg-gray-300'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            githubEnabled ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    ) : (
+                      <Input
+                        type={field.type === 'password' ? 'password' : 'text'}
+                        value={
+                          field.key === 'github_client_id'
+                            ? githubClientId
+                            : field.key === 'github_client_secret'
+                              ? githubClientSecret
+                              : field.key === 'github_redirect_uri'
+                                ? githubRedirectUri
+                                : ''
+                        }
+                        onChange={(event) => {
+                          if (field.key === 'github_client_id') setGithubClientId(event.target.value)
+                          else if (field.key === 'github_client_secret') setGithubClientSecret(event.target.value)
+                          else if (field.key === 'github_redirect_uri') setGithubRedirectUri(event.target.value)
+                        }}
+                        placeholder={field.placeholder}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+
+          <div className="flex justify-end">
+            <Button onClick={handleSaveGitHubOAuth} loading={saving}>
+              保存 GitHub OAuth 配置
             </Button>
           </div>
         </div>

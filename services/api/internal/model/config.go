@@ -63,7 +63,8 @@ const (
 	ConfigCategorySystem = "system"
 	ConfigCategorySEO    = "seo"
 	ConfigCategorySMTP   = "smtp"
-	ConfigCategoryGeetest = "geetest"
+	ConfigCategoryGeetest    = "geetest"
+	ConfigCategoryGitHubOAuth = "github_oauth"
 )
 
 // 预置配置键
@@ -97,6 +98,8 @@ const (
 	ConfigKeySEOOGImage         = "seo_og_image"
 	ConfigKeySEOGoogleVerify    = "seo_google_verify"
 
+	// GitHub OAuth 配置
+	ConfigKeyGitHubEnabled     = "github_oauth.enabled"
 	ConfigKeyGitHubClientID     = "github_client_id"
 	ConfigKeyGitHubClientSecret = "github_client_secret"
 	ConfigKeyGitHubRedirectURI  = "github_redirect_uri"

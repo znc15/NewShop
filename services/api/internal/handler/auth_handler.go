@@ -348,6 +348,10 @@ func (h *AuthHandler) GitHubLogin(c *gin.Context) {
 
 	authURL, err := h.githubOAuthService.GetAuthorizationURL(c.Request.Context(), state)
 	if err != nil {
+		if errors.Is(err, service.ErrGitHubOAuthDisabled) {
+			c.JSON(http.StatusServiceUnavailable, gin.H{"code": 50300, "message": "GitHub 登录功能未启用"})
+			return
+		}
 		h.logger.Error("生成 GitHub OAuth 授权地址失败", zap.Error(err))
 		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "GitHub OAuth 配置无效"})
 		return
@@ -381,6 +385,10 @@ func (h *AuthHandler) GitHubCallback(c *gin.Context) {
 
 	result, err := h.githubOAuthService.HandleCallback(c.Request.Context(), code)
 	if err != nil {
+		if errors.Is(err, service.ErrGitHubOAuthDisabled) {
+			h.redirectToFrontendLogin(c, "GitHub 登录功能未启用")
+			return
+		}
 		h.logger.Error("GitHub OAuth 回调处理失败", zap.Error(err))
 		h.redirectToFrontendLogin(c, "GitHub 登录失败，请稍后重试")
 		return

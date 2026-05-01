@@ -8,6 +8,7 @@ import { authService } from '@/services/auth'
 import { useAuthStore } from '@/stores/auth'
 import { cn, getApiErrorMessage } from '@/utils'
 import { useGeetest } from '@/hooks/useGeetest'
+import http from '@/services/http'
 
 // 动画变体配置
 const containerVariants: Variants = {
@@ -52,6 +53,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [serverError, setServerError] = useState('')
+  const [gitHubOAuthEnabled, setGitHubOAuthEnabled] = useState(false)
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -99,6 +101,28 @@ export default function LoginPage() {
     }
     if (serverError) setServerError('')
   }
+
+  // 检查 GitHub OAuth 是否已启用
+  useEffect(() => {
+    let cancelled = false
+
+    const checkGitHubOAuth = async () => {
+      try {
+        const configs = await http.get<Record<string, unknown>>('/configs/public')
+        if (cancelled) return
+        setGitHubOAuthEnabled(configs['github_oauth.enabled'] === true)
+      } catch {
+        // 获取公开配置失败，默认不显示 GitHub 登录按钮
+        if (!cancelled) setGitHubOAuthEnabled(false)
+      }
+    }
+
+    void checkGitHubOAuth()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search)
@@ -371,43 +395,48 @@ export default function LoginPage() {
               </motion.div>
             </form>
 
-            {/* 分隔线 */}
-            <motion.div
-              className="relative my-8"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.7 }}
-            >
-              <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-200" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-stone">或</span>
-              </div>
-            </motion.div>
-
-{/* 社交登录按钮 */}
-             <motion.div
-               className="space-y-3"
-               initial={{ opacity: 0, y: 20 }}
-               animate={{ opacity: 1, y: 0 }}
-               transition={{ delay: 0.8 }}
-             >
-                <motion.a
-                  href="/api/v1/auth/github"
-                  className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-slate-300 rounded-lg text-charcoal hover:bg-slate-50 hover:border-slate-400 transition-colors"
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
+            {/* 社交登录 — 仅当 GitHub OAuth 已启用时显示 */}
+            {gitHubOAuthEnabled && (
+              <>
+                {/* 分隔线 */}
+                <motion.div
+                  className="relative my-8"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.7 }}
                 >
-                 <svg className="w-5 h-5" viewBox="0 0 24 24">
-                   <path
-                     fill="currentColor"
-                     d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0012 2z"
-                   />
-                 </svg>
-                  <span>使用 GitHub 登录</span>
-                </motion.a>
-              </motion.div>
+                  <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-slate-200" />
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-4 bg-white text-stone">或</span>
+                  </div>
+                </motion.div>
+
+                {/* GitHub 登录按钮 */}
+                <motion.div
+                  className="space-y-3"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 }}
+                >
+                  <motion.a
+                    href="/api/v1/auth/github"
+                    className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-slate-300 rounded-lg text-charcoal hover:bg-slate-50 hover:border-slate-400 transition-colors"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                  >
+                    <svg className="w-5 h-5" viewBox="0 0 24 24">
+                      <path
+                        fill="currentColor"
+                        d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0012 2z"
+                      />
+                    </svg>
+                    <span>使用 GitHub 登录</span>
+                  </motion.a>
+                </motion.div>
+              </>
+            )}
           </motion.div>
 
           {/* 底部链接 */}

@@ -31,6 +31,7 @@ const (
 
 var (
 	ErrGitHubOAuthConfigMissing = errors.New("GitHub OAuth 配置缺失")
+	ErrGitHubOAuthDisabled      = errors.New("GitHub OAuth 未启用")
 	ErrGitHubOAuthStateInvalid  = errors.New("GitHub OAuth 状态无效")
 	ErrGitHubOAuthCodeMissing   = errors.New("GitHub OAuth 授权码缺失")
 	ErrGitHubOAuthEmailMissing  = errors.New("GitHub 账户未返回邮箱")
@@ -337,6 +338,11 @@ func (s *GitHubOAuthService) buildNickname(githubUser *githubUserProfile, email 
 }
 
 func (s *GitHubOAuthService) getOAuthConfig(ctx context.Context) (*githubOAuthConfig, error) {
+	// 检查 GitHub OAuth 是否已启用
+	if !s.configService.IsFeatureEnabled(ctx, model.ConfigKeyGitHubEnabled) {
+		return nil, ErrGitHubOAuthDisabled
+	}
+
 	clientID, err := s.getDecodedStringConfig(ctx, model.ConfigKeyGitHubClientID)
 	if err != nil {
 		return nil, err
