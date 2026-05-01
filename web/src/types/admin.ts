@@ -18,6 +18,53 @@ export interface AdminLoginResponse {
   admin: AdminInfo
 }
 
+// 管理员详情（用于列表和详情页）
+export interface AdminDetail {
+  id: number
+  username: string
+  nickname: string
+  role: 'super_admin' | 'admin' | 'operator'
+  status: 'active' | 'disabled'
+  last_login_at: string | null
+  last_login_ip: string | null
+  created_at: string
+}
+
+// 管理员列表响应
+export interface AdminListResponse {
+  admins: AdminDetail[]
+  total: number
+  page: number
+}
+
+// 管理员创建/更新表单
+export interface AdminFormData {
+  username: string
+  password?: string
+  nickname: string
+  role: 'super_admin' | 'admin' | 'operator'
+  status?: 'active' | 'disabled'
+}
+
+// 管理员个人信息（/admin/profile 响应）
+export interface AdminProfile {
+  id: number
+  username: string
+  nickname: string
+  role: string
+  status: string
+  last_login_at: string | null
+  last_login_ip: string | null
+  created_at: string
+}
+
+// 修改密码表单
+export interface ChangePasswordForm {
+  old_password: string
+  new_password: string
+  confirm_password: string
+}
+
 // 订单状态类型
 export type OrderStatusType = 'pending' | 'paid' | 'shipped' | 'delivered' | 'completed' | 'cancelled' | 'refunded'
 

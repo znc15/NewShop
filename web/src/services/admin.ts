@@ -22,6 +22,10 @@ import type {
   DashboardStats,
   AdminConfigItem,
   AdminConfigPayload,
+  AdminDetail,
+  AdminListResponse,
+  AdminFormData,
+  AdminProfile,
 } from '@/types/admin'
 
 type UnknownRecord = Record<string, unknown>
@@ -467,6 +471,28 @@ export const adminService = {
 
   updateConfig(key: string, value: string, description?: string): Promise<void> {
     return adminHttp.put(`/configs/${key}`, { value, description })
+  },
+
+  // ==================== 管理员管理 ====================
+  async getAdmins(page = 1, pageSize = 20): Promise<AdminListResponse> {
+    const data = await adminHttp.get<AdminListResponse>('/admins', { page, page_size: pageSize })
+    return data
+  },
+
+  getAdminProfile(): Promise<AdminProfile> {
+    return adminHttp.get<AdminProfile>('/profile')
+  },
+
+  createAdmin(formData: AdminFormData): Promise<AdminDetail> {
+    return adminHttp.post<AdminDetail>('/admins', formData)
+  },
+
+  updateAdmin(id: number, formData: Partial<AdminFormData>): Promise<AdminDetail> {
+    return adminHttp.put<AdminDetail>(`/admins/${id}`, formData)
+  },
+
+  deleteAdmin(id: number): Promise<void> {
+    return adminHttp.delete(`/admins/${id}`)
   },
 }
 

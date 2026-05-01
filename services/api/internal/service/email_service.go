@@ -8,23 +8,84 @@ import (
 	"math/big"
 	"time"
 
+	"newshop/api/internal/config"
 	"newshop/api/internal/model"
 	"newshop/api/internal/pkg/email"
 
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
 // EmailService 邮件服务
 type EmailService struct {
-	db    *gorm.DB
-	redis *redis.Client
-	email *email.Client
+	db            *gorm.DB
+	redis         *redis.Client
+	configService *ConfigService
+	smtpFallback  config.SMTPConfig
+	logger        *zap.Logger
 }
 
 // NewEmailService 创建邮件服务
-func NewEmailService(db *gorm.DB, redis *redis.Client, emailClient *email.Client) *EmailService {
-	return &EmailService{db: db, redis: redis, email: emailClient}
+// smtpFallback 作为环境变量回退值，当 DB 中无配置时使用
+func NewEmailService(db *gorm.DB, redis *redis.Client, smtpFallback config.SMTPConfig, logger *zap.Logger) *EmailService {
+	return &EmailService{db: db, redis: redis, smtpFallback: smtpFallback, logger: logger}
+}
+
+// SetConfigService 注入配置服务（延迟注入，避免循环依赖）
+func (s *EmailService) SetConfigService(cs *ConfigService) {
+	s.configService = cs
+}
+
+// getEmailClient 从 DB 读取最新 SMTP 配置并创建邮件客户端
+// DB 无配置时回退到环境变量默认值
+func (s *EmailService) getEmailClient(ctx context.Context) *email.Client {
+	var host, user, password, from string
+	var port int
+
+	// 优先从 DB 读取
+	if s.configService != nil {
+		if h, err := s.configService.GetStringConfig(ctx, model.ConfigKeySMTPHost); err == nil && h != "" {
+			host = h
+		}
+		if p, err := s.configService.GetIntConfig(ctx, model.ConfigKeySMTPPort); err == nil && p > 0 {
+			port = p
+		}
+		if u, err := s.configService.GetStringConfig(ctx, model.ConfigKeySMTPUser); err == nil && u != "" {
+			user = u
+		}
+		if pw, err := s.configService.GetStringConfig(ctx, model.ConfigKeySMTPPassword); err == nil && pw != "" {
+			password = pw
+		}
+		if f, err := s.configService.GetStringConfig(ctx, model.ConfigKeySMTPFrom); err == nil && f != "" {
+			from = f
+		}
+	}
+
+	// 回退到环境变量默认值
+	if host == "" {
+		host = s.smtpFallback.Host
+	}
+	if port == 0 {
+		port = s.smtpFallback.Port
+	}
+	if user == "" {
+		user = s.smtpFallback.User
+	}
+	if password == "" {
+		password = s.smtpFallback.Password
+	}
+	if from == "" {
+		from = s.smtpFallback.From
+	}
+
+	return email.NewClient(email.Config{
+		Host:     host,
+		Port:     port,
+		User:     user,
+		Password: password,
+		From:     from,
+	})
 }
 
 // SendVerifyCode 发送验证码
@@ -57,11 +118,8 @@ func (s *EmailService) sendCodeEmail(ctx context.Context, emailAddr, templateCod
 		}
 	}
 
-	if s.email == nil {
-		return fmt.Errorf("邮件客户端未初始化")
-	}
-
-	if err := s.email.SendWithTemplate(emailAddr, subject, bodyHTML, map[string]string{"Code": code}); err != nil {
+	client := s.getEmailClient(ctx)
+	if err := client.SendWithTemplate(emailAddr, subject, bodyHTML, map[string]string{"Code": code}); err != nil {
 		return fmt.Errorf("发送邮件失败: %w", err)
 	}
 
@@ -132,7 +190,8 @@ func (s *EmailService) sendQueuedEmail(ctx context.Context, e *model.EmailOutbox
 			params[k] = str
 		}
 	}
-	return s.email.SendWithTemplate(e.ToEmail, template.Subject, template.BodyHTML, params)
+	client := s.getEmailClient(ctx)
+	return client.SendWithTemplate(e.ToEmail, template.Subject, template.BodyHTML, params)
 }
 
 // generateCode 使用加密随机数生成验证码

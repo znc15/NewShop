@@ -267,6 +267,72 @@ func (r *ConfigRepo) InitializeDefaults(ctx context.Context) error {
 			Description: "GitHub OAuth 回调地址",
 			IsPublic:    false,
 		},
+		// SMTP 邮件服务配置
+		{
+			Key:         model.ConfigKeySMTPHost,
+			Value:       "smtp.example.com",
+			Type:        model.ConfigTypeString,
+			Category:    model.ConfigCategorySMTP,
+			Description: "SMTP 服务器地址",
+			IsPublic:    false,
+		},
+		{
+			Key:         model.ConfigKeySMTPPort,
+			Value:       587,
+			Type:        model.ConfigTypeNumber,
+			Category:    model.ConfigCategorySMTP,
+			Description: "SMTP 服务器端口",
+			IsPublic:    false,
+		},
+		{
+			Key:         model.ConfigKeySMTPUser,
+			Value:       "",
+			Type:        model.ConfigTypeString,
+			Category:    model.ConfigCategorySMTP,
+			Description: "SMTP 登录用户名",
+			IsPublic:    false,
+		},
+		{
+			Key:         model.ConfigKeySMTPPassword,
+			Value:       "",
+			Type:        model.ConfigTypeString,
+			Category:    model.ConfigCategorySMTP,
+			Description: "SMTP 登录密码",
+			IsPublic:    false,
+		},
+		{
+			Key:         model.ConfigKeySMTPFrom,
+			Value:       "noreply@example.com",
+			Type:        model.ConfigTypeString,
+			Category:    model.ConfigCategorySMTP,
+			Description: "SMTP 发件人地址",
+			IsPublic:    false,
+		},
+		// 极验配置默认值
+		{
+			Key:         model.ConfigKeyGeetestID,
+			Value:       "",
+			Type:        model.ConfigTypeString,
+			Category:    model.ConfigCategoryGeetest,
+			Description: "极验验证码 ID",
+			IsPublic:    false,
+		},
+		{
+			Key:         model.ConfigKeyGeetestKey,
+			Value:       "",
+			Type:        model.ConfigTypeString,
+			Category:    model.ConfigCategoryGeetest,
+			Description: "极验验证码 Key",
+			IsPublic:    false,
+		},
+		{
+			Key:         model.ConfigKeyGeetestActions,
+			Value:       []string{"login", "register", "reset_password"},
+			Type:        model.ConfigTypeArray,
+			Category:    model.ConfigCategoryGeetest,
+			Description: "极验验证码启用的操作列表",
+			IsPublic:    false,
+		},
 	}
 
 	for _, dc := range defaultConfigs {

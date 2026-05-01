@@ -18,6 +18,9 @@ import {
   AdminProductsPage,
   AdminReviewsPage,
   AdminSeoPage,
+  AdminSettingsPage,
+  AdminAdminsPage,
+  AdminProfilePage,
   AdminUsersPage,
 } from '@/pages/admin'
 import configService from '@/services/config'
@@ -113,6 +116,9 @@ const ROUTE_TITLE_MAP: Record<string, string> = {
   '/admin/homepage': '后台首页配置',
   '/admin/footer': '后台页脚配置',
   '/admin/seo': '后台 SEO 配置',
+  '/admin/settings': '后台系统设置',
+  '/admin/admins': '后台管理员管理',
+  '/admin/profile': '后台个人资料',
 }
 
 const ROUTE_TITLE_PATTERNS: Array<{ pattern: string; title: string }> = [
@@ -281,6 +287,9 @@ function App() {
     if (path === '/admin/homepage') return <AdminHomepageSettingsPage />
     if (path === '/admin/footer') return <AdminFooterSettingsPage />
     if (path === '/admin/seo') return <AdminSeoPage />
+    if (path === '/admin/settings') return <AdminSettingsPage />
+    if (path === '/admin/admins') return <AdminAdminsPage />
+    if (path === '/admin/profile') return <AdminProfilePage />
     return <AdminDashboard />
   }
 

@@ -8,7 +8,6 @@ import (
 	_ "newshop/api/docs" // swagger docs，需要先运行 swag init 生成
 	"newshop/api/internal/config"
 	"newshop/api/internal/model"
-	"newshop/api/internal/pkg/email"
 	"newshop/api/internal/pkg/jwt"
 	"newshop/api/internal/router"
 	"newshop/api/internal/service"
@@ -47,7 +46,6 @@ type Application struct {
 	logger       *zap.Logger
 	jwtManager   *jwt.JWTManager
 	emailService *service.EmailService
-	emailClient  *email.Client
 }
 
 func main() {
@@ -91,17 +89,8 @@ func main() {
 		logger.Warn("Redis 连接失败，部分功能可能不可用", zap.Error(err))
 	}
 
-	// 初始化邮件客户端
-	emailClient := email.NewClient(email.Config{
-		Host:     cfg.SMTP.Host,
-		Port:     cfg.SMTP.Port,
-		User:     cfg.SMTP.User,
-		Password: cfg.SMTP.Password,
-		From:     cfg.SMTP.From,
-	})
-
-	// 初始化邮件服务
-	emailService := service.NewEmailService(db, rdb, emailClient)
+	// 初始化邮件服务（SMTP 配置通过 DB 热加载，env 作为回退）
+	emailService := service.NewEmailService(db, rdb, cfg.SMTP, logger)
 
 	// 创建 Gin 引擎
 	engine := gin.New()

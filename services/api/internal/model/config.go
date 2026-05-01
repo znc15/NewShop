@@ -60,8 +60,10 @@ const (
 	ConfigCategoryOrder   = "order"
 	ConfigCategoryPayment = "payment"
 	ConfigCategoryEmail   = "email"
-	ConfigCategorySystem  = "system"
-	ConfigCategorySEO     = "seo"
+	ConfigCategorySystem = "system"
+	ConfigCategorySEO    = "seo"
+	ConfigCategorySMTP   = "smtp"
+	ConfigCategoryGeetest = "geetest"
 )
 
 // 预置配置键
@@ -103,5 +105,12 @@ const (
 	ConfigKeyGeetestID      = "geetest.id"
 	ConfigKeyGeetestKey     = "geetest.key"
 	ConfigKeyGeetestActions = "geetest.enabled_actions"
+
+	// SMTP 邮件服务配置
+	ConfigKeySMTPHost     = "smtp.host"
+	ConfigKeySMTPPort     = "smtp.port"
+	ConfigKeySMTPUser     = "smtp.user"
+	ConfigKeySMTPPassword = "smtp.password"
+	ConfigKeySMTPFrom     = "smtp.from"
 )
 

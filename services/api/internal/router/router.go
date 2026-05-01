@@ -254,6 +254,8 @@ func NewRouter(db *gorm.DB, rdb *redis.Client, cfg *config.Config, logger *zap.L
 // SetEmailService 设置邮件服务
 func (r *Router) SetEmailService(emailService *service.EmailService) {
 	r.emailService = emailService
+	// 注入 ConfigService 以支持 SMTP 配置热加载
+	emailService.SetConfigService(r.configService)
 	r.authCodeService = service.NewAuthCodeService(
 		r.userService,
 		emailService,
