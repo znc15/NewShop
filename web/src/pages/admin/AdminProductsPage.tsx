@@ -30,7 +30,7 @@ const INITIAL_FORM_DATA: AdminProductFormData = {
   detail_images: [],
   price: 0,
   category_id: 0,
-  status: 'draft',
+  status: 'active',
   stock: 0,
   is_hot: false,
   is_sale: false,
