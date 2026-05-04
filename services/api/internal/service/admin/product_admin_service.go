@@ -40,9 +40,39 @@ func (s *ProductAdminService) CreateProduct(ctx context.Context, product *model.
 	return s.productRepo.CreateProduct(ctx, product)
 }
 
-// UpdateProduct 更新商品
+// UpdateProduct 更新商品（含 SKU/属性替换，在同一事务中完成）
 func (s *ProductAdminService) UpdateProduct(ctx context.Context, product *model.Product) error {
-	return s.productRepo.UpdateProduct(ctx, product)
+	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// 删除旧 SKU
+		if err := tx.Where("product_id = ?", product.ID).Delete(&model.ProductSku{}).Error; err != nil {
+			return err
+		}
+		// 删除旧属性
+		if err := tx.Where("product_id = ?", product.ID).Delete(&model.ProductAttr{}).Error; err != nil {
+			return err
+		}
+		// 保存商品主体（排除关联，防止 GORM Save 默认忽略关联导致数据丢失）
+		if err := tx.Omit("Skus", "Attrs").Save(product).Error; err != nil {
+			return err
+		}
+		// 创建新 SKU
+		for i := range product.Skus {
+			product.Skus[i].ID = 0
+			product.Skus[i].ProductID = product.ID
+			if err := tx.Create(&product.Skus[i]).Error; err != nil {
+				return err
+			}
+		}
+		// 创建新属性
+		for i := range product.Attrs {
+			product.Attrs[i].ID = 0
+			product.Attrs[i].ProductID = product.ID
+			if err := tx.Create(&product.Attrs[i]).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 // DeleteProduct 删除商品

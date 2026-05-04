@@ -645,13 +645,7 @@ func (h *ProductAdminHandler) Update(c *gin.Context) {
 
 	// 处理 SKU 更新
 	if req.Skus != nil {
-		// 删除旧的 SKU
-		for _, oldSku := range product.Skus {
-			h.productRepo.DeleteSku(c.Request.Context(), oldSku.ID)
-		}
 		product.Skus = nil
-
-		// 添加新的 SKU
 		for _, skuReq := range req.Skus {
 			sku := model.ProductSku{
 				ProductID: id,
@@ -667,13 +661,7 @@ func (h *ProductAdminHandler) Update(c *gin.Context) {
 
 	// 处理属性更新
 	if req.Attrs != nil {
-		// 删除旧的属性
-		for _, oldAttr := range product.Attrs {
-			h.productRepo.DeleteProductAttr(c.Request.Context(), oldAttr.ID)
-		}
 		product.Attrs = nil
-
-		// 添加新的属性
 		for _, attrReq := range req.Attrs {
 			attr := model.ProductAttr{
 				ProductID: id,

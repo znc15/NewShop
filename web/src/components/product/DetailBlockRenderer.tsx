@@ -16,7 +16,7 @@ export function DetailBlockRenderer({ blocks, className }: DetailBlockRendererPr
   }
 
   return (
-    <div className={cn('space-y-6', className)}>
+    <div className={cn(className)}>
       {blocks.map((block) => {
         switch (block.type) {
           case 'text':
@@ -42,7 +42,7 @@ export function DetailBlockRenderer({ blocks, className }: DetailBlockRendererPr
                 src={block.content}
                 alt={block.alt || '商品详情图'}
                 loading="lazy"
-                className="w-full rounded-lg border border-slate-200 bg-white object-contain"
+                className="w-full"
               />
             ) : null
 
