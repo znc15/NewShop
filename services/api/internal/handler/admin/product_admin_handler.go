@@ -675,7 +675,7 @@ func (h *ProductAdminHandler) Update(c *gin.Context) {
 
 	if err := h.productService.UpdateProduct(c.Request.Context(), product); err != nil {
 		h.logger.Error("更新商品失败", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "更新商品失败"})
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "更新商品失败: " + err.Error()})
 		return
 	}
 
