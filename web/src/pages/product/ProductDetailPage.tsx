@@ -527,7 +527,7 @@ export default function ProductDetailPage() {
 
       {/* 商品详情 / 规格参数 / 商品评价 Tab 区 */}
       <motion.div
-        className="mt-8"
+        className="mt-0"
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.45, duration: 0.5 }}

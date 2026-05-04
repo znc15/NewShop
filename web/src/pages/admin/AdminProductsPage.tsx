@@ -448,7 +448,7 @@ export function AdminProductsPage() {
         open={editModalOpen}
         onClose={() => setEditModalOpen(false)}
         title={selectedProduct ? '编辑商品' : '添加商品'}
-        size="lg"
+        size="xl"
       >
         <div className="space-y-4">
           <div>
