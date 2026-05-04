@@ -131,6 +131,7 @@ export interface AdminProductFormData {
   description: string
   detail?: string
   detail_images?: string[]
+  main_image: string
   price: number
   original_price?: number
   category_id: number

@@ -28,6 +28,7 @@ const INITIAL_FORM_DATA: AdminProductFormData = {
   description: '',
   detail: '',
   detail_images: [],
+  main_image: '',
   price: 0,
   category_id: 0,
   status: 'active',
@@ -192,6 +193,7 @@ export function AdminProductsPage() {
         description: product.description,
         detail: product.detail || '',
         detail_images: detailImages,
+        main_image: product.main_image || '',
         price: product.price,
         original_price: product.original_price || undefined,
         category_id: product.category_id,
@@ -477,6 +479,17 @@ export function AdminProductsPage() {
                 onChange={setDetailBlocks}
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-charcoal mb-1">
+              首图 URL
+            </label>
+            <Input
+              value={formData.main_image}
+              onChange={(e) => setFormData((prev) => ({ ...prev, main_image: e.target.value }))}
+              placeholder="商品列表展示的主图地址"
+            />
           </div>
 
           <div>
