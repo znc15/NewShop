@@ -188,7 +188,6 @@ export function AdminSettingsPage() {
     const fetchConfigs = async () => {
       setLoading(true)
       try {
-        // 获取所有配置（不分分类）
         const data = await adminService.getConfigs()
         const configMap = data.reduce<Record<string, AdminConfigItem>>((acc, item) => {
           acc[item.key] = item
@@ -197,19 +196,16 @@ export function AdminSettingsPage() {
 
         setConfigs(configMap)
 
-        // 填充极验表单
         setGeetestId(parseStringValue(configMap['geetest.id']?.value ?? ''))
         setGeetestKey(parseStringValue(configMap['geetest.key']?.value ?? ''))
         setGeetestActions(parseActionsValue(configMap['geetest.enabled_actions']?.value ?? ''))
 
-        // 填充 SMTP 表单
         setSmtpHost(parseStringValue(configMap['smtp.host']?.value ?? ''))
         setSmtpPort(parseStringValue(configMap['smtp.port']?.value ?? ''))
         setSmtpUser(parseStringValue(configMap['smtp.user']?.value ?? ''))
         setSmtpPassword(parseStringValue(configMap['smtp.password']?.value ?? ''))
         setSmtpFrom(parseStringValue(configMap['smtp.from']?.value ?? ''))
 
-        // 填充 GitHub OAuth 表单
         setGithubEnabled(parseBooleanValue(configMap['github_oauth.enabled']?.value ?? 'false'))
         setGithubClientId(parseStringValue(configMap['github_client_id']?.value ?? ''))
         setGithubClientSecret(parseStringValue(configMap['github_client_secret']?.value ?? ''))
@@ -251,7 +247,6 @@ export function AdminSettingsPage() {
 
       await Promise.all(payloads.map((p) => adminService.upsertConfig(p)))
 
-      // 重新获取以刷新配置映射
       const latest = await adminService.getConfigs()
       const configMap = latest.reduce<Record<string, AdminConfigItem>>((acc, item) => {
         acc[item.key] = item
@@ -285,7 +280,6 @@ export function AdminSettingsPage() {
 
       await Promise.all(payloads.map((p) => adminService.upsertConfig(p)))
 
-      // 重新获取以刷新配置映射
       const latest = await adminService.getConfigs()
       const configMap = latest.reduce<Record<string, AdminConfigItem>>((acc, item) => {
         acc[item.key] = item
@@ -313,7 +307,6 @@ export function AdminSettingsPage() {
 
       await Promise.all(payloads.map((p) => adminService.upsertConfig(p)))
 
-      // 重新获取以刷新配置映射
       const latest = await adminService.getConfigs()
       const configMap = latest.reduce<Record<string, AdminConfigItem>>((acc, item) => {
         acc[item.key] = item
@@ -332,22 +325,57 @@ export function AdminSettingsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-forest-600" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
       </div>
+    )
+  }
+
+  // 渲染配置字段卡片
+  const renderConfigCard = (
+    field: typeof GEETEST_FIELDS[number] | typeof SMTP_FIELDS[number] | typeof GITHUB_OAUTH_FIELDS[number],
+    value: string,
+    onChange: (value: string) => void,
+    extra?: React.ReactNode
+  ) => {
+    const Icon = field.icon
+    return (
+      <Card key={field.key} className="border-slate-200/60 shadow-sm">
+        <CardContent className="p-6">
+          <div className="flex items-start gap-4">
+            <div className="mt-1 rounded-xl bg-blue-50 p-3 text-blue-600 shrink-0">
+              <Icon className="h-5 w-5" />
+            </div>
+            <div className="flex-1 space-y-4">
+              <div>
+                <h3 className="text-base font-semibold text-slate-800">{field.label}</h3>
+                <p className="mt-1 text-sm text-slate-500">{field.description}</p>
+              </div>
+              {extra ?? (
+                <Input
+                  type={field.type === 'password' ? 'password' : field.type === 'number' ? 'number' : 'text'}
+                  value={value}
+                  onChange={(e) => onChange(e.target.value)}
+                  placeholder={field.placeholder}
+                />
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     )
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold text-charcoal">系统设置</h2>
-        <p className="mt-2 max-w-2xl text-sm text-stone">
+        <h2 className="text-2xl font-semibold text-slate-800">系统设置</h2>
+        <p className="mt-2 max-w-2xl text-sm text-slate-500">
           管理系统核心配置，包括极验验证码、SMTP 邮件服务和 GitHub OAuth 登录。修改后即时生效，无需重启服务。
         </p>
       </div>
 
       {/* Tab 切换 */}
-      <div className="flex gap-2 border-b border-cream-200">
+      <div className="flex gap-1 border-b border-slate-200">
         {TABS.map((tab) => {
           const Icon = tab.icon
           return (
@@ -357,7 +385,7 @@ export function AdminSettingsPage() {
               className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab.id
                   ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-stone hover:text-charcoal'
+                  : 'border-transparent text-slate-500 hover:text-slate-700'
               }`}
             >
               <Icon className="h-4 w-4" />
@@ -370,60 +398,31 @@ export function AdminSettingsPage() {
       {/* 极验配置 Tab */}
       {activeTab === 'geetest' && (
         <div className="space-y-4">
-          {GEETEST_FIELDS.map((field) => {
-            const Icon = field.icon
-
-            return (
-              <div key={field.key} className="rounded-2xl border border-cream-200 bg-white p-6 shadow-sm">
-                <div className="flex items-start gap-4">
-                  <div className="mt-1 rounded-xl bg-blue-50 p-3 text-blue-600">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1 space-y-4">
-                    <div>
-                      <h3 className="text-base font-semibold text-charcoal">{field.label}</h3>
-                      <p className="mt-1 text-sm text-stone">{field.description}</p>
-                    </div>
-
-                    {field.type === 'multiselect' ? (
-                      <div className="flex flex-wrap gap-2">
-                        {field.options.map((opt) => (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => toggleAction(opt.value)}
-                            className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-                              geetestActions.includes(opt.value)
-                                ? 'bg-blue-600 text-white border-blue-600'
-                                : 'bg-white text-stone border-cream-300 hover:border-blue-400'
-                            }`}
-                          >
-                            {opt.label}
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <Input
-                        type={field.type === 'password' ? 'password' : 'text'}
-                        value={
-                          field.key === 'geetest.id'
-                            ? geetestId
-                            : field.key === 'geetest.key'
-                              ? geetestKey
-                              : ''
-                        }
-                        onChange={(event) => {
-                          if (field.key === 'geetest.id') setGeetestId(event.target.value)
-                          else if (field.key === 'geetest.key') setGeetestKey(event.target.value)
-                        }}
-                        placeholder={field.placeholder}
-                      />
-                    )}
-                  </div>
+          {GEETEST_FIELDS.map((field) =>
+            renderConfigCard(
+              field,
+              field.key === 'geetest.id' ? geetestId : field.key === 'geetest.key' ? geetestKey : '',
+              field.key === 'geetest.id' ? setGeetestId : setGeetestKey,
+              field.type === 'multiselect' ? (
+                <div className="flex flex-wrap gap-2">
+                  {field.options.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => toggleAction(opt.value)}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                        geetestActions.includes(opt.value)
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'bg-white text-slate-500 border-slate-200 hover:border-blue-400'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
                 </div>
-              </div>
+              ) : undefined
             )
-          })}
+          )}
 
           <div className="flex justify-end">
             <Button onClick={handleSaveGeetest} loading={saving}>
@@ -436,50 +435,31 @@ export function AdminSettingsPage() {
       {/* SMTP 配置 Tab */}
       {activeTab === 'smtp' && (
         <div className="space-y-4">
-          {SMTP_FIELDS.map((field) => {
-            const Icon = field.icon
-
-            return (
-              <div key={field.key} className="rounded-2xl border border-cream-200 bg-white p-6 shadow-sm">
-                <div className="flex items-start gap-4">
-                  <div className="mt-1 rounded-xl bg-blue-50 p-3 text-blue-600">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1 space-y-4">
-                    <div>
-                      <h3 className="text-base font-semibold text-charcoal">{field.label}</h3>
-                      <p className="mt-1 text-sm text-stone">{field.description}</p>
-                    </div>
-
-                    <Input
-                      type={field.type === 'password' ? 'password' : field.type === 'number' ? 'number' : 'text'}
-                      value={
-                        field.key === 'smtp.host'
-                          ? smtpHost
-                          : field.key === 'smtp.port'
-                            ? smtpPort
-                            : field.key === 'smtp.user'
-                              ? smtpUser
-                              : field.key === 'smtp.password'
-                                ? smtpPassword
-                                : field.key === 'smtp.from'
-                                  ? smtpFrom
-                                  : ''
-                      }
-                      onChange={(event) => {
-                        if (field.key === 'smtp.host') setSmtpHost(event.target.value)
-                        else if (field.key === 'smtp.port') setSmtpPort(event.target.value)
-                        else if (field.key === 'smtp.user') setSmtpUser(event.target.value)
-                        else if (field.key === 'smtp.password') setSmtpPassword(event.target.value)
-                        else if (field.key === 'smtp.from') setSmtpFrom(event.target.value)
-                      }}
-                      placeholder={field.placeholder}
-                    />
-                  </div>
-                </div>
-              </div>
+          {SMTP_FIELDS.map((field) =>
+            renderConfigCard(
+              field,
+              field.key === 'smtp.host'
+                ? smtpHost
+                : field.key === 'smtp.port'
+                  ? smtpPort
+                  : field.key === 'smtp.user'
+                    ? smtpUser
+                    : field.key === 'smtp.password'
+                      ? smtpPassword
+                      : field.key === 'smtp.from'
+                        ? smtpFrom
+                        : '',
+              field.key === 'smtp.host'
+                ? setSmtpHost
+                : field.key === 'smtp.port'
+                  ? setSmtpPort
+                  : field.key === 'smtp.user'
+                    ? setSmtpUser
+                    : field.key === 'smtp.password'
+                      ? setSmtpPassword
+                      : setSmtpFrom
             )
-          })}
+          )}
 
           <div className="flex justify-end">
             <Button onClick={handleSaveSMTP} loading={saving}>
@@ -493,57 +473,52 @@ export function AdminSettingsPage() {
       {activeTab === 'github_oauth' && (
         <div className="space-y-4">
           {GITHUB_OAUTH_FIELDS.map((field) => {
-            const Icon = field.icon
-
-            return (
-              <div key={field.key} className="rounded-2xl border border-cream-200 bg-white p-6 shadow-sm">
-                <div className="flex items-start gap-4">
-                  <div className="mt-1 rounded-xl bg-blue-50 p-3 text-blue-600">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1 space-y-4">
-                    <div>
-                      <h3 className="text-base font-semibold text-charcoal">{field.label}</h3>
-                      <p className="mt-1 text-sm text-stone">{field.description}</p>
-                    </div>
-
-                    {field.type === 'toggle' ? (
-                      <button
-                        type="button"
-                        onClick={() => setGithubEnabled(!githubEnabled)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                          githubEnabled ? 'bg-blue-600' : 'bg-gray-300'
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            githubEnabled ? 'translate-x-6' : 'translate-x-1'
+            if (field.type === 'toggle') {
+              return (
+                <Card key={field.key} className="border-slate-200/60 shadow-sm">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="mt-1 rounded-xl bg-blue-50 p-3 text-blue-600 shrink-0">
+                        <Globe className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 space-y-4">
+                        <div>
+                          <h3 className="text-base font-semibold text-slate-800">{field.label}</h3>
+                          <p className="mt-1 text-sm text-slate-500">{field.description}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setGithubEnabled(!githubEnabled)}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                            githubEnabled ? 'bg-blue-600' : 'bg-gray-300'
                           }`}
-                        />
-                      </button>
-                    ) : (
-                      <Input
-                        type={field.type === 'password' ? 'password' : 'text'}
-                        value={
-                          field.key === 'github_client_id'
-                            ? githubClientId
-                            : field.key === 'github_client_secret'
-                              ? githubClientSecret
-                              : field.key === 'github_redirect_uri'
-                                ? githubRedirectUri
-                                : ''
-                        }
-                        onChange={(event) => {
-                          if (field.key === 'github_client_id') setGithubClientId(event.target.value)
-                          else if (field.key === 'github_client_secret') setGithubClientSecret(event.target.value)
-                          else if (field.key === 'github_redirect_uri') setGithubRedirectUri(event.target.value)
-                        }}
-                        placeholder={field.placeholder}
-                      />
-                    )}
-                  </div>
-                </div>
-              </div>
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                              githubEnabled ? 'translate-x-6' : 'translate-x-1'
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            }
+            return renderConfigCard(
+              field,
+              field.key === 'github_client_id'
+                ? githubClientId
+                : field.key === 'github_client_secret'
+                  ? githubClientSecret
+                  : field.key === 'github_redirect_uri'
+                    ? githubRedirectUri
+                    : '',
+              field.key === 'github_client_id'
+                ? setGithubClientId
+                : field.key === 'github_client_secret'
+                  ? setGithubClientSecret
+                  : setGithubRedirectUri
             )
           })}
 
