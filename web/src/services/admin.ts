@@ -142,7 +142,7 @@ function mapProduct(item: unknown): AdminProduct {
     price: toNumber(record.price),
     original_price: toNumber(record.original_price),
     main_image: toString(record.main_image),
-    images: typeof record.images === 'string' ? record.images : null,
+    images: Array.isArray(record.images) ? (record.images as string[]).filter((u): u is string => typeof u === 'string').join('\n') : typeof record.images === 'string' ? record.images : null,
     category_id: toNumber(record.category_id),
     category_name: toString(record.category_name),
     brand_id: record.brand_id === null ? null : toNumber(record.brand_id, 0),
