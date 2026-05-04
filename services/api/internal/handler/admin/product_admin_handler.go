@@ -575,7 +575,8 @@ func (h *ProductAdminHandler) Update(c *gin.Context) {
 	// 获取现有商品
 	product, err := h.productService.GetProductByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"code": 40400, "message": "商品不存在"})
+		h.logger.Error("获取商品失败", zap.Uint64("product_id", id), zap.Error(err))
+		c.JSON(http.StatusNotFound, gin.H{"code": 40400, "message": "商品不存在: " + err.Error()})
 		return
 	}
 
