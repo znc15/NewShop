@@ -119,22 +119,6 @@ function parseImageCollection(rawValue: unknown): string[] {
   return []
 }
 
-function parseDetailImageUrls(product: Product): string[] {
-  const explicitUrls = parseImageCollection((product as Product & { detail_images?: unknown }).detail_images)
-  if (explicitUrls.length > 0) {
-    return explicitUrls
-  }
-
-  const detailText = product.detail || ''
-  const urlRegex = /https?:\/\/[^\s]+\.(?:jpg|jpeg|png|webp|gif)(?:\?[^\s]*)?/gi
-  const matches = detailText.match(urlRegex)
-  if (!matches) {
-    return []
-  }
-
-  return Array.from(new Set(matches.map((item) => item.trim()).filter((item) => item.length > 0)))
-}
-
 function getAverageRating(reviews: ProductReview[]): string {
   if (reviews.length === 0) {
     return '暂无评分'
@@ -330,17 +314,6 @@ export default function ProductDetailPage() {
           content: detailText,
         })
       }
-    }
-
-    // 将 detail_images 追加为 image 类型区块
-    const imageUrls = parseDetailImageUrls(product)
-    for (const url of imageUrls) {
-      blocks.push({
-        id: `image-${blockIndex++}`,
-        type: 'image',
-        content: url,
-        alt: '商品详情图',
-      })
     }
 
     return blocks
