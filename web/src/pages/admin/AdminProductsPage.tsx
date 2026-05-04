@@ -186,39 +186,81 @@ export function AdminProductsPage() {
   }
 
   // 打开编辑弹窗
-  const openEditModal = (product?: AdminProduct) => {
+  const openEditModal = async (product?: AdminProduct) => {
     if (product) {
+      setEditModalOpen(true)
       setSelectedProduct(product)
-      const images = parseImageList(product.images)
-      const detailImages = product.detail_images || []
-      setFormData({
-        name: product.name,
-        description: product.description,
-        detail: product.detail || '',
-        detail_images: detailImages,
-        main_image: product.main_image || '',
-        price: product.price,
-        original_price: product.original_price || undefined,
-        category_id: product.category_id,
-        status: product.status,
-        stock: product.stock,
-        is_hot: product.is_hot,
-        is_sale: product.is_sale,
-        seo_title: product.seo_title || '',
-        seo_keywords: product.seo_keywords || '',
-        seo_description: product.seo_description || '',
-        sort: product.sort,
-        images,
-        skus: [],
-      })
-      // 将 detail 和 detail_images 转换为区块
-      setDetailBlocks(convertToBlocks(product.detail, detailImages))
+      // 列表数据不含 SKU，请求完整商品详情
+      try {
+        const fullProduct = await adminService.getProduct(product.id)
+        setSelectedProduct(fullProduct)
+        const images = parseImageList(fullProduct.images)
+        const detailImages = fullProduct.detail_images || []
+        setFormData({
+          name: fullProduct.name,
+          description: fullProduct.description,
+          detail: fullProduct.detail || '',
+          detail_images: detailImages,
+          main_image: fullProduct.main_image || '',
+          price: fullProduct.price,
+          original_price: fullProduct.original_price || undefined,
+          category_id: fullProduct.category_id,
+          status: fullProduct.status,
+          stock: fullProduct.stock,
+          is_hot: fullProduct.is_hot,
+          is_sale: fullProduct.is_sale,
+          seo_title: fullProduct.seo_title || '',
+          seo_keywords: fullProduct.seo_keywords || '',
+          seo_description: fullProduct.seo_description || '',
+          sort: fullProduct.sort,
+          images,
+          skus: (fullProduct.skus || []).map((sku) => ({
+            sku_code: sku.sku_code || '',
+            specs: sku.specs || '',
+            price: sku.price || 0,
+            stock: sku.stock || 0,
+            image: sku.image || '',
+          })),
+        })
+        setDetailBlocks(convertToBlocks(fullProduct.detail, detailImages))
+      } catch {
+        // 如果获取详情失败，回退到列表数据
+        const images = parseImageList(product.images)
+        const detailImages = product.detail_images || []
+        setFormData({
+          name: product.name,
+          description: product.description,
+          detail: product.detail || '',
+          detail_images: detailImages,
+          main_image: product.main_image || '',
+          price: product.price,
+          original_price: product.original_price || undefined,
+          category_id: product.category_id,
+          status: product.status,
+          stock: product.stock,
+          is_hot: product.is_hot,
+          is_sale: product.is_sale,
+          seo_title: product.seo_title || '',
+          seo_keywords: product.seo_keywords || '',
+          seo_description: product.seo_description || '',
+          sort: product.sort,
+          images,
+          skus: (product.skus || []).map((sku) => ({
+            sku_code: sku.sku_code || '',
+            specs: sku.specs || '',
+            price: sku.price || 0,
+            stock: sku.stock || 0,
+            image: sku.image || '',
+          })),
+        })
+        setDetailBlocks(convertToBlocks(product.detail, detailImages))
+      }
     } else {
       setSelectedProduct(null)
       setFormData(INITIAL_FORM_DATA)
       setDetailBlocks([])
+      setEditModalOpen(true)
     }
-    setEditModalOpen(true)
   }
 
   // 保存商品
