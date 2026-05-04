@@ -43,12 +43,12 @@ func (s *ProductAdminService) CreateProduct(ctx context.Context, product *model.
 // UpdateProduct 更新商品（含 SKU/属性替换，在同一事务中完成）
 func (s *ProductAdminService) UpdateProduct(ctx context.Context, product *model.Product) error {
 	return s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		// 删除旧 SKU
-		if err := tx.Where("product_id = ?", product.ID).Delete(&model.ProductSku{}).Error; err != nil {
+		// 硬删除旧 SKU（避免 soft delete 残留占用 sku_code 唯一索引）
+		if err := tx.Unscoped().Where("product_id = ?", product.ID).Delete(&model.ProductSku{}).Error; err != nil {
 			return err
 		}
-		// 删除旧属性
-		if err := tx.Where("product_id = ?", product.ID).Delete(&model.ProductAttr{}).Error; err != nil {
+		// 硬删除旧属性
+		if err := tx.Unscoped().Where("product_id = ?", product.ID).Delete(&model.ProductAttr{}).Error; err != nil {
 			return err
 		}
 		// 保存商品主体（排除关联，防止 GORM Save 默认忽略关联导致数据丢失）

@@ -444,6 +444,41 @@ export default function ProductDetailPage() {
             <span className="text-stone">已售 {product.sales || 0}</span>
           </motion.div>
 
+          {/* SKU 概览 */}
+          {productSkus.length > 0 && (
+            <motion.div className="space-y-2" variants={itemVariants}>
+              {productSkus.map((sku) => {
+                let specLabel = ''
+                if (sku.specs) {
+                  try {
+                    const raw = typeof sku.specs === 'string' ? JSON.parse(sku.specs) : sku.specs
+                    if (raw && typeof raw === 'object') {
+                      specLabel = Object.values(raw as Record<string, string>).join(' / ')
+                    }
+                  } catch {
+                    specLabel = typeof sku.specs === 'string' ? sku.specs : ''
+                  }
+                }
+                const active = selectedSku?.id === sku.id
+                return (
+                  <button
+                    key={sku.id}
+                    type="button"
+                    onClick={() => setSelectedSku(sku)}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg border text-sm transition-colors ${
+                      active
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                    }`}
+                  >
+                    <span>{specLabel || sku.sku_code}</span>
+                    <span className="font-medium text-red-500">¥{(sku.price / 100).toFixed(2)}</span>
+                  </button>
+                )
+              })}
+            </motion.div>
+          )}
+
           {/* SKU 选择器 */}
           {specs.length > 0 && (
             <motion.div className="border-t border-slate-200 pt-6" variants={itemVariants}>
