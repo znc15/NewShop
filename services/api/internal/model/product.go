@@ -59,6 +59,9 @@ type Product struct {
 	Description   string         `gorm:"type:text" json:"description"`
 	Detail        string         `gorm:"type:text" json:"detail"`
 	DetailImages  string         `gorm:"type:text" json:"detail_images"`
+	SeoTitle       string         `gorm:"size:200" json:"seo_title"`
+	SeoKeywords    string         `gorm:"size:500" json:"seo_keywords"`
+	SeoDescription string         `gorm:"size:500" json:"seo_description"`
 	Status        string         `gorm:"size:50;default:draft;index" json:"status"`
 	Sort          int            `gorm:"default:0" json:"sort"`
 	Category      *Category      `gorm:"foreignKey:CategoryID" json:"category,omitempty"`

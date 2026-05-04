@@ -1,42 +1,89 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import {
+  ShoppingBag,
+  DollarSign,
+  UserPlus,
+  Clock,
+  Package,
+  Users,
+  Ticket,
+  TrendingUp,
+  ArrowRight,
+} from 'lucide-react'
 import adminService from '@/services/admin'
 import type { DashboardStats } from '@/types/admin'
 import { cn } from '@/utils'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 
-// 统计卡片组件
 function StatCard({
   title,
   value,
-  icon,
+  icon: Icon,
   trend,
   trendLabel,
 }: {
   title: string
   value: string | number
-  icon: React.ReactNode
+  icon: React.ComponentType<{ className?: string }>
   trend?: number
   trendLabel?: string
 }) {
   return (
-    <div className="bg-white rounded-xl border border-cream-200 p-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm text-stone">{title}</p>
-          <p className="text-2xl font-semibold text-charcoal mt-1">{value}</p>
-          {trend !== undefined && (
-            <p
-              className={cn(
-                'text-xs mt-2',
-                trend >= 0 ? 'text-green-600' : 'text-red-600'
-              )}
-            >
-              {trend >= 0 ? '+' : ''}{trend}% {trendLabel}
-            </p>
-          )}
+    <Card className="overflow-hidden border-slate-200/60 shadow-sm hover:shadow-md transition-shadow">
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <p className="text-sm text-slate-500">{title}</p>
+            <p className="text-2xl font-semibold text-slate-900">{value}</p>
+            {trend !== undefined && (
+              <div className="flex items-center gap-1 mt-2">
+                <TrendingUp
+                  className={cn('h-3.5 w-3.5', trend >= 0 ? 'text-emerald-500' : 'text-red-500')}
+                />
+                <span
+                  className={cn(
+                    'text-xs font-medium',
+                    trend >= 0 ? 'text-emerald-600' : 'text-red-600'
+                  )}
+                >
+                  {trend >= 0 ? '+' : ''}
+                  {trend}% {trendLabel}
+                </span>
+              </div>
+            )}
+          </div>
+          <div className="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+            <Icon className="h-6 w-6 text-blue-600" />
+          </div>
         </div>
-        <div className="p-3 bg-forest-50 rounded-lg text-forest-600">{icon}</div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function QuickLink({
+  to,
+  icon: Icon,
+  label,
+  desc,
+}: {
+  to: string
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  desc: string
+}) {
+  return (
+    <Link
+      to={to}
+      className="flex flex-col items-center justify-center p-4 rounded-xl bg-slate-50 border border-slate-100 hover:bg-white hover:border-blue-200 hover:shadow-sm transition-all group"
+    >
+      <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center mb-2 group-hover:bg-blue-100 transition-colors">
+        <Icon className="h-5 w-5 text-blue-600" />
       </div>
-    </div>
+      <span className="text-sm font-medium text-slate-700">{label}</span>
+      <span className="text-xs text-slate-400 mt-0.5">{desc}</span>
+    </Link>
   )
 }
 
@@ -61,159 +108,129 @@ export function AdminDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-forest-600" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
       </div>
     )
   }
 
   if (!stats) {
     return (
-      <div className="text-center py-12 text-stone">加载失败</div>
+      <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+        <ShoppingBag className="h-12 w-12 mb-4 opacity-40" />
+        <p>加载失败，请刷新重试</p>
+      </div>
     )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* 统计卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         <StatCard
           title="今日订单"
           value={stats.today_orders}
+          icon={ShoppingBag}
           trend={12.5}
           trendLabel="较昨日"
-          icon={
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-              <path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1Z" />
-            </svg>
-          }
         />
         <StatCard
           title="今日销售额"
           value={`¥${stats.today_sales.toLocaleString()}`}
+          icon={DollarSign}
           trend={8.3}
           trendLabel="较昨日"
-          icon={
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="1" x2="12" y2="23" />
-              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-            </svg>
-          }
         />
         <StatCard
           title="新增用户"
           value={stats.today_users}
+          icon={UserPlus}
           trend={5.2}
           trendLabel="较昨日"
-          icon={
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <line x1="19" y1="8" x2="19" y2="14" />
-              <line x1="22" y1="11" x2="16" y2="11" />
-            </svg>
-          }
         />
         <StatCard
           title="待处理订单"
           value={stats.pending_orders}
-          icon={
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12,6 12,12 16,14" />
-            </svg>
-          }
+          icon={Clock}
         />
       </div>
 
-      {/* 快捷操作和数据概览 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* 快捷入口 */}
-        <div className="bg-white rounded-xl border border-cream-200 p-6">
-          <h3 className="font-semibold text-charcoal mb-4">快捷入口</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <a
-              href="/admin/products"
-              className="flex flex-col items-center justify-center p-4 bg-cream-50 rounded-lg hover:bg-cream-100 transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-forest-600 mb-2">
-                <path d="m7.5 4.27 9 5.15" />
-                <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
-                <path d="m3.3 7 8.7 5 8.7-5" />
-                <path d="M12 22V12" />
-              </svg>
-              <span className="text-sm text-charcoal">商品管理</span>
-              <span className="text-xs text-stone mt-1">{stats.total_products} 件商品</span>
-            </a>
-            <a
-              href="/admin/orders"
-              className="flex flex-col items-center justify-center p-4 bg-cream-50 rounded-lg hover:bg-cream-100 transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-forest-600 mb-2">
-                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-                <path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1Z" />
-              </svg>
-              <span className="text-sm text-charcoal">订单管理</span>
-              <span className="text-xs text-stone mt-1">{stats.pending_orders} 待处理</span>
-            </a>
-            <a
-              href="/admin/users"
-              className="flex flex-col items-center justify-center p-4 bg-cream-50 rounded-lg hover:bg-cream-100 transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-forest-600 mb-2">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                <circle cx="9" cy="7" r="4" />
-                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-              </svg>
-              <span className="text-sm text-charcoal">用户管理</span>
-              <span className="text-xs text-stone mt-1">{stats.total_users} 位用户</span>
-            </a>
-            <a
-              href="/admin/coupons"
-              className="flex flex-col items-center justify-center p-4 bg-cream-50 rounded-lg hover:bg-cream-100 transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-forest-600 mb-2">
-                <circle cx="8" cy="21" r="1" />
-                <circle cx="19" cy="21" r="1" />
-                <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
-              </svg>
-              <span className="text-sm text-charcoal">优惠券</span>
-              <span className="text-xs text-stone mt-1">促销活动</span>
-            </a>
-          </div>
-        </div>
+        <Card className="border-slate-200/60 shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-base font-semibold">快捷入口</CardTitle>
+          </CardHeader>
+          <CardContent className="pb-6">
+            <div className="grid grid-cols-2 gap-3">
+              <QuickLink
+                to="/admin/products"
+                icon={Package}
+                label="商品管理"
+                desc={`${stats.total_products} 件商品`}
+              />
+              <QuickLink
+                to="/admin/orders"
+                icon={ShoppingBag}
+                label="订单管理"
+                desc={`${stats.pending_orders} 待处理`}
+              />
+              <QuickLink
+                to="/admin/users"
+                icon={Users}
+                label="用户管理"
+                desc={`${stats.total_users} 位用户`}
+              />
+              <QuickLink
+                to="/admin/coupons"
+                icon={Ticket}
+                label="优惠券"
+                desc="促销活动"
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* 最近订单 */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-cream-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-charcoal">最近订单</h3>
-            <a href="/admin/orders" className="text-sm text-forest-600 hover:underline">
+        <Card className="lg:col-span-2 border-slate-200/60 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-4">
+            <CardTitle className="text-base font-semibold">最近订单</CardTitle>
+            <Link
+              to="/admin/orders"
+              className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
+            >
               查看全部
-            </a>
-          </div>
-          {(stats.recent_orders?.length ?? 0) > 0 ? (
-            <div className="space-y-3">
-              {stats.recent_orders?.slice(0, 5).map((order) => (
-                <div
-                  key={order.id}
-                  className="flex items-center justify-between py-2 border-b border-cream-100 last:border-0"
-                >
-                  <div>
-                    <p className="text-sm font-medium text-charcoal">{order.order_no}</p>
-                    <p className="text-xs text-stone">{order.user_name}</p>
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </CardHeader>
+          <CardContent className="pb-6">
+            {(stats.recent_orders?.length ?? 0) > 0 ? (
+              <div className="space-y-1">
+                {stats.recent_orders?.slice(0, 5).map((order) => (
+                  <div
+                    key={order.id}
+                    className="flex items-center justify-between py-3 px-3 rounded-lg hover:bg-slate-50 transition-colors"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-slate-800">{order.order_no}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">{order.user_name}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-slate-800">
+                        ¥{order.pay_amount}
+                      </p>
+                      <p className="text-xs text-slate-400 mt-0.5">{order.status}</p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-charcoal">¥{order.pay_amount}</p>
-                    <p className="text-xs text-stone">{order.status}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-stone">暂无订单数据</div>
-          )}
-        </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+                <ShoppingBag className="h-10 w-10 mb-3 opacity-40" />
+                <p className="text-sm">暂无订单数据</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

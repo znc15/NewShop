@@ -36,6 +36,9 @@ func main() {
 		"ALTER TABLE products ALTER COLUMN images TYPE TEXT USING images::text;",
 		"ALTER TABLE products DROP CONSTRAINT IF EXISTS products_brand_id_fkey;",
 		"ALTER TABLE products ALTER COLUMN brand_id DROP NOT NULL;",
+		"ALTER TABLE products ADD COLUMN IF NOT EXISTS seo_title VARCHAR(200);",
+		"ALTER TABLE products ADD COLUMN IF NOT EXISTS seo_keywords VARCHAR(500);",
+		"ALTER TABLE products ADD COLUMN IF NOT EXISTS seo_description VARCHAR(500);",
 		// 修复 seed 数据显式插入 ID 后 BIGSERIAL sequence 未同步的问题
 		"SELECT setval('categories_id_seq', COALESCE((SELECT MAX(id) FROM categories), 1));",
 		"SELECT setval('brands_id_seq', COALESCE((SELECT MAX(id) FROM brands), 1));",

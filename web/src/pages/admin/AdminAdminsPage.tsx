@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Plus, Pencil, Trash2, Shield, ShieldAlert, ShieldCheck, UserCheck, UserX } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import adminService from '@/services/admin'
 import type { AdminDetail } from '@/types/admin'
 import { getApiErrorMessage } from '@/utils'
@@ -204,7 +205,7 @@ export function AdminAdminsPage() {
   if (loading && admins.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-forest-600" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
       </div>
     )
   }
@@ -213,8 +214,8 @@ export function AdminAdminsPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-semibold text-charcoal">管理员管理</h2>
-          <p className="mt-2 max-w-2xl text-sm text-stone">
+          <h2 className="text-2xl font-semibold text-slate-800">管理员管理</h2>
+          <p className="mt-2 max-w-2xl text-sm text-slate-500">
             管理系统后台管理员账号，包括创建、编辑、禁用和删除操作。
           </p>
         </div>
@@ -225,33 +226,36 @@ export function AdminAdminsPage() {
       </div>
 
       {/* 管理员表格 */}
-      <div className="rounded-2xl border border-cream-200 bg-white shadow-sm overflow-hidden">
+      <Card className="overflow-hidden border-slate-200/60 shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 border-b border-cream-200">
+            <thead className="bg-slate-50/80 border-b border-slate-100">
               <tr>
-                <th className="text-left px-6 py-3 font-medium text-stone">用户名</th>
-                <th className="text-left px-6 py-3 font-medium text-stone">昵称</th>
-                <th className="text-left px-6 py-3 font-medium text-stone">角色</th>
-                <th className="text-left px-6 py-3 font-medium text-stone">状态</th>
-                <th className="text-left px-6 py-3 font-medium text-stone">最后登录</th>
-                <th className="text-right px-6 py-3 font-medium text-stone">操作</th>
+                <th className="text-left px-6 py-3.5 font-medium text-slate-500 text-xs">用户名</th>
+                <th className="text-left px-6 py-3.5 font-medium text-slate-500 text-xs">昵称</th>
+                <th className="text-left px-6 py-3.5 font-medium text-slate-500 text-xs">角色</th>
+                <th className="text-left px-6 py-3.5 font-medium text-slate-500 text-xs">状态</th>
+                <th className="text-left px-6 py-3.5 font-medium text-slate-500 text-xs">最后登录</th>
+                <th className="text-right px-6 py-3.5 font-medium text-slate-500 text-xs">操作</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-cream-100">
+            <tbody className="divide-y divide-slate-50">
               {admins.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-stone">
-                    暂无管理员数据
+                  <td colSpan={6} className="px-6 py-16 text-center">
+                    <div className="flex flex-col items-center gap-2 text-slate-400">
+                      <Shield className="h-8 w-8 opacity-40" />
+                      <p className="text-sm">暂无管理员数据</p>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 admins.map((admin) => {
                   const RoleIcon = ROLE_CONFIG[admin.role]?.icon || Shield
                   return (
-                    <tr key={admin.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4 font-medium text-charcoal">{admin.username}</td>
-                      <td className="px-6 py-4 text-charcoal">{admin.nickname || '-'}</td>
+                    <tr key={admin.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="px-6 py-4 font-medium text-slate-800">{admin.username}</td>
+                      <td className="px-6 py-4 text-slate-600">{admin.nickname || '-'}</td>
                       <td className="px-6 py-4">
                         <span
                           className={cn(
@@ -278,16 +282,16 @@ export function AdminAdminsPage() {
                           {STATUS_CONFIG[admin.status]?.label || admin.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-stone text-xs">
+                      <td className="px-6 py-4 text-slate-400 text-xs">
                         {admin.last_login_at
                           ? new Date(admin.last_login_at).toLocaleString('zh-CN')
                           : '从未登录'}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => openEditModal(admin)}
-                            className="p-1.5 rounded-lg text-stone hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                            className="p-2 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                             title="编辑"
                           >
                             <Pencil className="h-4 w-4" />
@@ -295,10 +299,10 @@ export function AdminAdminsPage() {
                           <button
                             onClick={() => handleDelete(admin)}
                             className={cn(
-                              'p-1.5 rounded-lg transition-colors',
+                              'p-2 rounded-lg transition-colors',
                               admin.id === currentAdminId
-                                ? 'text-cream-300 cursor-not-allowed'
-                                : 'text-stone hover:text-red-600 hover:bg-red-50'
+                                ? 'text-slate-200 cursor-not-allowed'
+                                : 'text-slate-400 hover:text-red-500 hover:bg-red-50'
                             )}
                             title={admin.id === currentAdminId ? '不能删除自己' : '删除'}
                             disabled={admin.id === currentAdminId}
@@ -317,8 +321,8 @@ export function AdminAdminsPage() {
 
         {/* 分页 */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-cream-200 bg-slate-50">
-            <span className="text-sm text-stone">
+          <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+            <span className="text-sm text-slate-500">
               共 {total} 条，第 {page} / {totalPages} 页
             </span>
             <div className="flex gap-2">
@@ -341,28 +345,25 @@ export function AdminAdminsPage() {
             </div>
           </div>
         )}
-      </div>
+      </Card>
 
       {/* 创建/编辑弹窗 */}
       {modalMode && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* 遮罩 */}
-          <div className="absolute inset-0 bg-black/40" onClick={closeModal} />
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closeModal} />
 
           {/* 弹窗卡片 */}
-          <div className="relative z-10 w-full max-w-md mx-4 rounded-2xl bg-white shadow-xl">
-            <div className="px-6 py-5 border-b border-cream-200">
-              <h3 className="text-lg font-semibold text-charcoal">
+          <Card className="relative z-10 w-full max-w-md mx-auto shadow-xl border-slate-200/60">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg">
                 {modalMode === 'create' ? '添加管理员' : '编辑管理员'}
-              </h3>
-            </div>
-
-            <div className="px-6 py-5 space-y-4">
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               {/* 用户名 */}
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1.5">
-                  用户名
-                </label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">用户名</label>
                 <Input
                   value={form.username}
                   onChange={(e) => setForm({ ...form, username: e.target.value })}
@@ -377,14 +378,14 @@ export function AdminAdminsPage() {
 
               {/* 密码 */}
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1.5">
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
                   {modalMode === 'create' ? '密码' : '新密码（留空则不修改）'}
                 </label>
                 <Input
                   type="password"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  placeholder={modalMode === 'create' ? '请输入密码（至少 6 位）' : '留空则不修改密码'}
+                  placeholder={modalMode === 'create' ? '请输入密码（至少 6 位）' : '留空不修改密码'}
                   error={errors.password}
                 />
                 {errors.password && (
@@ -394,9 +395,7 @@ export function AdminAdminsPage() {
 
               {/* 昵称 */}
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1.5">
-                  昵称
-                </label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">昵称</label>
                 <Input
                   value={form.nickname}
                   onChange={(e) => setForm({ ...form, nickname: e.target.value })}
@@ -410,13 +409,11 @@ export function AdminAdminsPage() {
 
               {/* 角色 */}
               <div>
-                <label className="block text-sm font-medium text-charcoal mb-1.5">
-                  角色
-                </label>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">角色</label>
                 <select
                   value={form.role}
                   onChange={(e) => setForm({ ...form, role: e.target.value as AdminFormState['role'] })}
-                  className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="super_admin">超级管理员</option>
                   <option value="admin">管理员</option>
@@ -427,30 +424,28 @@ export function AdminAdminsPage() {
               {/* 状态（仅编辑模式） */}
               {modalMode === 'edit' && (
                 <div>
-                  <label className="block text-sm font-medium text-charcoal mb-1.5">
-                    状态
-                  </label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">状态</label>
                   <select
                     value={form.status}
                     onChange={(e) => setForm({ ...form, status: e.target.value as 'active' | 'disabled' })}
-                    className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="active">正常</option>
                     <option value="disabled">禁用</option>
                   </select>
                 </div>
               )}
-            </div>
 
-            <div className="flex justify-end gap-3 px-6 py-4 border-t border-cream-200 bg-slate-50 rounded-b-2xl">
-              <Button variant="outline" onClick={closeModal}>
-                取消
-              </Button>
-              <Button onClick={handleSubmit} loading={submitting}>
-                {modalMode === 'create' ? '创建' : '保存'}
-              </Button>
-            </div>
-          </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <Button variant="outline" onClick={closeModal}>
+                  取消
+                </Button>
+                <Button onClick={handleSubmit} loading={submitting}>
+                  {modalMode === 'create' ? '创建' : '保存'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>

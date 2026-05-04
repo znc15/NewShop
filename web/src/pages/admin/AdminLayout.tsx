@@ -1,169 +1,53 @@
 import { useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import {
+  LayoutDashboard,
+  Package,
+  MessageSquare,
+  ShoppingBag,
+  Users,
+  Grid3X3,
+  Ticket,
+  Home,
+  PanelBottom,
+  Search,
+  Settings,
+  Shield,
+  UserCircle,
+  ArrowLeft,
+  ChevronLeft,
+  LogOut,
+} from 'lucide-react'
 import { cn } from '@/utils'
 
-// 侧边栏导航项
 const navItems = [
-  {
-    title: '仪表盘',
-    href: '/admin',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="7" height="7" />
-        <rect x="14" y="3" width="7" height="7" />
-        <rect x="14" y="14" width="7" height="7" />
-        <rect x="3" y="14" width="7" height="7" />
-      </svg>
-    ),
-  },
-  {
-    title: '商品管理',
-    href: '/admin/products',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="m7.5 4.27 9 5.15" />
-        <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
-        <path d="m3.3 7 8.7 5 8.7-5" />
-        <path d="M12 22V12" />
-      </svg>
-    ),
-  },
-  {
-    title: '评价管理',
-    href: '/admin/reviews',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-        <path d="M8 9h8" />
-        <path d="M8 13h5" />
-      </svg>
-    ),
-  },
-  {
-    title: '订单管理',
-    href: '/admin/orders',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-        <path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1Z" />
-      </svg>
-    ),
-  },
-  {
-    title: '用户管理',
-    href: '/admin/users',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-      </svg>
-    ),
-  },
-  {
-    title: '分类管理',
-    href: '/admin/categories',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 3h6v6H3z" />
-        <path d="M15 3h6v6h-6z" />
-        <path d="M3 15h6v6H3z" />
-        <path d="M15 15h6v6h-6z" />
-      </svg>
-    ),
-  },
-  {
-    title: '优惠券管理',
-    href: '/admin/coupons',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M10 9.5 8 12l2 2.5" />
-        <path d="M14 9.5 16 12l-2 2.5" />
-        <path d="M21 11.5V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16v-3.5" />
-      </svg>
-    ),
-  },
-  {
-    title: '首页设置',
-    href: '/admin/homepage',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="m3 9 9-7 9 7" />
-        <path d="M9 22V12h6v10" />
-        <path d="M3 22h18" />
-      </svg>
-    ),
-  },
-  {
-    title: '页脚设置',
-    href: '/admin/footer',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 6h18" />
-        <path d="M3 12h18" />
-        <path d="M3 18h12" />
-        <path d="M19 17v2" />
-      </svg>
-    ),
-  },
-  {
-    title: 'SEO 设置',
-    href: '/admin/seo',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="11" cy="11" r="8" />
-        <path d="m21 21-4.3-4.3" />
-        <path d="M8 11h6" />
-        <path d="M8 8h3" />
-        <path d="M8 14h4" />
-      </svg>
-    ),
-  },
-  {
-    title: '系统设置',
-    href: '/admin/settings',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-        <circle cx="12" cy="12" r="3" />
-      </svg>
-    ),
-  },
-  {
-    title: '管理员管理',
-    href: '/admin/admins',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-      </svg>
-    ),
-  },
-  {
-    title: '个人资料',
-    href: '/admin/profile',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-        <circle cx="12" cy="7" r="4" />
-      </svg>
-    ),
-  },
+  { title: '仪表盘', href: '/admin', icon: LayoutDashboard },
+  { title: '商品管理', href: '/admin/products', icon: Package },
+  { title: '评价管理', href: '/admin/reviews', icon: MessageSquare },
+  { title: '订单管理', href: '/admin/orders', icon: ShoppingBag },
+  { title: '用户管理', href: '/admin/users', icon: Users },
+  { title: '分类管理', href: '/admin/categories', icon: Grid3X3 },
+  { title: '优惠券管理', href: '/admin/coupons', icon: Ticket },
+  { title: '首页设置', href: '/admin/homepage', icon: Home },
+  { title: '页脚设置', href: '/admin/footer', icon: PanelBottom },
+  { title: 'SEO 设置', href: '/admin/seo', icon: Search },
+  { title: '系统设置', href: '/admin/settings', icon: Settings },
+  { title: '管理员管理', href: '/admin/admins', icon: Shield },
+  { title: '个人资料', href: '/admin/profile', icon: UserCircle },
 ]
 
 export function AdminLayout({ children }: { children?: ReactNode }) {
   const location = useLocation()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
-  // 判断当前路由是否激活
   const isActive = (href: string) => {
-    if (href === '/admin') {
-      return location.pathname === '/admin'
-    }
+    if (href === '/admin') return location.pathname === '/admin'
     return location.pathname.startsWith(href)
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('admin-auth-storage')
+    window.location.href = '/admin/login'
   }
 
   return (
@@ -171,98 +55,124 @@ export function AdminLayout({ children }: { children?: ReactNode }) {
       {/* 侧边栏 */}
       <aside
         className={cn(
-          'fixed left-0 top-0 z-40 h-screen bg-slate-800 text-slate-100 transition-all duration-300',
-          sidebarCollapsed ? 'w-16' : 'w-64'
+          'fixed left-0 top-0 z-40 h-screen flex flex-col bg-slate-900 text-slate-300 transition-all duration-300',
+          sidebarCollapsed ? 'w-[72px]' : 'w-64'
         )}
       >
-        {/* Logo */}
-        <div className="flex items-center justify-between h-16 px-4 border-b border-slate-700">
-          {!sidebarCollapsed && (
-            <Link to="/admin" className="font-display text-xl font-semibold">
-              管理后台
-            </Link>
-          )}
-          <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="p-1.5 rounded hover:bg-slate-700 transition-colors"
+        {/* Logo 区域 */}
+        <div className="flex items-center h-16 px-4 border-b border-slate-800 shrink-0">
+          <Link
+            to="/admin"
+            className={cn(
+              'flex items-center gap-2.5 overflow-hidden whitespace-nowrap',
+              sidebarCollapsed && 'justify-center'
+            )}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className={cn('transition-transform', sidebarCollapsed && 'rotate-180')}
+            <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center shrink-0">
+              <Shield className="h-4.5 w-4.5 text-white" />
+            </div>
+            {!sidebarCollapsed && (
+              <span className="font-semibold text-white text-base tracking-tight">管理后台</span>
+            )}
+          </Link>
+          {!sidebarCollapsed && (
+            <button
+              onClick={() => setSidebarCollapsed(true)}
+              className="ml-auto p-1 rounded-md text-slate-500 hover:text-slate-300 hover:bg-slate-800 transition-colors"
             >
-              <path d="m15 18-6-6 6-6" />
-            </svg>
-          </button>
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
         {/* 导航菜单 */}
-        <nav className="p-2 space-y-1">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              to={item.href}
-              className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors',
-                isActive(item.href)
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-              )}
-              title={sidebarCollapsed ? item.title : undefined}
-            >
-              {item.icon}
-              {!sidebarCollapsed && <span className="text-sm font-medium">{item.title}</span>}
-            </Link>
-          ))}
+        <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
+          {navItems.map((item) => {
+            const Icon = item.icon
+            const active = isActive(item.href)
+            return (
+              <Link
+                key={item.href}
+                to={item.href}
+                className={cn(
+                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                  sidebarCollapsed && 'justify-center px-2',
+                  active
+                    ? 'bg-blue-600/20 text-blue-400'
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                )}
+                title={sidebarCollapsed ? item.title : undefined}
+              >
+                <Icon className={cn('h-5 w-5 shrink-0', active && 'text-blue-400')} />
+                {!sidebarCollapsed && <span>{item.title}</span>}
+              </Link>
+            )
+          })}
         </nav>
 
-        {/* 返回前台 */}
-        <div className="absolute bottom-4 left-0 right-0 px-2">
+        {/* 底部分组 */}
+        <div className="p-3 border-t border-slate-800 space-y-0.5 shrink-0">
+          {/* 返回前台 */}
           <Link
             to="/"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+            className={cn(
+              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors',
+              sidebarCollapsed && 'justify-center px-2'
+            )}
             title={sidebarCollapsed ? '返回前台' : undefined}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="m12 19-7-7 7-7" />
-              <path d="M19 12H5" />
-            </svg>
-            {!sidebarCollapsed && <span className="text-sm font-medium">返回前台</span>}
+            <ArrowLeft className="h-5 w-5 shrink-0" />
+            {!sidebarCollapsed && <span>返回前台</span>}
           </Link>
+
+          {/* 退出登录 */}
+          <button
+            onClick={handleLogout}
+            className={cn(
+              'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors',
+              sidebarCollapsed && 'justify-center px-2'
+            )}
+            title={sidebarCollapsed ? '退出登录' : undefined}
+          >
+            <LogOut className="h-5 w-5 shrink-0" />
+            {!sidebarCollapsed && <span>退出登录</span>}
+          </button>
+
+          {/* 展开按钮（仅在折叠时显示） */}
+          {sidebarCollapsed && (
+            <button
+              onClick={() => setSidebarCollapsed(false)}
+              className="w-full flex items-center justify-center px-2 py-2.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-slate-800 transition-colors"
+              title="展开侧边栏"
+            >
+              <ChevronLeft className="h-4 w-4 rotate-180" />
+            </button>
+          )}
         </div>
       </aside>
 
       {/* 主内容区 */}
       <div
         className={cn(
-          'flex-1 transition-all duration-300',
-          sidebarCollapsed ? 'ml-16' : 'ml-64'
+          'flex-1 flex flex-col min-h-screen transition-all duration-300',
+          sidebarCollapsed ? 'ml-[72px]' : 'ml-64'
         )}
       >
         {/* 顶部栏 */}
-        <header className="sticky top-0 z-30 h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between">
-          <h1 className="text-lg font-semibold text-charcoal">
+        <header className="sticky top-0 z-30 h-16 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 flex items-center justify-between">
+          <h1 className="text-lg font-semibold text-slate-800">
             {navItems.find((item) => isActive(item.href))?.title || '管理后台'}
           </h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-stone">管理员</span>
-            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-medium">
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-slate-500">管理员</span>
+            <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-medium ring-2 ring-blue-100">
               A
             </div>
           </div>
         </header>
 
         {/* 页面内容 */}
-        <main className="p-6">
-          {children}
-        </main>
+        <main className="flex-1 p-6">{children}</main>
       </div>
     </div>
   )

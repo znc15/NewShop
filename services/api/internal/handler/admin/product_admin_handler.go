@@ -87,12 +87,15 @@ type CreateProductRequest struct {
 	Stock         int                    `json:"stock" binding:"gte=0"`
 	Description   string                 `json:"description"`
 	Detail        string                 `json:"detail"`
-	IsHot         bool                   `json:"is_hot"`
-	IsSale        bool                   `json:"is_sale"`
-	Status        string                 `json:"status" binding:"oneof=draft active inactive"`
-	Sort          int                    `json:"sort"`
-	Skus          []CreateProductSkuReq  `json:"skus"`
-	Attrs         []CreateProductAttrReq `json:"attrs"`
+	IsHot          bool                   `json:"is_hot"`
+	IsSale         bool                   `json:"is_sale"`
+	SeoTitle       string                 `json:"seo_title" binding:"max=200"`
+	SeoKeywords    string                 `json:"seo_keywords" binding:"max=500"`
+	SeoDescription string                 `json:"seo_description" binding:"max=500"`
+	Status         string                 `json:"status" binding:"oneof=draft active inactive"`
+	Sort           int                    `json:"sort"`
+	Skus           []CreateProductSkuReq  `json:"skus"`
+	Attrs          []CreateProductAttrReq `json:"attrs"`
 }
 
 // CreateProductSkuReq 创建 SKU 请求
@@ -124,11 +127,15 @@ type UpdateProductRequest struct {
 	Stock         int                    `json:"stock" binding:"gte=0"`
 	Description   *string                `json:"description"`
 	Detail        *string                `json:"detail"`
-	IsHot         *bool                  `json:"is_hot"`
-	IsSale        *bool                  `json:"is_sale"`
-	Sort          int                    `json:"sort"`
-	Skus          []UpdateProductSkuReq  `json:"skus"`
-	Attrs         []UpdateProductAttrReq `json:"attrs"`
+	IsHot          *bool                  `json:"is_hot"`
+	IsSale         *bool                  `json:"is_sale"`
+	SeoTitle       *string                `json:"seo_title" binding:"max=200"`
+	SeoKeywords    *string                `json:"seo_keywords" binding:"max=500"`
+	SeoDescription *string                `json:"seo_description" binding:"max=500"`
+	Status         string                 `json:"status" binding:"oneof=draft active inactive"`
+	Sort           int                    `json:"sort"`
+	Skus           []UpdateProductSkuReq  `json:"skus"`
+	Attrs          []UpdateProductAttrReq `json:"attrs"`
 }
 
 // UpdateProductSkuReq 更新 SKU 请求
@@ -178,6 +185,9 @@ type ProductDetailResponse struct {
 	IsSale        bool          `json:"is_sale"`
 	Description   string        `json:"description"`
 	Detail        string        `json:"detail"`
+	SeoTitle       string        `json:"seo_title"`
+	SeoKeywords    string        `json:"seo_keywords"`
+	SeoDescription string        `json:"seo_description"`
 	Status        string        `json:"status"`
 	Sort          int           `json:"sort"`
 	Skus          []SkuInfo     `json:"skus"`
@@ -369,19 +379,22 @@ func (h *ProductAdminHandler) Create(c *gin.Context) {
 	}
 
 	product := &model.Product{
-		Name:          req.Name,
-		CategoryID:    req.CategoryID,
-		BrandID:       req.BrandID,
-		MainImage:     req.MainImage,
-		Price:         req.Price,
-		OriginalPrice: req.OriginalPrice,
-		Stock:         req.Stock,
-		IsHot:         req.IsHot,
-		IsSale:        req.IsSale,
-		Description:   req.Description,
-		Detail:        req.Detail,
-		Status:        req.Status,
-		Sort:          req.Sort,
+		Name:           req.Name,
+		CategoryID:     req.CategoryID,
+		BrandID:        req.BrandID,
+		MainImage:      req.MainImage,
+		Price:          req.Price,
+		OriginalPrice:  req.OriginalPrice,
+		Stock:          req.Stock,
+		IsHot:          req.IsHot,
+		IsSale:         req.IsSale,
+		Description:    req.Description,
+		Detail:         req.Detail,
+		SeoTitle:       req.SeoTitle,
+		SeoKeywords:    req.SeoKeywords,
+		SeoDescription: req.SeoDescription,
+		Status:         req.Status,
+		Sort:           req.Sort,
 	}
 
 	// 处理图片
@@ -479,9 +492,12 @@ func (h *ProductAdminHandler) Get(c *gin.Context) {
 		Sales:         product.Sales,
 		IsHot:         product.IsHot,
 		IsSale:        product.IsSale,
-		Description:   product.Description,
-		Detail:        product.Detail,
-		Status:        product.Status,
+		Description:    product.Description,
+		Detail:         product.Detail,
+		SeoTitle:       product.SeoTitle,
+		SeoKeywords:    product.SeoKeywords,
+		SeoDescription: product.SeoDescription,
+		Status:         product.Status,
 		Sort:          product.Sort,
 		CreatedAt:     product.CreatedAt.Format("2006-01-02 15:04:05"),
 		UpdatedAt:     product.UpdatedAt.Format("2006-01-02 15:04:05"),
@@ -598,6 +614,18 @@ func (h *ProductAdminHandler) Update(c *gin.Context) {
 	}
 	if req.IsSale != nil {
 		product.IsSale = *req.IsSale
+	}
+	if req.SeoTitle != nil {
+		product.SeoTitle = *req.SeoTitle
+	}
+	if req.SeoKeywords != nil {
+		product.SeoKeywords = *req.SeoKeywords
+	}
+	if req.SeoDescription != nil {
+		product.SeoDescription = *req.SeoDescription
+	}
+	if req.Status != "" {
+		product.Status = req.Status
 	}
 	if req.Description != nil {
 		product.Description = *req.Description

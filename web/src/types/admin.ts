@@ -89,6 +89,9 @@ export interface AdminProduct {
   sales_count: number  // 别名
   is_hot: boolean
   is_sale: boolean
+  seo_title?: string
+  seo_keywords?: string
+  seo_description?: string
   sort: number
   skus?: AdminProductSku[]
   attrs?: AdminProductAttr[]
@@ -140,6 +143,9 @@ export interface AdminProductFormData {
   stock?: number
   is_hot: boolean
   is_sale: boolean
+  seo_title?: string
+  seo_keywords?: string
+  seo_description?: string
   sort?: number
   images: string[]
   skus: {

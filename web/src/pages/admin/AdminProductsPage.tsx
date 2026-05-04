@@ -35,6 +35,9 @@ const INITIAL_FORM_DATA: AdminProductFormData = {
   stock: 0,
   is_hot: false,
   is_sale: false,
+  seo_title: '',
+  seo_keywords: '',
+  seo_description: '',
   sort: 0,
   images: [],
   skus: [],
@@ -201,6 +204,9 @@ export function AdminProductsPage() {
         stock: product.stock,
         is_hot: product.is_hot,
         is_sale: product.is_sale,
+        seo_title: product.seo_title || '',
+        seo_keywords: product.seo_keywords || '',
+        seo_description: product.seo_description || '',
         sort: product.sort,
         images,
         skus: [],
@@ -599,6 +605,140 @@ export function AdminProductsPage() {
               <span className="text-sm text-charcoal">特惠</span>
             </label>
           </div>
+
+          {/* SEO 设置 */}
+          <details className="bg-cream-50 rounded-lg border border-cream-200">
+            <summary className="px-4 py-2 text-sm font-medium text-charcoal cursor-pointer select-none">
+              SEO 设置（可选）
+            </summary>
+            <div className="px-4 pb-4 space-y-3">
+              <div>
+                <label className="block text-xs text-stone mb-1">SEO 标题</label>
+                <Input
+                  value={formData.seo_title || ''}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, seo_title: e.target.value }))}
+                  placeholder="留空则使用商品名称"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-stone mb-1">SEO 关键词</label>
+                <Input
+                  value={formData.seo_keywords || ''}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, seo_keywords: e.target.value }))}
+                  placeholder="逗号分隔，如：iPhone,Apple,手机"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-stone mb-1">SEO 描述</label>
+                <textarea
+                  value={formData.seo_description || ''}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, seo_description: e.target.value }))}
+                  placeholder="留空则使用商品描述"
+                  className="w-full px-3 py-2 text-sm border border-cream-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-transparent resize-none"
+                  rows={2}
+                />
+              </div>
+            </div>
+          </details>
+
+          {/* SKU 管理 */}
+          <details className="bg-cream-50 rounded-lg border border-cream-200" open>
+            <summary className="px-4 py-2 text-sm font-medium text-charcoal cursor-pointer select-none">
+              SKU 规格管理（如 128G / 256G）
+            </summary>
+            <div className="px-4 pb-4 space-y-3">
+              {formData.skus.length === 0 && (
+                <p className="text-xs text-stone">暂无 SKU，商品将使用默认价格和库存</p>
+              )}
+              {formData.skus.map((sku, index) => (
+                <div key={index} className="flex flex-wrap items-end gap-2 p-3 bg-white rounded-lg border border-cream-200">
+                  <div className="flex-1 min-w-[120px]">
+                    <label className="block text-xs text-stone mb-1">SKU 编码</label>
+                    <Input
+                      value={sku.sku_code}
+                      onChange={(e) => {
+                        const newSkus = [...formData.skus]
+                        newSkus[index] = { ...newSkus[index], sku_code: e.target.value }
+                        setFormData((prev) => ({ ...prev, skus: newSkus }))
+                      }}
+                      placeholder="如 SKU-IP15-256"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-[100px]">
+                    <label className="block text-xs text-stone mb-1">规格</label>
+                    <Input
+                      value={sku.specs}
+                      onChange={(e) => {
+                        const newSkus = [...formData.skus]
+                        newSkus[index] = { ...newSkus[index], specs: e.target.value }
+                        setFormData((prev) => ({ ...prev, skus: newSkus }))
+                      }}
+                      placeholder='如 {"存储":"256GB"}'
+                    />
+                  </div>
+                  <div className="w-[100px]">
+                    <label className="block text-xs text-stone mb-1">价格 (分)</label>
+                    <Input
+                      type="number"
+                      value={sku.price}
+                      onChange={(e) => {
+                        const newSkus = [...formData.skus]
+                        newSkus[index] = { ...newSkus[index], price: Number(e.target.value) }
+                        setFormData((prev) => ({ ...prev, skus: newSkus }))
+                      }}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div className="w-[80px]">
+                    <label className="block text-xs text-stone mb-1">库存</label>
+                    <Input
+                      type="number"
+                      value={sku.stock}
+                      onChange={(e) => {
+                        const newSkus = [...formData.skus]
+                        newSkus[index] = { ...newSkus[index], stock: Number(e.target.value) }
+                        setFormData((prev) => ({ ...prev, skus: newSkus }))
+                      }}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-[150px]">
+                    <label className="block text-xs text-stone mb-1">图片 URL</label>
+                    <Input
+                      value={sku.image || ''}
+                      onChange={(e) => {
+                        const newSkus = [...formData.skus]
+                        newSkus[index] = { ...newSkus[index], image: e.target.value }
+                        setFormData((prev) => ({ ...prev, skus: newSkus }))
+                      }}
+                      placeholder="可选"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData((prev) => ({ ...prev, skus: prev.skus.filter((_, i) => i !== index) }))
+                    }}
+                    className="px-2 py-2 text-xs text-red-600 hover:bg-red-50 rounded"
+                  >
+                    删除
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    skus: [...prev.skus, { sku_code: '', specs: '', price: prev.price, stock: 0, image: '' }],
+                  }))
+                }}
+                className="w-full py-2 text-sm text-forest-600 border border-dashed border-forest-300 rounded-lg hover:bg-forest-50 transition-colors"
+              >
+                + 添加 SKU
+              </button>
+            </div>
+          </details>
 
           <div className="flex justify-end gap-3 pt-4">
             <Button variant="secondary" onClick={() => setEditModalOpen(false)}>

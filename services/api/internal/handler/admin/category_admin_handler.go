@@ -155,7 +155,7 @@ func (h *CategoryAdminHandler) Create(c *gin.Context) {
 
 	if err := h.categoryService.CreateCategory(c.Request.Context(), category); err != nil {
 		h.logger.Error("创建分类失败", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "创建分类失败"})
+		c.JSON(http.StatusInternalServerError, gin.H{"code": 50000, "message": "创建分类失败: " + err.Error()})
 		return
 	}
 
